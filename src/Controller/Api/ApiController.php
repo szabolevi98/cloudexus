@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller\Api;
 
+use Cloudexus\Core\ClientIp;
 use Cloudexus\Core\Config;
 use Cloudexus\Core\Currency;
 use Cloudexus\Core\Language;
@@ -111,7 +112,7 @@ abstract class ApiController
 
     protected function clientIp(): string
     {
-        return $_SERVER['REMOTE_ADDR'] ?? '';
+        return ClientIp::get();
     }
 
     protected function userTokenLifetimeDays(): int
