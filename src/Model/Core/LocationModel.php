@@ -7,12 +7,16 @@ use Cloudexus\Core\Paginator;
 
 class LocationModel
 {
-    /** Filters: q (code/name), warehouse_id, status. */
+    /** Filters: q (code/name), code (exact, e.g. a scanned shelf label), warehouse_id, status. */
     public function paginate(array $filters, Paginator $pager): array
     {
         $where = [];
         $params = [];
 
+        if (($filters['code'] ?? '') !== '') {
+            $where[] = 'l.code = :code';
+            $params['code'] = $filters['code'];
+        }
         if ($filters['q'] !== '') {
             $where[] = '(l.code LIKE :q1 OR l.name LIKE :q2)';
             $params['q1'] = '%' . $filters['q'] . '%';

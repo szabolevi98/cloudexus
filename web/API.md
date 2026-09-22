@@ -190,6 +190,7 @@ admin UI.
 | GET | `/api/products` | Product list. Filters: `q` (SKU/name/barcode), `category_id`, `status` (`active`/`inactive`), `updated_since` |
 | GET | `/api/products/{id}` | Single product, full data (by ID) |
 | GET | `/api/products/sku/{sku}` | Single product, full data (by SKU) |
+| GET | `/api/products/lookup?code=` | Scanned code → active product with its stock per warehouse/location (see [Product lookup](#product-lookup-scanning)) |
 
 Example response (`GET /api/products/1`) — all fields of the detailed product:
 
@@ -265,6 +266,38 @@ integrations keep working — `unit_id` and `parameter_id` are additions.
 `attr_value` values are returned in the language selected by `?language=` (see
 [Language](#language)), falling back to the default language where a translation is missing.
 
+#### Product lookup (scanning)
+
+`GET /api/products/lookup?code=5995323785398` resolves what a barcode scanner read. The code
+is matched against the **barcode** first and the **SKU** second (if one product's barcode
+equals another's SKU, the barcode wins); only active products are found. The code is a query
+parameter rather than part of the path because scanned codes can contain `/`. Response:
+
+```json
+{
+  "data": {
+    "id": 12,
+    "sku": "PRD-0012",
+    "barcode": "5995323785398",
+    "name": "24\" monitor",
+    "unit": "szett",
+    "unit_name": "szett",
+    "min_stock": "0.000",
+    "matched_by": "barcode",
+    "stock_total": "243.000",
+    "stock": [
+      { "warehouse_id": 1, "warehouse_name": "Központi raktár", "location_id": 24, "location_code": "B-03-04", "quantity": "134.000" },
+      { "warehouse_id": 1, "warehouse_name": "Központi raktár", "location_id": null, "location_code": null, "quantity": "42.000" }
+    ]
+  }
+}
+```
+
+- `matched_by` is `barcode` or `sku`.
+- `stock` lists every warehouse+location with non-zero stock; stock booked without a
+  location is under `location_id: null`. `stock_total` is their sum.
+- No match returns `404`; a missing `code` returns `422`.
+
 ### Categories
 
 | Method | Path | Description |
@@ -307,6 +340,11 @@ Category lists are ordered by the **translated** name, so the order differs per 
 | GET | `/api/customer-groups` | Customer groups. Filters: `q`, `updated_since` |
 | GET | `/api/customer-groups/{id}` | Single customer group |
 | GET | `/api/warehouses` | Warehouses. Filters: `q`, `status`, `updated_since` |
+| GET | `/api/warehouses/{id}/locations` | The warehouse's storage locations (shelves). Filters: `q` (code/name), `code` (exact match, e.g. a scanned shelf label), `status` |
+
+A location row carries its `code` (unique within the warehouse), an optional descriptive
+`name`, `is_active`, and the stock held on it: `stock_qty` (sum over all products) and
+`product_count`. For what exactly is on a shelf, use `GET /api/stock?location_id=`.
 
 Example response (`GET /api/currencies`):
 

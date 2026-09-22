@@ -261,6 +261,7 @@ $router->post('/api/auth/logout', fn() => (new AuthApiController())->logout());
 $router->get('/api/auth/me', fn() => (new AuthApiController())->me());
 
 $router->get('/api/products', fn() => (new ProductApiController())->index());
+$router->get('/api/products/lookup', fn() => (new ProductApiController())->lookup());
 $router->get('/api/products/sku/{sku}', fn($sku) => (new ProductApiController())->showBySku(rawurldecode($sku)));
 $router->get('/api/products/{id}', fn($id) => (new ProductApiController())->show((int) $id));
 
@@ -278,6 +279,7 @@ $router->get('/api/customer-groups', fn() => (new CustomerGroupApiController())-
 $router->get('/api/customer-groups/{id}', fn($id) => (new CustomerGroupApiController())->show((int) $id));
 
 $router->get('/api/warehouses', fn() => (new WarehouseApiController())->index());
+$router->get('/api/warehouses/{id}/locations', fn($id) => (new WarehouseApiController())->locations((int) $id));
 $router->get('/api/stock', fn() => (new StockApiController())->index());
 $router->get('/api/pricing/effective', fn() => (new PricingApiController())->effective());
 

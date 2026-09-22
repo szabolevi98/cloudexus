@@ -492,9 +492,11 @@ class ProductModel
              FROM products p
              ' . self::descJoin() . '
              ' . self::unitJoin() . '
-             WHERE (p.barcode = :c1 OR p.sku = :c2) AND p.is_active = 1 LIMIT 1'
+             WHERE (p.barcode = :c1 OR p.sku = :c2) AND p.is_active = 1
+             ORDER BY p.barcode = :c3 DESC, p.id ASC LIMIT 1'
         );
-        $stmt->execute(['c1' => $code, 'c2' => $code]);
+        // Ha egy vonalkód egy másik termék cikkszámával egyezik, a vonalkód nyer.
+        $stmt->execute(['c1' => $code, 'c2' => $code, 'c3' => $code]);
 
         return $stmt->fetch() ?: null;
     }

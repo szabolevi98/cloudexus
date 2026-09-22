@@ -283,6 +283,30 @@ class StockMovementModel
         return $stmt->fetchAll();
     }
 
+    /**
+     * One product's current stock per warehouse and location (non-zero rows only),
+     * for the mobile app's scan result. Movements without a location sum up under
+     * location_id = null.
+     */
+    public function stockForProduct(int $productId): array
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT w.id AS warehouse_id, w.name AS warehouse_name,
+                    l.id AS location_id, l.code AS location_code,
+                    SUM(CASE WHEN m.type = 'in' THEN m.quantity ELSE -m.quantity END) AS quantity
+             FROM stock_movements m
+             JOIN warehouses w ON w.id = m.warehouse_id
+             LEFT JOIN warehouse_locations l ON l.id = m.location_id
+             WHERE m.product_id = :product_id
+             GROUP BY w.id, l.id
+             HAVING quantity != 0
+             ORDER BY w.name ASC, l.code IS NULL ASC, l.code ASC"
+        );
+        $stmt->execute(['product_id' => $productId]);
+
+        return $stmt->fetchAll();
+    }
+
     public function totalQuantityForProduct(int $productId): float
     {
         $stmt = DatabaseConnection::get()->prepare(
