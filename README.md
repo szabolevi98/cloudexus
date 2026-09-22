@@ -247,6 +247,14 @@ A szkript `0` kilépési kóddal jelzi a sikert, `1`-gyel a hibát, a részletek
 kerülnek. Az MNB minden árfolyamot forintban jegyez, ezért az átszámítás a forinton keresztül
 történik — így akkor is helyes, ha nem a forint az elsődleges pénznem.
 
+## 📱 Mobil / PDA app
+
+A raktári bevételt, kiadást és raktárközi átadást a raktárosok telefonról vagy kézi vonalkódolvasós PDA-ról
+végzik a **[Cloudexus Mobile](https://github.com/szabolevi98/cloudexus-mobile)** Android appal, a saját
+felhasználónevükkel. A mozgás az ő nevükre könyvelődik, és azonnal látszik a webes felületen. Az APK a
+[Releases](https://github.com/szabolevi98/cloudexus-mobile/releases) oldalról tölthető le; az app a lenti
+REST API-t használja.
+
 ## 🔌 REST API
 
 Külső integrációkhoz (pl. webshop-szinkronizáláshoz) és a mobil / PDA raktári apphoz van egy
