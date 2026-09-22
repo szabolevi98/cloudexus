@@ -1,5 +1,6 @@
 <?php
 
+use Cloudexus\Controller\Api\AuthApiController;
 use Cloudexus\Controller\Api\CategoryApiController;
 use Cloudexus\Controller\Api\CurrencyApiController;
 use Cloudexus\Controller\Api\CustomerGroupApiController;
@@ -71,12 +72,6 @@ set_error_handler(function (int $level, string $message, string $file, int $line
     return true;
 });
 
-set_exception_handler(function (\Throwable $e): void {
-    \Cloudexus\Core\Logger::error('Uncaught: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
-    http_response_code(500);
-    echo \Cloudexus\Core\Lang::get('errors.unexpected');
-});
-
 // The REST API (/api/*) authenticates with a bearer token, not the session
 // cookie, so it must bypass session start and the form CSRF gate.
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
@@ -85,6 +80,18 @@ if ($scriptBase !== '' && str_starts_with($requestPath, $scriptBase)) {
     $requestPath = substr($requestPath, strlen($scriptBase));
 }
 $isApiRequest = $requestPath === '/api' || str_starts_with($requestPath, '/api/');
+
+set_exception_handler(function (\Throwable $e) use ($isApiRequest): void {
+    \Cloudexus\Core\Logger::error('Uncaught: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+    http_response_code(500);
+    if ($isApiRequest) {
+        // API clients parse every response as JSON, errors included.
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => ['status' => 500, 'message' => 'Unexpected server error.']]);
+        return;
+    }
+    echo \Cloudexus\Core\Lang::get('errors.unexpected');
+});
 
 if (!$isApiRequest) {
     Session::start();
@@ -249,6 +256,10 @@ $router->post('/cash/{id}/delete', fn($id) => (new CashVoucherController())->del
 // REST API (/api/*) — bearer-token auth, JSON. Read-only catalog, full CRUD on
 // partners and orders. See web/API.md for the full documentation.
 // ---------------------------------------------------------------------------
+$router->post('/api/auth/login', fn() => (new AuthApiController())->login());
+$router->post('/api/auth/logout', fn() => (new AuthApiController())->logout());
+$router->get('/api/auth/me', fn() => (new AuthApiController())->me());
+
 $router->get('/api/products', fn() => (new ProductApiController())->index());
 $router->get('/api/products/sku/{sku}', fn($sku) => (new ProductApiController())->showBySku(rawurldecode($sku)));
 $router->get('/api/products/{id}', fn($id) => (new ProductApiController())->show((int) $id));

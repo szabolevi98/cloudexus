@@ -1,7 +1,7 @@
 # Cloudexus REST API
 
-REST API for external integrations (e.g. webshop sync). JSON in and out,
-token-based authentication.
+REST API for external integrations (e.g. webshop sync) and the mobile / PDA warehouse app.
+JSON in and out, token-based authentication.
 
 ## Basics
 
@@ -17,10 +17,18 @@ Every request requires an API token in the `Authorization` header:
 Authorization: Bearer <token>
 ```
 
-Tokens are managed in the admin UI under **API → API users** (create, regenerate,
-enable/disable, delete). A token grants full access (there is no per-token permission
-level). If the server strips the standard `Authorization` header, the `X-Api-Key: <token>`
-header can be used instead.
+There are two kinds of token:
+
+- **Integration token** — for a system such as a webshop. Managed in the admin UI under
+  **API → API users** (create, regenerate, enable/disable, delete).
+- **User token** — for a person, e.g. a warehouse worker signed in to the mobile / PDA app.
+  Issued by `POST /api/auth/login` with the user's own username and password (see
+  [Authentication endpoints](#authentication-endpoints)). User tokens start with `cxu_`.
+
+Either kind grants full access to the endpoints below (there is no per-token permission
+level), except that **stock movements can only be booked with a user token**, so every
+movement names the person who made it. If the server strips the standard `Authorization`
+header, the `X-Api-Key: <token>` header can be used instead.
 
 A missing or invalid token returns `401`:
 
@@ -28,9 +36,47 @@ A missing or invalid token returns `401`:
 { "error": { "status": 401, "message": "Invalid or missing API token." } }
 ```
 
+### Authentication endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Sign in with username (or e-mail) and password; returns a user token. No token needed |
+| GET | `/api/auth/me` | The user behind the current user token |
+| POST | `/api/auth/logout` | Revoke the current user token (this device only) |
+
+**Login body:**
+
+```json
+{ "username": "kovacs.anna", "password": "••••••••", "device_name": "Zebra TC21 #3" }
+```
+
+`device_name` is optional and only helps tell a user's devices apart. Response (`201`):
+
+```json
+{
+  "data": {
+    "token": "cxu_3f9c…",
+    "expires_at": "2026-12-21 08:00:00",
+    "user": { "id": 7, "username": "kovacs.anna", "full_name": "Kovács Anna", "email": "anna@example.com", "role": "user" }
+  }
+}
+```
+
+- The raw token is returned **only here**; the server stores just its hash. Keep it in the
+  device's secure storage.
+- The token expires after 90 days **without use**: every request moves `expires_at` forward.
+- A wrong username or password returns `401` (the message does not say which was wrong).
+  After 10 failed attempts from one IP address within 15 minutes, further attempts return
+  `429` until the window passes.
+- A user token stops working as soon as its user is deactivated, and changing the user's
+  password signs them out on every device.
+- `GET /api/auth/me` and `POST /api/auth/logout` return `403` when called with an
+  integration token.
+
 ## Rate limiting
 
-Each API token is limited to 60 requests per rolling minute. Every response carries:
+Each API token is limited to 60 requests per rolling minute (for user tokens, the limit is
+per user, shared across their devices). Every response carries:
 
 ```
 X-RateLimit-Limit: 60
@@ -124,7 +170,9 @@ All API messages (including error messages) are in **English**:
 ```
 
 Status codes used: `200` OK, `201` created, `400/422` bad request,
-`401` authentication missing/invalid, `404` resource not found, `429` rate limit exceeded.
+`401` authentication missing/invalid, `403` the endpoint needs a user token,
+`404` resource or endpoint not found, `429` rate limit exceeded, `500` unexpected server error.
+Every error, including an unknown endpoint and a server error, has this JSON shape.
 
 ---
 
@@ -542,6 +590,14 @@ Example response (`GET /api/orders/19`) — the address fields are resolved from
 ---
 
 # Examples (curl)
+
+Sign in as a user (the mobile app does this once, then sends the returned token):
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"kovacs.anna","password":"<password>","device_name":"Zebra TC21 #3"}' \
+  "https://cloudexus.levente.net/api/auth/login"
+```
 
 Product list (page 2, 100 per page):
 

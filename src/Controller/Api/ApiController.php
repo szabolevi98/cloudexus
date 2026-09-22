@@ -8,6 +8,7 @@ use Cloudexus\Core\Language;
 use Cloudexus\Core\Paginator;
 use Cloudexus\Model\Account\ApiRequestLogModel;
 use Cloudexus\Model\Account\ApiUserModel;
+use Cloudexus\Model\Account\UserTokenModel;
 
 /**
  * Base for all /api/* endpoints: bearer-token auth, JSON in/out, and a
@@ -18,7 +19,11 @@ abstract class ApiController
     protected const DEFAULT_PER_PAGE = 50;
     protected const MAX_PER_PAGE = 200;
 
+    /** The integration (api_users) behind the token, or null for a user token. */
     protected ?array $apiUser = null;
+
+    /** The signed-in user behind a per-user token (mobile app), or null for an integration token. */
+    protected ?array $user = null;
 
     /**
      * Rejects the request with 401 unless a valid, active token is present,
@@ -26,31 +31,39 @@ abstract class ApiController
      * logs the request to api_request_logs (see ApiRequestLogModel) — this
      * is the single hook point for every /api/* endpoint, so no individual
      * controller needs to touch logging or rate limiting itself.
+     *
+     * Two kinds of token are accepted: an integration token from the admin UI
+     * (api_users), and a per-user token from POST /api/auth/login (user_tokens).
      */
     protected function authenticate(): void
     {
-        $this->apiUser = (new ApiUserModel())->findActiveByToken($this->bearerToken());
+        $token = $this->bearerToken();
+        $userTokens = new UserTokenModel();
+        $this->user = $userTokens->findActiveUser($token);
+        if (!$this->user) {
+            $this->apiUser = (new ApiUserModel())->findActiveByToken($token);
+        }
 
-        $log = new ApiRequestLogModel();
-        $logId = $log->start(
-            $this->apiUser['id'] ?? null,
-            $_SERVER['REQUEST_METHOD'] ?? '',
-            strtok($_SERVER['REQUEST_URI'] ?? '', '?'),
-            $_SERVER['REMOTE_ADDR'] ?? ''
-        );
-        $this->registerLogFinish($log, $logId);
+        $log = $this->startLog();
 
         // Traffic-driven self-cleanup: no cron dependency, negligible overhead.
         if (random_int(1, 100) === 1) {
             $log->purgeOlderThan((int) Config::get('api.log_retention_days', 14));
+            $userTokens->purgeExpired();
         }
 
-        if (!$this->apiUser) {
+        if (!$this->apiUser && !$this->user) {
             $this->error('Invalid or missing API token.', 401);
         }
 
+        if ($this->user) {
+            $userTokens->touch((int) $this->user['token_id'], $this->userTokenLifetimeDays());
+        }
+
         $limit = (int) Config::get('api.rate_limit_per_minute', 60);
-        $recentCount = $log->countRecent((int) $this->apiUser['id'], 60);
+        $recentCount = $this->user
+            ? $log->countRecent('user_id', (int) $this->user['id'], 60)
+            : $log->countRecent('api_user_id', (int) $this->apiUser['id'], 60);
         header('X-RateLimit-Limit: ' . $limit);
         header('X-RateLimit-Remaining: ' . max(0, $limit - $recentCount));
         if ($recentCount > $limit) {
@@ -58,6 +71,50 @@ abstract class ApiController
         }
 
         $this->applyLanguage();
+    }
+
+    /**
+     * authenticate(), plus 403 for integration tokens: for endpoints whose
+     * records must name the person who made them (stock movements).
+     */
+    protected function requireUser(): void
+    {
+        $this->authenticate();
+
+        if (!$this->user) {
+            $this->error('This endpoint needs a user token. Sign in with POST /api/auth/login.', 403);
+        }
+    }
+
+    /** Writes this request's api_request_logs row; the status is filled in at shutdown. */
+    protected function startLog(): ApiRequestLogModel
+    {
+        $log = new ApiRequestLogModel();
+        $logId = $log->start(
+            $this->apiUser['id'] ?? null,
+            $this->user['id'] ?? null,
+            $_SERVER['REQUEST_METHOD'] ?? '',
+            $this->requestPath(),
+            $this->clientIp()
+        );
+        $this->registerLogFinish($log, $logId);
+
+        return $log;
+    }
+
+    protected function requestPath(): string
+    {
+        return strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+    }
+
+    protected function clientIp(): string
+    {
+        return $_SERVER['REMOTE_ADDR'] ?? '';
+    }
+
+    protected function userTokenLifetimeDays(): int
+    {
+        return max(1, (int) Config::get('api.user_token_lifetime_days', 90));
     }
 
     /** Fills in the log row's status code and duration once the response is final. */
@@ -110,9 +167,14 @@ abstract class ApiController
         exit;
     }
 
-    protected function error(string $message, int $status = 400): never
+    /** @param array $details Optional machine-readable detail, e.g. which lines are short of stock. */
+    protected function error(string $message, int $status = 400, array $details = []): never
     {
-        $this->json(['error' => ['status' => $status, 'message' => $message]], $status);
+        $error = ['status' => $status, 'message' => $message];
+        if ($details) {
+            $error['details'] = $details;
+        }
+        $this->json(['error' => $error], $status);
     }
 
     /** Decoded JSON request body as an array. */

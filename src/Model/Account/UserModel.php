@@ -104,6 +104,11 @@ class UserModel
 
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = :id';
         DatabaseConnection::get()->prepare($sql)->execute($params);
+
+        // A new password signs the user out of the mobile app on every device.
+        if (!empty($data['password'])) {
+            (new UserTokenModel())->revokeAllForUser($id);
+        }
     }
 
     public function delete(int $id): void

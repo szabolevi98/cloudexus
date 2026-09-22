@@ -47,6 +47,11 @@ class Router
         }
 
         http_response_code(404);
+        if ($path === '/api' || str_starts_with($path, '/api/')) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => ['status' => 404, 'message' => 'Unknown API endpoint: ' . $method . ' ' . $path]], JSON_UNESCAPED_SLASHES);
+            return;
+        }
         $esc = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         echo '<!DOCTYPE html><html lang="' . $esc(Lang::locale()) . '"><head><meta charset="utf-8"><title>404 — Cloudexus</title>'
             . '<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;'

@@ -23,9 +23,10 @@ class ApiRequestLogModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT l.*, u.name AS api_user_name
+            "SELECT l.*, COALESCE(u.name, us.full_name) AS api_user_name
              FROM api_request_logs l
              LEFT JOIN api_users u ON u.id = l.api_user_id
+             LEFT JOIN users us ON us.id = l.user_id
              $whereSql
              ORDER BY l.id DESC
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
@@ -98,15 +99,16 @@ class ApiRequestLogModel
     }
 
     /** Beszúr egy log-sort a kérés indulásakor, státusz/futásidő nélkül. Visszaadja a sor id-ját. */
-    public function start(?int $apiUserId, string $method, string $path, string $ip): int
+    public function start(?int $apiUserId, ?int $userId, string $method, string $path, string $ip): int
     {
         $pdo = DatabaseConnection::get();
         $stmt = $pdo->prepare(
-            'INSERT INTO api_request_logs (api_user_id, method, path, ip_address, created_at)
-             VALUES (:api_user_id, :method, :path, :ip, NOW())'
+            'INSERT INTO api_request_logs (api_user_id, user_id, method, path, ip_address, created_at)
+             VALUES (:api_user_id, :user_id, :method, :path, :ip, NOW())'
         );
         $stmt->execute([
             'api_user_id' => $apiUserId,
+            'user_id' => $userId,
             'method' => $method,
             'path' => $path,
             'ip' => $ip,
@@ -127,14 +129,38 @@ class ApiRequestLogModel
             ]);
     }
 
-    /** Az adott API user kéréseinek száma az utolsó $windowSeconds másodpercben (rate limit alap). */
-    public function countRecent(int $apiUserId, int $windowSeconds): int
+    /**
+     * Az adott kliens kéréseinek száma az utolsó $windowSeconds másodpercben (rate limit alap).
+     * $column: 'api_user_id' (integrációs token) vagy 'user_id' (felhasználói token).
+     */
+    public function countRecent(string $column, int $ownerId, int $windowSeconds): int
+    {
+        $column = $column === 'user_id' ? 'user_id' : 'api_user_id';
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT COUNT(*) FROM api_request_logs
+             WHERE $column = :owner_id AND created_at >= NOW() - INTERVAL :seconds SECOND"
+        );
+        $stmt->bindValue('owner_id', $ownerId, \PDO::PARAM_INT);
+        $stmt->bindValue('seconds', $windowSeconds, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Sikertelen bejelentkezések száma egy IP-ről az utolsó $windowSeconds másodpercben
+     * (a POST /api/auth/login brute force védelme). Az aktuális kérés sora még státusz
+     * nélküli, így nem számít bele.
+     */
+    public function countFailedLogins(string $ip, string $path, int $windowSeconds): int
     {
         $stmt = DatabaseConnection::get()->prepare(
             'SELECT COUNT(*) FROM api_request_logs
-             WHERE api_user_id = :api_user_id AND created_at >= NOW() - INTERVAL :seconds SECOND'
+             WHERE ip_address = :ip AND path = :path AND status_code = 401
+               AND created_at >= NOW() - INTERVAL :seconds SECOND'
         );
-        $stmt->bindValue('api_user_id', $apiUserId, \PDO::PARAM_INT);
+        $stmt->bindValue('ip', $ip);
+        $stmt->bindValue('path', $path);
         $stmt->bindValue('seconds', $windowSeconds, \PDO::PARAM_INT);
         $stmt->execute();
 

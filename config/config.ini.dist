@@ -50,3 +50,7 @@ min_score = 0.5
 rate_limit_per_minute = 60
 ; ennyi napig tartjuk meg az api_request_logs sorokat, azon túl önműködően törlődnek
 log_retention_days = 14
+; felhasználói (mobil app) token élettartama napban; minden kéréssel újraindul
+user_token_lifetime_days = 90
+; ennyi sikertelen POST /api/auth/login után 15 percre letiltjuk az IP-t
+login_max_failures = 10
