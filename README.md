@@ -249,12 +249,17 @@ történik — így akkor is helyes, ha nem a forint az elsődleges pénznem.
 
 ## 🔌 REST API
 
-Külső integrációkhoz (pl. webshop-szinkronizáláshoz) van egy REST API, `Bearer`
-tokenes hitelesítéssel. A tokeneket az **API → API-felhasználók** admin oldalon lehet létrehozni és kezelni.
+Külső integrációkhoz (pl. webshop-szinkronizáláshoz) és a mobil / PDA raktári apphoz van egy
+REST API, `Bearer` tokenes hitelesítéssel. Az integrációs tokeneket az **API → API-felhasználók**
+admin oldalon lehet létrehozni és kezelni; a munkatársak a saját felhasználónevükkel és jelszavukkal
+kapnak személyes tokent (`POST /api/auth/login`).
 
 - Olvasásra: teljes katalógus (termékek, kategóriák, mértékegységek, paraméterek,
   pénznemek, nyelvek, készlet, számlák, árazás)
 - Írásra is: partnerek és rendelések teljes CRUD-dal
+- Raktári mozgások: vonalkódos termékkeresés, bevét, kiadás és raktárközi átadás tételsorokkal,
+  a bejelentkezett munkatárs nevére könyvelve; az `Idempotency-Key` fejléc miatt a gyenge wifin
+  újraküldött kérés sem könyvel kétszer
 - Az összegek mindig az elsődleges pénznemben jönnek (`meta.currency`); a fordítható
   szövegek nyelve az opcionális `?language=` paraméterrel választható (`meta.language`)
 - A válaszok és hibaüzenetek angolul érkeznek

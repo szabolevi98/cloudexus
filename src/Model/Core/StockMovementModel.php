@@ -189,6 +189,24 @@ class StockMovementModel
         return $stmt->fetchAll();
     }
 
+    /**
+     * Row-locks the warehouses until the caller's transaction ends, so two
+     * bookings against the same warehouse check stock one after the other
+     * instead of both passing the check and overselling. Locked in id order,
+     * so two transfers in opposite directions cannot deadlock.
+     */
+    public function lockWarehouses(array $warehouseIds): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $warehouseIds)));
+        sort($ids);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $stmt = DatabaseConnection::get()
+            ->prepare("SELECT id FROM warehouses WHERE id IN ($placeholders) ORDER BY id FOR UPDATE");
+        $stmt->execute($ids);
+        $stmt->fetchAll();
+    }
+
     public function availableQuantity(int $productId, int $warehouseId): float
     {
         $stmt = DatabaseConnection::get()->prepare(

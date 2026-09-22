@@ -254,7 +254,8 @@ $router->post('/cash/{id}/delete', fn($id) => (new CashVoucherController())->del
 
 // ---------------------------------------------------------------------------
 // REST API (/api/*) — bearer-token auth, JSON. Read-only catalog, full CRUD on
-// partners and orders. See web/API.md for the full documentation.
+// partners and orders, per-user sign-in and stock bookings for the mobile app.
+// See web/API.md for the full documentation.
 // ---------------------------------------------------------------------------
 $router->post('/api/auth/login', fn() => (new AuthApiController())->login());
 $router->post('/api/auth/logout', fn() => (new AuthApiController())->logout());
@@ -281,6 +282,9 @@ $router->get('/api/customer-groups/{id}', fn($id) => (new CustomerGroupApiContro
 $router->get('/api/warehouses', fn() => (new WarehouseApiController())->index());
 $router->get('/api/warehouses/{id}/locations', fn($id) => (new WarehouseApiController())->locations((int) $id));
 $router->get('/api/stock', fn() => (new StockApiController())->index());
+$router->post('/api/stock/in', fn() => (new StockApiController())->in());
+$router->post('/api/stock/out', fn() => (new StockApiController())->out());
+$router->post('/api/stock/transfer', fn() => (new StockApiController())->transfer());
 $router->get('/api/pricing/effective', fn() => (new PricingApiController())->effective());
 
 $router->get('/api/invoices', fn() => (new InvoiceApiController())->index());

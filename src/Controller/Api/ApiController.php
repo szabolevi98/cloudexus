@@ -8,6 +8,7 @@ use Cloudexus\Core\Language;
 use Cloudexus\Core\Paginator;
 use Cloudexus\Model\Account\ApiRequestLogModel;
 use Cloudexus\Model\Account\ApiUserModel;
+use Cloudexus\Model\Account\IdempotencyKeyModel;
 use Cloudexus\Model\Account\UserTokenModel;
 
 /**
@@ -50,6 +51,7 @@ abstract class ApiController
         if (random_int(1, 100) === 1) {
             $log->purgeOlderThan((int) Config::get('api.log_retention_days', 14));
             $userTokens->purgeExpired();
+            (new IdempotencyKeyModel())->purgeOlderThan(7);
         }
 
         if (!$this->apiUser && !$this->user) {

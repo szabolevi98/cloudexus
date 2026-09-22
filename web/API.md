@@ -478,6 +478,129 @@ fixed/sale price if any, otherwise the product's own price/sale price); `is_sale
 that price is a sale price. `partner_id` is optional — without it the product's list price is
 returned.
 
+## Stock bookings (POST)
+
+Stock in, stock out and warehouse-to-warehouse transfers, as booked from the mobile / PDA
+app. These endpoints need a **user token** (see [Authentication](#authentication)); an
+integration token gets `403`. Every movement is credited to the signed-in user, just as
+if they had booked it in the admin UI.
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/stock/in` | Book stock in to a warehouse |
+| POST | `/api/stock/out` | Book stock out of a warehouse (checked against its stock) |
+| POST | `/api/stock/transfer` | Move stock from one warehouse to another (an out + in pair per line) |
+
+A request carries any number of lines (at most 500) and is **all-or-nothing**: if any line
+is invalid or short of stock, nothing is booked.
+
+**Stock in / out body:**
+
+```json
+{
+  "warehouse_id": 1,
+  "location_id": 24,
+  "note": "Delivery note 2026/118",
+  "items": [
+    { "product_id": 12, "quantity": 3 },
+    { "product_id": 31, "quantity": 1.5, "location_id": 18 }
+  ]
+}
+```
+
+- `warehouse_id` — **required**, an active warehouse.
+- `location_id` — optional default location for every line; an item's own `location_id`
+  overrides it. `null` or omitted means no location. A location must be active and belong
+  to the warehouse.
+- `items[].quantity` — a positive number (or numeric string) with at most 3 decimals.
+- `note` — optional, at most 200 characters; defaults to "Mobil app".
+- Lines for the same product and location are booked as one movement.
+
+**Stock out is checked per warehouse**, the same way as in the admin UI: the requested total
+of a product may not exceed its stock in the warehouse, whichever locations it sits on.
+Concurrent bookings against the same warehouse are checked one after the other, so two
+devices cannot both take the last piece.
+
+Response (`201`):
+
+```json
+{
+  "data": {
+    "type": "out",
+    "warehouse": { "id": 1, "name": "Központi raktár" },
+    "note": "Mobil app",
+    "created_by": { "id": 7, "full_name": "Kovács Anna" },
+    "movements": [
+      { "id": 337, "product_id": 12, "sku": "PRD-0012", "product_name": "24\" monitor", "unit": "szett", "location_id": 24, "location_code": "B-03-04", "quantity": "3.000" }
+    ]
+  }
+}
+```
+
+**Transfer body:**
+
+```json
+{
+  "from_warehouse_id": 1,
+  "from_location_id": 24,
+  "to_warehouse_id": 3,
+  "to_location_id": 101,
+  "note": "Restocking Szeged",
+  "items": [ { "product_id": 12, "quantity": 2 } ]
+}
+```
+
+The two warehouses must differ. `from_location_id` / `to_location_id` are optional defaults,
+overridable per item like `location_id` above. The stock check runs against the source
+warehouse. Each line becomes an out movement in the source and an in movement in the
+target, with the note `Raktárközi átadás: <from> → <to> — <note>`, so transfers booked
+here appear on the admin UI's transfer page too. The response lists, per line,
+`out_movement_id` and `in_movement_id` next to the product and location fields.
+
+**Errors.** Validation problems return `422`. When they are about individual lines,
+`error.details` says which line (`index` into `items`) and why:
+
+```json
+{
+  "error": {
+    "status": 422,
+    "message": "Some items are invalid.",
+    "details": [ { "index": 1, "message": "quantity must be a positive number with at most 3 decimals." } ]
+  }
+}
+```
+
+A shortage lists every short product with what is available and what was requested:
+
+```json
+{
+  "error": {
+    "status": 422,
+    "message": "Not enough stock in Központi raktár for 1 product(s). Nothing was booked.",
+    "details": [ { "product_id": 12, "sku": "PRD-0012", "product_name": "24\" monitor", "unit": "szett", "available": "177.000", "requested": "200.000" } ]
+  }
+}
+```
+
+### Idempotency-Key (safe retries)
+
+A booking may reach the server while its response gets lost on the way back (weak wifi at
+the far end of the warehouse). Retrying blindly would book it twice. To make retries safe,
+send an `Idempotency-Key` header, generated once per booking on the device (a UUID is ideal)
+and resent unchanged with every retry of that booking:
+
+```
+Idempotency-Key: 5b8e2c1a-7f4d-4a3e-9c61-2d0f8e7b9a44
+```
+
+- The first request books and its response is stored under the key (per user, for 7 days).
+- A retry with the same key and the same body books nothing and gets the stored response,
+  with the same status code and an `Idempotent-Replayed: true` header. A retry that arrives
+  while the first request is still running waits for it and then gets its response.
+- The same key with a different body returns `422`.
+- Failed requests (`4xx`) are not stored: fix the problem and retry under the same key.
+- The key must be 8–64 characters of `A-Z a-z 0-9 _ -`. Without the header, every request books.
+
 ## Full CRUD resources
 
 ### Partners
@@ -677,6 +800,22 @@ Create a partner:
 curl -X POST -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
   -d '{"name":"New Customer Ltd.","type":"customer","tax_number":"11111111-2-11"}' \
   "https://cloudexus.levente.net/api/partners"
+```
+
+Look up a scanned barcode:
+
+```bash
+curl -H "Authorization: Bearer <user token>" \
+  "https://cloudexus.levente.net/api/products/lookup?code=5995323785398"
+```
+
+Book stock out, safe to retry:
+
+```bash
+curl -X POST -H "Authorization: Bearer <user token>" -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 5b8e2c1a-7f4d-4a3e-9c61-2d0f8e7b9a44" \
+  -d '{"warehouse_id":1,"location_id":24,"items":[{"product_id":12,"quantity":3}]}' \
+  "https://cloudexus.levente.net/api/stock/out"
 ```
 
 Create an order:
