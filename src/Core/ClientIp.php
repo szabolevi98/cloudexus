@@ -3,11 +3,19 @@
 namespace Cloudexus\Core;
 
 /**
- * The visitor's real IP address. Behind the Cloudflare proxy REMOTE_ADDR is a
- * Cloudflare edge server, and the visitor's address comes in the
- * CF-Connecting-IP header. The header is only believed when the request really
- * comes from a Cloudflare range; from anywhere else it could be forged, and
- * REMOTE_ADDR is used as is.
+ * The visitor's real IP address, for the API request log and the sign-in
+ * throttle. Behind a reverse proxy REMOTE_ADDR is the proxy, and the visitor's
+ * address travels in a header, which is only believed when the request comes
+ * from a proxy that is trusted to set it; from anywhere else it could be forged.
+ *
+ * - Cloudflare needs no configuration: CF-Connecting-IP is used when the
+ *   request comes from a published Cloudflare range, and never otherwise, so
+ *   an installation without Cloudflare is unaffected.
+ * - Any other proxy (nginx, a load balancer, another CDN) is configured in
+ *   config.ini: [proxy] trusted_proxies lists its addresses or CIDR ranges,
+ *   and client_ip_header names the header it sets (default X-Forwarded-For).
+ *
+ * With neither, REMOTE_ADDR is used as is.
  */
 class ClientIp
 {
@@ -24,30 +32,72 @@ class ClientIp
     public static function get(): string
     {
         $remote = $_SERVER['REMOTE_ADDR'] ?? '';
-        $forwarded = trim($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
 
-        if ($forwarded !== '' && filter_var($forwarded, FILTER_VALIDATE_IP) && self::isCloudflare($remote)) {
-            return $forwarded;
+        $trusted = self::trustedProxies();
+        if ($trusted && self::inRanges($remote, $trusted)) {
+            $fromHeader = self::fromForwardedHeader($trusted);
+            if ($fromHeader !== null) {
+                return $fromHeader;
+            }
+        }
+
+        $cloudflare = trim($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
+        if ($cloudflare !== '' && filter_var($cloudflare, FILTER_VALIDATE_IP) && self::inRanges($remote, self::CLOUDFLARE_RANGES)) {
+            return $cloudflare;
         }
 
         return $remote;
     }
 
-    private static function isCloudflare(string $ip): bool
+    /**
+     * The client address from the configured header. X-Forwarded-For may hold a
+     * chain ("client, proxy1, proxy2"); anything left of an untrusted hop could
+     * be forged by the client, so the chain is read from the right and the
+     * first address that is not a trusted proxy wins.
+     */
+    private static function fromForwardedHeader(array $trusted): ?string
+    {
+        $header = trim((string) Config::get('proxy.client_ip_header', 'X-Forwarded-For'));
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $header ?: 'X-Forwarded-For'));
+        $chain = array_map('trim', explode(',', (string) ($_SERVER[$key] ?? '')));
+
+        foreach (array_reverse($chain) as $ip) {
+            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                return null;
+            }
+            if (!self::inRanges($ip, $trusted)) {
+                return $ip;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return string[] */
+    private static function trustedProxies(): array
+    {
+        $raw = (string) Config::get('proxy.trusted_proxies', '');
+
+        return array_values(array_filter(array_map('trim', explode(',', $raw))));
+    }
+
+    /** @param string[] $ranges Single addresses or CIDR ranges, IPv4 or IPv6. */
+    private static function inRanges(string $ip, array $ranges): bool
     {
         $packed = @inet_pton($ip);
         if ($packed === false) {
             return false;
         }
 
-        foreach (self::CLOUDFLARE_RANGES as $range) {
-            [$subnet, $bits] = explode('/', $range);
-            $subnetPacked = inet_pton($subnet);
-            if (strlen($subnetPacked) !== strlen($packed)) {
+        foreach ($ranges as $range) {
+            [$subnet, $bits] = array_pad(explode('/', $range, 2), 2, null);
+            $subnetPacked = @inet_pton($subnet);
+            if ($subnetPacked === false || strlen($subnetPacked) !== strlen($packed)) {
                 continue;
             }
-            $bytes = intdiv((int) $bits, 8);
-            $rest = (int) $bits % 8;
+            $bits = $bits === null ? strlen($packed) * 8 : (int) $bits;
+            $bytes = intdiv($bits, 8);
+            $rest = $bits % 8;
             if (strncmp($packed, $subnetPacked, $bytes) !== 0) {
                 continue;
             }

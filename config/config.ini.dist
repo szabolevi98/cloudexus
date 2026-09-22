@@ -54,3 +54,13 @@ log_retention_days = 14
 user_token_lifetime_days = 90
 ; ennyi sikertelen POST /api/auth/login után 15 percre letiltjuk az IP-t
 login_max_failures = 10
+
+[proxy]
+; Reverse proxy / CDN mögötti telepítéshez, hogy az API-log és a bejelentkezés-korlát a
+; látogató valódi IP-címét lássa. Cloudflare-hez nem kell beállítás: a CF-Connecting-IP
+; fejlécet a rendszer magától elfogadja, de csak Cloudflare címtartományból érkező kérésnél.
+; Más proxy (nginx, terheléselosztó) esetén itt kell megadni a címét vagy CIDR tartományát,
+; vesszővel elválasztva. Üresen a REMOTE_ADDR számít (nincs proxy).
+trusted_proxies =
+; a fejléc, amibe a fenti proxy a látogató címét írja
+client_ip_header = "X-Forwarded-For"
