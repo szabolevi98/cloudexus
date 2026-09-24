@@ -43,4 +43,8 @@ return [
     'logout' => 'Log out',
     'menu' => 'Menu',
     'language' => 'Language',
+    'theme' => 'Theme',
+    'theme_light' => 'Light',
+    'theme_dark' => 'Dark',
+    'theme_system' => 'As the system',
 ];

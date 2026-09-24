@@ -25,6 +25,7 @@ $files = [
     'components/table.css',
     'components/user-pill.css',
     'components/code-block.css',
+    'components/theme.css',
     'pages/auth.css',
     'pages/api-docs.css',
 ];

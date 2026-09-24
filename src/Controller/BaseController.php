@@ -57,6 +57,7 @@ abstract class BaseController
             'active_menu' => $this->activeMenu,
             'page_title' => $this->pageTitle,
             'current_locale' => Lang::locale(),
+            'theme_mode' => \Cloudexus\Core\Theme::mode(),
             'available_locales' => Lang::available(),
             // A nyelvváltó a languages táblából töltődik, hogy a saját nevén
             // jelenjen meg minden nyelv (Magyar, English, …).

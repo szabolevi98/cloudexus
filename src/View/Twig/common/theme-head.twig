@@ -1,0 +1,20 @@
+{#
+    A téma a <html> data-bs-theme attribútuma: a Bootstrap és a saját
+    --cx-* változók is ebből olvasnak. „Rendszer” választásnál a böngészőtől
+    kérdezzük meg, még az első kirajzolás előtt, hogy sötét gépen ne
+    villanjon fel a világos oldal; és követjük, ha a rendszer közben vált.
+#}
+<script>
+    (function () {
+        var root = document.documentElement;
+        if (root.dataset.themeMode !== 'system' || !window.matchMedia) return;
+        var query = window.matchMedia('(prefers-color-scheme: dark)');
+        var apply = function () {
+            root.setAttribute('data-bs-theme', query.matches ? 'dark' : 'light');
+            document.dispatchEvent(new CustomEvent('cx:theme'));
+        };
+        apply();
+        if (query.addEventListener) query.addEventListener('change', apply);
+    })();
+    window.cxDark = function () { return document.documentElement.getAttribute('data-bs-theme') === 'dark'; };
+</script>

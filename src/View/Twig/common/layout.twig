@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ current_locale }}">
+<html lang="{{ current_locale }}" data-bs-theme="{{ theme_mode == 'dark' ? 'dark' : 'light' }}" data-theme-mode="{{ theme_mode|default('system') }}">
 <head>
     <meta charset="UTF-8">
+    {% include 'common/theme-head.twig' %}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="icon" href="{{ base_url }}/assets/favicon.svg" type="image/svg+xml">
@@ -146,6 +147,22 @@
                             <li>
                                 <a class="dropdown-item {{ lang.code == current_locale ? 'active' : '' }}" href="{{ base_url }}/lang/{{ lang.code }}">
                                     {{ lang.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                {% set theme_icons = {light: 'bi-sun', dark: 'bi-moon-stars', system: 'bi-circle-half'} %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary cx-theme-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ t('nav.theme') }}" aria-label="{{ t('nav.theme') }}">
+                        <i class="bi {{ theme_icons[theme_mode] }}" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        {% for mode, icon in theme_icons %}
+                            <li>
+                                <a class="dropdown-item {{ mode == theme_mode ? 'active' : '' }}" href="{{ base_url }}/theme/{{ mode }}">
+                                    <i class="bi {{ icon }} me-2" aria-hidden="true"></i>{{ t('nav.theme_' ~ mode) }}
                                 </a>
                             </li>
                         {% endfor %}

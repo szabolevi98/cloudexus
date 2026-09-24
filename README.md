@@ -60,6 +60,7 @@ A Cloudexus egy helyen kezeli a teljes kereskedelmi folyamatot: részletes term�
 - Szerepkör-alapú jogosultságok (admin / felhasználó), admin felhasználókezelés
 - Saját profil és jelszóváltás
 - CSRF-védelem minden űrlapon, HttpOnly + SameSite session süti
+- Világos és sötét téma, vagy a rendszer beállítása szerint; a választás sütiben marad meg, és a belépőoldalra is érvényes
 - Kétnyelvű felület (magyar / angol) nyelvváltóval, a választás sütiben megjegyezve; a nyelvválasztás a törzsadatok szövegeire is érvényes (lásd [Adatok nyelvesítése](#-adatok-nyelvesítése)), a partner- és rendelésadatok viszont nem fordulnak
 - Pénznemek kezelése elsődleges pénznemmel és váltószámokkal, MNB közép­árfolyam-lekéréssel (gombbal vagy cronból)
 - Nyelvek kezelése alapnyelv-kijelöléssel; a fordítható törzsadatok nyelvenként tárolódnak, hiányzó fordítás esetén az alapnyelv jelenik meg

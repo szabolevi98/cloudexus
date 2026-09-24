@@ -43,4 +43,8 @@ return [
     'logout' => 'Kilépés',
     'menu' => 'Menü',
     'language' => 'Nyelv',
+    'theme' => 'Téma',
+    'theme_light' => 'Világos',
+    'theme_dark' => 'Sötét',
+    'theme_system' => 'A rendszer szerint',
 ];

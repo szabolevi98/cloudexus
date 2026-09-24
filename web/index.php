@@ -24,6 +24,7 @@ use Cloudexus\Controller\IncomingInvoiceController;
 use Cloudexus\Controller\InvoiceController;
 use Cloudexus\Controller\LanguageController;
 use Cloudexus\Controller\LocaleController;
+use Cloudexus\Controller\ThemeController;
 use Cloudexus\Controller\LocationController;
 use Cloudexus\Controller\LoginController;
 use Cloudexus\Controller\OrderController;
@@ -124,6 +125,7 @@ $router->post('/login', fn() => (new LoginController())->submit());
 $router->get('/logout', fn() => (new LoginController())->logout());
 
 $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code));
+$router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode));
 
 $router->get('/dashboard', fn() => (new DashboardController())->show());
 

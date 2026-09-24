@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ current_locale }}">
+<html lang="{{ current_locale }}" data-bs-theme="{{ theme_mode == 'dark' ? 'dark' : 'light' }}" data-theme-mode="{{ theme_mode|default('system') }}">
 <head>
     <meta charset="UTF-8">
+    {% include 'common/theme-head.twig' %}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ t('auth.page_title') }} — Cloudexus</title>
     <link rel="icon" href="{{ base_url }}/assets/favicon.svg" type="image/svg+xml">
@@ -45,14 +46,14 @@
         <div class="mb-3">
             <label for="username" class="form-label">{{ t('auth.username') }}</label>
             <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                <span class="input-group-text bg-body"><i class="bi bi-person"></i></span>
                 <input type="text" id="username" name="username" class="form-control" required autofocus>
             </div>
         </div>
         <div class="mb-4">
             <label for="password" class="form-label">{{ t('auth.password') }}</label>
             <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+                <span class="input-group-text bg-body"><i class="bi bi-lock"></i></span>
                 <input type="password" id="password" name="password" class="form-control" required>
             </div>
         </div>

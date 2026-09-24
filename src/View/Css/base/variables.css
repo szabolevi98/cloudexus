@@ -25,3 +25,44 @@
     --cx-shadow: 0 8px 24px rgba(29, 33, 70, 0.06);
     --cx-shadow-lg: 0 20px 45px rgba(29, 33, 70, 0.16);
 }
+
+/*
+ * The dark theme: the same palette, turned down. Bootstrap's own dark mode
+ * (data-bs-theme="dark") takes care of its components; these are ours, and
+ * Bootstrap's body and surface colours are pointed at them so that the two
+ * agree.
+ */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --cx-bg: #0f1220;
+    --cx-surface: #171b2e;
+    --cx-text: #e3e6f1;
+    --cx-muted: #9097ad;
+    --cx-border: #272c46;
+
+    --cx-primary: #7580f0;
+    --cx-primary-dark: #8d97f4;
+    --cx-primary-soft: rgba(117, 128, 240, 0.14);
+
+    --cx-sidebar-from: #0b0d1a;
+    --cx-sidebar-to: #1a1c44;
+
+    --cx-success: #34c38f;
+    --cx-warning: #f0b453;
+    --cx-danger: #f06b82;
+
+    --cx-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    --cx-shadow-lg: 0 20px 45px rgba(0, 0, 0, 0.45);
+
+    --bs-body-bg: var(--cx-bg);
+    --bs-body-color: var(--cx-text);
+    --bs-secondary-color: var(--cx-muted);
+    --bs-border-color: var(--cx-border);
+    --bs-tertiary-bg: #1d2238;
+    --bs-secondary-bg: #20253c;
+    --bs-link-color: #9aa3f6;
+    --bs-link-hover-color: #b7bdf8;
+    --bs-link-color-rgb: 154, 163, 246;
+    --bs-link-hover-color-rgb: 183, 189, 248;
+}

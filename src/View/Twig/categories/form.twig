@@ -71,7 +71,9 @@
                 branding: false,
                 plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount',
                 toolbar: 'undo redo | styleselect | bold italic | bullist numlist outdent indent | link image table | removeformat code fullscreen',
-                content_style: 'body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}',
+                skin: window.cxDark() ? 'oxide-dark' : 'oxide',
+                content_style: 'body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}'
+                    + (window.cxDark() ? 'body{background:#12162a;color:#e3e6f1}a{color:#9aa3f6}' : ''),
             });
         })();
     </script>
