@@ -77,7 +77,7 @@
                             </td>
                             <td>
                                 {% set tone = {active: 'success', scheduled: 'primary', expired: 'secondary', inactive: 'secondary'}[state] %}
-                                <span class="badge rounded-pill text-bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('price_rules.status.' ~ state) }}</span>
+                                <span class="badge rounded-pill bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('price_rules.status.' ~ state) }}</span>
                             </td>
                             {% if can('pricing.manage') %}
                                 <td class="text-end text-nowrap">

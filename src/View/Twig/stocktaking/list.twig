@@ -55,9 +55,9 @@
                             <td class="text-end">{{ s.item_count }}</td>
                             <td class="text-end">
                                 {% if s.diff_count > 0 %}
-                                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('stocktaking.variance_count', {'count': s.diff_count}) }}</span>
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ t('stocktaking.variance_count', {'count': s.diff_count}) }}</span>
                                 {% else %}
-                                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('stocktaking.accurate') }}</span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('stocktaking.accurate') }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">

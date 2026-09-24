@@ -139,11 +139,11 @@
                                             {% if invoice.status == 'unpaid' and invoice.due_date < today %}
                                                 <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
                                             {% elseif invoice.status == 'unpaid' %}
-                                                <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
+                                                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
                                             {% elseif invoice.status == 'paid' %}
-                                                <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
+                                                <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
                                             {% else %}
-                                                <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
+                                                <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
                                             {% endif %}
                                         </td>
                                         <td class="text-end text-nowrap">{{ invoice.total_amount|money }}</td>
@@ -221,7 +221,7 @@
                                         <td class="text-nowrap"><a href="{{ base_url }}/products/{{ p.id }}/edit" class="fw-medium">{{ p.sku }}</a></td>
                                         <td><a href="{{ base_url }}/products/{{ p.id }}/edit" class="text-body">{{ p.name }}</a></td>
                                         <td class="text-end">
-                                            <span class="badge rounded-pill {{ p.stock_qty <= 0 ? 'text-bg-danger' : 'text-bg-warning-subtle text-warning-emphasis' }}">
+                                            <span class="badge rounded-pill {{ p.stock_qty <= 0 ? 'text-bg-danger' : 'bg-warning-subtle text-warning-emphasis' }}">
                                                 {{ p.stock_qty|qty }} {{ p.unit }}
                                             </span>
                                         </td>

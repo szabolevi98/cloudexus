@@ -112,13 +112,13 @@
                                 {% if l.status_code is null %}
                                     <span class="badge rounded-pill bg-body-tertiary text-body border">—</span>
                                 {% elseif l.status_code < 400 %}
-                                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ l.status_code }}</span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ l.status_code }}</span>
                                 {% elseif l.status_code == 429 %}
-                                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ l.status_code }}</span>
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ l.status_code }}</span>
                                 {% elseif l.status_code < 500 %}
-                                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ l.status_code }}</span>
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ l.status_code }}</span>
                                 {% else %}
-                                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ l.status_code }}</span>
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ l.status_code }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-end text-muted">{{ l.duration_ms is not null ? l.duration_ms ~ ' ms' : '—' }}</td>

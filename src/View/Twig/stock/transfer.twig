@@ -112,9 +112,9 @@
                                     <td class="text-muted">{{ m.created_at }}</td>
                                     <td>
                                         {% if m.type == 'out' %}
-                                            <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('stock.direction_out') }}</span>
+                                            <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ t('stock.direction_out') }}</span>
                                         {% else %}
-                                            <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('stock.direction_in') }}</span>
+                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('stock.direction_in') }}</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ m.warehouse_name }}</td>

@@ -13,9 +13,9 @@
             </div>
             <div>
                 {% if stocktaking.diff_count > 0 %}
-                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('stocktaking.variance_corrected', {'count': stocktaking.diff_count}) }}</span>
+                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ t('stocktaking.variance_corrected', {'count': stocktaking.diff_count}) }}</span>
                 {% else %}
-                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('stocktaking.no_variance') }}</span>
+                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('stocktaking.no_variance') }}</span>
                 {% endif %}
             </div>
         </div>

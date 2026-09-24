@@ -11,9 +11,9 @@
                 {% if order.status == 'confirmed' %}
                     <span class="badge rounded-pill text-bg-primary">{{ t('common.order_status.confirmed') }}</span>
                 {% elseif order.status == 'invoiced' %}
-                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.order_status.invoiced') }}</span>
+                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('common.order_status.invoiced') }}</span>
                 {% else %}
-                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.order_status.cancelled') }}</span>
+                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ t('common.order_status.cancelled') }}</span>
                 {% endif %}
             </div>
         </div>

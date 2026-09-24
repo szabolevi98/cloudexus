@@ -70,9 +70,9 @@
                             <td class="fw-medium">{{ v.voucher_number }}</td>
                             <td>
                                 {% if v.type == 'bevetel' %}
-                                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('cash.income') }}</span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('cash.income') }}</span>
                                 {% else %}
-                                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('cash.expense') }}</span>
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ t('cash.expense') }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ v.partner_name ?: '—' }}</td>

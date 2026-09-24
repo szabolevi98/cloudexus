@@ -79,7 +79,7 @@
                         <tr>
                             <td class="text-nowrap small">{{ entry.created_at|date('Y.m.d. H:i:s') }}</td>
                             <td>{{ entry.user_name ?: '—' }}</td>
-                            <td><span class="badge rounded-pill text-bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('audit.actions.' ~ entry.action) }}</span></td>
+                            <td><span class="badge rounded-pill bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('audit.actions.' ~ entry.action) }}</span></td>
                             <td class="small text-muted text-nowrap">
                                 {% if entry.entity_type %}
                                     {{ t('audit.entities.' ~ entry.entity_type) }}{% if entry.entity_id %} #{{ entry.entity_id }}{% endif %}

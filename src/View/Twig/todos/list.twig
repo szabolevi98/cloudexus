@@ -79,7 +79,7 @@
                                                 {% endif %}
                                             </form>
                                         {% else %}
-                                            <span class="badge rounded-pill {{ todo.is_done ? 'text-bg-success-subtle text-success-emphasis' : 'text-bg-secondary' }}">{{ todo.is_done ? t('todos.done') : t('todos.open') }}</span>
+                                            <span class="badge rounded-pill {{ todo.is_done ? 'bg-success-subtle text-success-emphasis' : 'text-bg-secondary' }}">{{ todo.is_done ? t('todos.done') : t('todos.open') }}</span>
                                         {% endif %}
                                     </td>
                                     <td>

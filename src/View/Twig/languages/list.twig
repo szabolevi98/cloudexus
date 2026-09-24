@@ -79,7 +79,7 @@
                                     <td><input type="number" name="sort_order" form="lang-{{ row.id }}" class="form-control form-control-sm" value="{{ row.sort_order }}"></td>
                                     <td>
                                         {% if row.is_default %}
-                                            <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('languages.active') }}</span>
+                                            <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('languages.active') }}</span>
                                         {% else %}
                                             <div class="form-check mb-0">
                                                 <input type="checkbox" name="is_active" form="lang-{{ row.id }}" class="form-check-input" {{ row.is_active ? 'checked' : '' }}>

@@ -77,11 +77,11 @@
                             <td class="text-muted">{{ product.category_name ?: '—' }}</td>
                             <td class="text-end">
                                 {% if product.stock_qty <= 0 %}
-                                    {% set stockClass = 'text-bg-danger-subtle text-danger-emphasis' %}
+                                    {% set stockClass = 'bg-danger-subtle text-danger-emphasis' %}
                                 {% elseif product.min_stock > 0 and product.stock_qty < product.min_stock %}
-                                    {% set stockClass = 'text-bg-warning-subtle text-warning-emphasis' %}
+                                    {% set stockClass = 'bg-warning-subtle text-warning-emphasis' %}
                                 {% else %}
-                                    {% set stockClass = 'text-bg-success-subtle text-success-emphasis' %}
+                                    {% set stockClass = 'bg-success-subtle text-success-emphasis' %}
                                 {% endif %}
                                 <span class="badge rounded-pill {{ stockClass }}" {% if product.min_stock > 0 %}title="{{ t('products.min_prefix') }}: {{ product.min_stock|qty }}"{% endif %}>
                                     {{ product.stock_qty|qty }} {{ product.unit }}
@@ -97,9 +97,9 @@
                             </td>
                             <td>
                                 {% if product.is_active %}
-                                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.active') }}</span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('common.active') }}</span>
                                 {% else %}
-                                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.inactive') }}</span>
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ t('common.inactive') }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-end text-nowrap">

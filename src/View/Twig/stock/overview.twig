@@ -55,7 +55,7 @@
                             <td class="fw-medium">{{ row.sku }}</td>
                             <td>{{ row.product_name }}</td>
                             <td class="text-end">
-                                <span class="badge rounded-pill {{ row.quantity < 0 ? 'text-bg-danger-subtle text-danger-emphasis' : 'text-bg-success-subtle text-success-emphasis' }}">
+                                <span class="badge rounded-pill {{ row.quantity < 0 ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis' }}">
                                     {{ row.quantity|qty }} {{ row.unit }}
                                 </span>
                             </td>
