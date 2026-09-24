@@ -79,6 +79,10 @@ class OrderApiController extends ApiController
             $this->error('Order not found.', 404);
         }
 
+        if ($this->orders()->isLocked($id)) {
+            $this->error('This order has been invoiced and can no longer be changed.', 409);
+        }
+
         $body = $this->body();
         $partnerId = (int) ($body['partner_id'] ?? $order['partner_id']);
         if (!(new PartnerModel())->findById($partnerId)) {
@@ -114,7 +118,9 @@ class OrderApiController extends ApiController
         if (!$this->orders()->findById($id)) {
             $this->error('Order not found.', 404);
         }
-        $this->orders()->delete($id);
+        if (!$this->orders()->delete($id)) {
+            $this->error('Only a draft or cancelled order that was never invoiced can be deleted.', 409);
+        }
         $this->json(['data' => ['deleted' => true, 'id' => $id]]);
     }
 
@@ -142,7 +148,8 @@ class OrderApiController extends ApiController
     private function statusOr(array $body, string $default): string
     {
         $status = $body['status'] ?? $default;
-        return in_array($status, self::STATUSES, true) ? $status : $default;
+        // 'invoiced' comes from issuing the invoice, not from the order body.
+        return in_array($status, self::STATUSES, true) && $status !== 'invoiced' ? $status : $default;
     }
 
     private function dateOr(?string $date): string

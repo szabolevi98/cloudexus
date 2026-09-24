@@ -211,16 +211,60 @@ class IncomingInvoiceModel
         }
     }
 
-    public function updateStatus(int $id, string $status): void
+    /** Kifizetettnek jelölés: csak kifizetetlen számlán (egy sztornózott nem válhat fizetetté). */
+    public function markPaid(int $id): bool
     {
-        DatabaseConnection::get()
-            ->prepare('UPDATE incoming_invoices SET status = :status WHERE id = :id')
-            ->execute(['id' => $id, 'status' => $status]);
+        $stmt = DatabaseConnection::get()->prepare("UPDATE incoming_invoices SET status = 'paid' WHERE id = :id AND status = 'unpaid'");
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
     }
 
-    public function delete(int $id): void
+    /**
+     * Sztornó: csak kifizetetlen bejövő számla. Ha a rögzítéskor raktárba is
+     * bevételezett, a tételek ugyanabból a raktárból kikerülnek — zárolt
+     * raktárral, és ha közben már elfogytak, StockShortage-dzsel megáll.
+     * Törlés nincs: egy befogadott számla bizonylat, nyoma marad.
+     *
+     * @throws \DomainException ha a számla nem kifizetetlen
+     */
+    public function cancel(int $id, ?int $userId): void
     {
-        DatabaseConnection::get()->prepare('DELETE FROM incoming_invoices WHERE id = :id')->execute(['id' => $id]);
+        $invoice = $this->findById($id);
+        if (!$invoice || $invoice['status'] !== 'unpaid') {
+            throw new \DomainException('Only an unpaid incoming invoice can be cancelled.');
+        }
+
+        $stock = new \Cloudexus\Model\Core\StockMovementModel();
+        $warehouseId = (int) ($invoice['warehouse_id'] ?? 0);
+
+        $stock->locked($warehouseId ? [$warehouseId] : [], function () use ($stock, $invoice, $id, $warehouseId, $userId): void {
+            $pdo = DatabaseConnection::get();
+            $updated = $pdo->prepare("UPDATE incoming_invoices SET status = 'cancelled' WHERE id = :id AND status = 'unpaid'");
+            $updated->execute(['id' => $id]);
+            if ($updated->rowCount() === 0) {
+                throw new \DomainException('Only an unpaid incoming invoice can be cancelled.');
+            }
+
+            if ($warehouseId) {
+                $needed = [];
+                foreach ($invoice['items'] as $item) {
+                    $needed[(int) $item['product_id']] = ($needed[(int) $item['product_id']] ?? 0) + (float) $item['quantity'];
+                }
+                $stock->assertAvailable($warehouseId, $needed);
+
+                foreach ($needed as $productId => $quantity) {
+                    $stock->create([
+                        'warehouse_id' => $warehouseId,
+                        'product_id' => $productId,
+                        'type' => 'out',
+                        'quantity' => $quantity,
+                        'note' => 'Beszerzés sztornó: ' . $invoice['invoice_number'],
+                        'created_by' => $userId,
+                    ]);
+                }
+            }
+        });
     }
 
     public function unpaidList(): array

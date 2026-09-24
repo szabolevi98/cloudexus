@@ -21,5 +21,7 @@ return [
     'created' => 'Purchase order created.',
     'cancelled' => 'Order voided.',
     'deleted' => 'Order deleted.',
+    'not_cancellable' => 'Only a draft or confirmed purchase order can be cancelled.',
+    'not_deletable' => 'Only a draft or cancelled purchase order without an incoming invoice can be deleted.',
     'title_prefix' => 'Order',
 ];

@@ -162,15 +162,26 @@ class PurchaseOrderModel
         }
     }
 
-    public function updateStatus(int $id, string $status): void
+    /** Lemondás: csak piszkozat vagy visszaigazolt, még nem számlázott rendelés. */
+    public function cancel(int $id): bool
     {
-        DatabaseConnection::get()
-            ->prepare('UPDATE purchase_orders SET status = :status WHERE id = :id')
-            ->execute(['id' => $id, 'status' => $status]);
+        $stmt = DatabaseConnection::get()->prepare(
+            "UPDATE purchase_orders SET status = 'cancelled' WHERE id = :id AND status IN ('draft', 'confirmed')"
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
     }
 
-    public function delete(int $id): void
+    /** Törlés: csak piszkozat vagy lemondott rendelés, amelyhez nem érkezett számla. */
+    public function delete(int $id): bool
     {
-        DatabaseConnection::get()->prepare('DELETE FROM purchase_orders WHERE id = :id')->execute(['id' => $id]);
+        $stmt = DatabaseConnection::get()->prepare(
+            "DELETE FROM purchase_orders WHERE id = :id AND status IN ('draft', 'cancelled')
+             AND NOT EXISTS (SELECT 1 FROM incoming_invoices WHERE purchase_order_id = :id2)"
+        );
+        $stmt->execute(['id' => $id, 'id2' => $id]);
+
+        return $stmt->rowCount() > 0;
     }
 }

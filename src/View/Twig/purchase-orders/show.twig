@@ -34,7 +34,7 @@
                         <tr>
                             <td>{{ item.sku }}</td>
                             <td>{{ item.product_name }}</td>
-                            <td class="text-end">{{ item.quantity|number_format(0, ',', ' ') }} {{ item.unit }}</td>
+                            <td class="text-end">{{ item.quantity|qty }} {{ item.unit }}</td>
                             <td class="text-end">{{ item.unit_price|money }}</td>
                             <td class="text-end">{{ item.line_total|money }}</td>
                         </tr>

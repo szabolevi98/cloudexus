@@ -29,6 +29,20 @@ class AuditLogModel
         }, $stmt->fetchAll());
     }
 
+    /** Ennyi $action sor jött erről az IP-ről az elmúlt $seconds másodpercben. */
+    public function countRecentFromIp(string $action, string $ip, int $seconds): int
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            'SELECT COUNT(*) FROM audit_log WHERE ip = :ip AND action = :action AND created_at >= NOW() - INTERVAL :seconds SECOND'
+        );
+        $stmt->bindValue('ip', $ip);
+        $stmt->bindValue('action', $action);
+        $stmt->bindValue('seconds', $seconds, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
     /** @return array<int, string> a naplóban szereplő felhasználók, a szűrőhöz */
     public function users(): array
     {

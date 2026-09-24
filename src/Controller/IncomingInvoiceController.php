@@ -79,7 +79,6 @@ class IncomingInvoiceController extends BaseController
         }
 
         $id = $this->invoices->create([
-            'invoice_number' => $_POST['invoice_number'],
             'purchase_order_id' => ($_POST['purchase_order_id'] ?? '') ?: null,
             'partner_id' => (int) $_POST['partner_id'],
             'warehouse_id' => ($_POST['warehouse_id'] ?? '') ?: null,
@@ -111,7 +110,10 @@ class IncomingInvoiceController extends BaseController
     {
         $this->requirePermission(Permissions::FINANCE_MARK_PAID);
 
-        $this->invoices->updateStatus($id, 'paid');
+        if (!$this->invoices->markPaid($id)) {
+            $this->flashError($this->t('incoming_invoices.not_payable'));
+            $this->redirect('/incoming-invoices/' . $id);
+        }
         AuditLog::record(AuditLog::PAID, 'incoming_invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
         $this->flashSuccess($this->t('incoming_invoices.marked_paid'));
         $this->redirect('/incoming-invoices/' . $id);
@@ -121,18 +123,18 @@ class IncomingInvoiceController extends BaseController
     {
         $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
-        $this->invoices->updateStatus($id, 'cancelled');
+        try {
+            $this->invoices->cancel($id, Auth::id());
+        } catch (\Cloudexus\Model\Core\StockShortage $e) {
+            $this->flashError($this->t('incoming_invoices.cancel_shortage'));
+            $this->redirect('/incoming-invoices/' . $id);
+        } catch (\DomainException) {
+            $this->flashError($this->t('incoming_invoices.not_cancellable'));
+            $this->redirect('/incoming-invoices/' . $id);
+        }
+        AuditLog::record(AuditLog::STORNO, 'incoming_invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
         $this->flashSuccess($this->t('incoming_invoices.cancelled'));
         $this->redirect('/incoming-invoices/' . $id);
-    }
-
-    public function delete(int $id): void
-    {
-        $this->requirePermission(Permissions::PURCHASING_MANAGE);
-
-        $this->invoices->delete($id);
-        $this->flashSuccess($this->t('incoming_invoices.deleted'));
-        $this->redirect('/incoming-invoices');
     }
 
     private function collectItems(): array

@@ -83,8 +83,8 @@
                                 {% else %}
                                     {% set stockClass = 'text-bg-success-subtle text-success-emphasis' %}
                                 {% endif %}
-                                <span class="badge rounded-pill {{ stockClass }}" {% if product.min_stock > 0 %}title="{{ t('products.min_prefix') }}: {{ product.min_stock|number_format(0, ',', ' ') }}"{% endif %}>
-                                    {{ product.stock_qty|number_format(0, ',', ' ') }} {{ product.unit }}
+                                <span class="badge rounded-pill {{ stockClass }}" {% if product.min_stock > 0 %}title="{{ t('products.min_prefix') }}: {{ product.min_stock|qty }}"{% endif %}>
+                                    {{ product.stock_qty|qty }} {{ product.unit }}
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">

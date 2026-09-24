@@ -61,7 +61,7 @@
                                 <a href="{{ base_url }}/stock?location_id={{ l.id }}" class="text-decoration-none">{{ l.code }}</a>
                             </td>
                             <td>{{ l.name ?: '—' }}</td>
-                            <td class="text-end">{{ l.stock_qty|number_format(0, ',', ' ') }}</td>
+                            <td class="text-end">{{ l.stock_qty|qty }}</td>
                             <td class="text-end text-muted">{{ l.product_count }}</td>
                             <td>
                                 {% if l.is_active %}

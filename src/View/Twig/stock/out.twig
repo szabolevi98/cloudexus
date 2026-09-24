@@ -96,7 +96,7 @@
                                     <td>{{ m.warehouse_name }}</td>
                                     <td class="text-muted">{{ m.location_code ?: '—' }}</td>
                                     <td>{{ m.sku }} — {{ m.product_name }}</td>
-                                    <td class="text-end text-danger fw-medium">-{{ m.quantity|number_format(0, ',', ' ') }} {{ m.unit }}</td>
+                                    <td class="text-end text-danger fw-medium">-{{ m.quantity|qty }} {{ m.unit }}</td>
                                     <td class="text-muted">{{ m.created_by_name ?: '—' }}</td>
                                 </tr>
                             {% else %}

@@ -77,3 +77,6 @@ CREATE TABLE IF NOT EXISTS audit_log (
   KEY idx_audit_entity (entity_type, entity_id),
   CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- A webes belépés korlátja IP-nként számolja a sikertelen belépéseket.
+ALTER TABLE audit_log ADD INDEX IF NOT EXISTS idx_audit_ip (ip, action, created_at);

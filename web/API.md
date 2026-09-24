@@ -733,7 +733,8 @@ Fields:
 - `partner_id` — **required**, an existing partner.
 - `items` — **required** (at least one line), each with `product_id`, `quantity`, `unit_price`.
 - `order_date` — `YYYY-MM-DD` (default: today).
-- `status` — `draft` / `confirmed` / `invoiced` / `cancelled` (default: `confirmed`).
+- `status` — `draft` / `confirmed` / `cancelled` (default: `confirmed`). `invoiced` is set
+  by issuing the invoice and cannot be sent; an invoiced order is read-only (PUT returns `409`).
 - `shipping_address_id`, `billing_address_id` — the id of one of the partner's addresses
   (optional; 0 or omitted = none).
 - `shipping_cost`, `payment_cost` — arbitrary net amounts (default: 0).
@@ -742,6 +743,7 @@ Fields:
 - The order number is generated automatically; `total_amount` is computed by the server
   (items + `shipping_cost` + `payment_cost`).
 - On PUT, `items` is only replaced if provided; otherwise the line items are kept.
+- DELETE only removes a `draft` or `cancelled` order that was never invoiced; otherwise `409`.
 
 Example response (`GET /api/orders/19`) — the address fields are resolved from the chosen addresses:
 

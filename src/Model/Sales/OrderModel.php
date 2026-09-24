@@ -274,16 +274,41 @@ class OrderModel
         }
     }
 
-    public function updateStatus(int $id, string $status): void
+    /**
+     * Lemondás: csak piszkozat vagy visszaigazolt rendelés mondható le. Egy
+     * kiszámlázottat előbb a számla sztornójával kell visszanyitni.
+     */
+    public function cancel(int $id): bool
     {
-        DatabaseConnection::get()
-            ->prepare('UPDATE orders SET status = :status WHERE id = :id')
-            ->execute(['id' => $id, 'status' => $status]);
+        $stmt = DatabaseConnection::get()->prepare(
+            "UPDATE orders SET status = 'cancelled' WHERE id = :id AND status IN ('draft', 'confirmed')"
+        );
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount() > 0;
     }
 
-    public function delete(int $id): void
+    /** Kiszámlázott, vagy számlához (akár sztornózotthoz) kötött rendelés nem módosul. */
+    public function isLocked(int $id): bool
     {
-        DatabaseConnection::get()->prepare('DELETE FROM orders WHERE id = :id')->execute(['id' => $id]);
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT status = 'invoiced' OR EXISTS (SELECT 1 FROM invoices WHERE order_id = o.id) FROM orders o WHERE o.id = :id"
+        );
+        $stmt->execute(['id' => $id]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /** Törlés: csak piszkozat vagy lemondott, és soha nem számlázott rendelés. */
+    public function delete(int $id): bool
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            "DELETE FROM orders WHERE id = :id AND status IN ('draft', 'cancelled')
+             AND NOT EXISTS (SELECT 1 FROM invoices WHERE order_id = :id2)"
+        );
+        $stmt->execute(['id' => $id, 'id2' => $id]);
+
+        return $stmt->rowCount() > 0;
     }
 
     private function insertItems(int $orderId, array $items): void

@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
@@ -92,7 +93,11 @@ class PurchaseOrderController extends BaseController
     {
         $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
-        $this->orders->updateStatus($id, 'cancelled');
+        if (!$this->orders->cancel($id)) {
+            $this->flashError($this->t('purchase_orders.not_cancellable'));
+            $this->redirect('/purchase-orders/' . $id);
+        }
+        AuditLog::record(AuditLog::UPDATE, 'purchase_order', $id, $this->orders->findById($id)['order_number'] ?? null, ['status' => 'cancelled']);
         $this->flashSuccess($this->t('purchase_orders.cancelled'));
         $this->redirect('/purchase-orders/' . $id);
     }
@@ -101,7 +106,12 @@ class PurchaseOrderController extends BaseController
     {
         $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
-        $this->orders->delete($id);
+        $number = $this->orders->findById($id)['order_number'] ?? null;
+        if (!$this->orders->delete($id)) {
+            $this->flashError($this->t('purchase_orders.not_deletable'));
+            $this->redirect('/purchase-orders/' . $id);
+        }
+        AuditLog::record(AuditLog::DELETE, 'purchase_order', $id, $number);
         $this->flashSuccess($this->t('purchase_orders.deleted'));
         $this->redirect('/purchase-orders');
     }

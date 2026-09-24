@@ -21,5 +21,7 @@ return [
     'created' => 'Szállítói rendelés létrehozva.',
     'cancelled' => 'Rendelés stornózva.',
     'deleted' => 'Rendelés törölve.',
+    'not_cancellable' => 'Csak piszkozat vagy visszaigazolt rendelés stornózható.',
+    'not_deletable' => 'Csak piszkozat vagy lemondott rendelés törölhető, amelyhez nem érkezett számla.',
     'title_prefix' => 'Rendelés',
 ];

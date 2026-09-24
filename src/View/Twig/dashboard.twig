@@ -222,10 +222,10 @@
                                         <td><a href="{{ base_url }}/products/{{ p.id }}/edit" class="text-body">{{ p.name }}</a></td>
                                         <td class="text-end">
                                             <span class="badge rounded-pill {{ p.stock_qty <= 0 ? 'text-bg-danger' : 'text-bg-warning-subtle text-warning-emphasis' }}">
-                                                {{ p.stock_qty|number_format(0, ',', ' ') }} {{ p.unit }}
+                                                {{ p.stock_qty|qty }} {{ p.unit }}
                                             </span>
                                         </td>
-                                        <td class="text-end text-muted text-nowrap">{{ p.min_stock|number_format(0, ',', ' ') }} {{ p.unit }}</td>
+                                        <td class="text-end text-muted text-nowrap">{{ p.min_stock|qty }} {{ p.unit }}</td>
                                         <td class="text-end">
                                             {% if can('stock.move') %}
                                                 <a href="{{ base_url }}/stock/in?product_id={{ p.id }}" class="btn btn-sm btn-outline-primary">{{ t('dashboard.receive') }}</a>

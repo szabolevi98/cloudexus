@@ -20,6 +20,8 @@ available_locales = "hu,en"
 name = cloudexus_session
 ; élettartam másodpercben (alap: 30 nap)
 lifetime = 2592000
+; ennyi sikertelen webes belépés után 15 percre letiltjuk az IP-t
+login_max_failures = 10
 
 [company]
 name = "Mintacég Kft."

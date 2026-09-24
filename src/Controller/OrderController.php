@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerAddressModel;
@@ -68,7 +69,6 @@ class OrderController extends BaseController
         }
 
         $id = $this->orders->create([
-            'order_number' => $_POST['order_number'],
             'partner_id' => (int) $_POST['partner_id'],
             'shipping_address_id' => (int) ($_POST['shipping_address_id'] ?? 0),
             'billing_address_id' => (int) ($_POST['billing_address_id'] ?? 0),
@@ -100,8 +100,12 @@ class OrderController extends BaseController
     {
         $this->requirePermission(Permissions::ORDERS_MANAGE);
 
-        $this->orders->updateStatus($id, 'cancelled');
-        $this->flashSuccess($this->t('orders.cancelled'));
+        if ($this->orders->cancel($id)) {
+            AuditLog::record(AuditLog::UPDATE, 'order', $id, $this->orders->findById($id)['order_number'] ?? null, ['status' => 'cancelled']);
+            $this->flashSuccess($this->t('orders.cancelled'));
+        } else {
+            $this->flashError($this->t('orders.not_cancellable'));
+        }
         $this->redirect('/orders/' . $id);
     }
 
@@ -109,7 +113,12 @@ class OrderController extends BaseController
     {
         $this->requirePermission(Permissions::ORDERS_MANAGE);
 
-        $this->orders->delete($id);
+        $number = $this->orders->findById($id)['order_number'] ?? null;
+        if (!$this->orders->delete($id)) {
+            $this->flashError($this->t('orders.not_deletable'));
+            $this->redirect('/orders/' . $id);
+        }
+        AuditLog::record(AuditLog::DELETE, 'order', $id, $number);
         $this->flashSuccess($this->t('orders.deleted'));
         $this->redirect('/orders');
     }

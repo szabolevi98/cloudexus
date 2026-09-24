@@ -36,10 +36,10 @@
                         <tr>
                             <td class="fw-medium">{{ item.sku }}</td>
                             <td>{{ item.product_name }}</td>
-                            <td class="text-end text-muted">{{ item.book_quantity|number_format(0, ',', ' ') }} {{ item.unit }}</td>
-                            <td class="text-end">{{ item.counted_quantity|number_format(0, ',', ' ') }} {{ item.unit }}</td>
+                            <td class="text-end text-muted">{{ item.book_quantity|qty }} {{ item.unit }}</td>
+                            <td class="text-end">{{ item.counted_quantity|qty }} {{ item.unit }}</td>
                             <td class="text-end fw-medium {{ item.diff == 0 ? 'text-muted' : (item.diff > 0 ? 'text-success' : 'text-danger') }}">
-                                {{ item.diff > 0 ? '+' : '' }}{{ item.diff|number_format(0, ',', ' ') }}
+                                {{ item.diff > 0 ? '+' : '' }}{{ item.diff|qty }}
                             </td>
                         </tr>
                     {% endfor %}

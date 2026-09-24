@@ -52,6 +52,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 Config::load(dirname(__DIR__) . '/config/config.ini');
 date_default_timezone_set(Config::get('app.timezone', 'Europe/Budapest'));
+\Cloudexus\Core\SecurityHeaders::send();
 
 // Nyelv: a languages tábla az egyetlen forrás a felület és az adatok nyelvéhez
 // is. A választást a cx_locale süti tartja; a REST API a ?language= paraméterrel
@@ -124,7 +125,7 @@ function registerCrud(Router $router, string $basePath, string $controllerClass)
 $router->get('/', fn() => header('Location: ' . Config::get('app.base_url') . '/login'));
 $router->get('/login', fn() => (new LoginController())->show());
 $router->post('/login', fn() => (new LoginController())->submit());
-$router->get('/logout', fn() => (new LoginController())->logout());
+$router->post('/logout', fn() => (new LoginController())->logout());
 
 $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code));
 $router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode));
@@ -258,7 +259,6 @@ $router->post('/incoming-invoices/create', fn() => (new IncomingInvoiceControlle
 $router->get('/incoming-invoices/{id}', fn($id) => (new IncomingInvoiceController())->show((int) $id));
 $router->post('/incoming-invoices/{id}/mark-paid', fn($id) => (new IncomingInvoiceController())->markPaid((int) $id));
 $router->post('/incoming-invoices/{id}/cancel', fn($id) => (new IncomingInvoiceController())->cancel((int) $id));
-$router->post('/incoming-invoices/{id}/delete', fn($id) => (new IncomingInvoiceController())->delete((int) $id));
 
 $router->get('/cash', fn() => (new CashVoucherController())->list());
 $router->get('/cash/create', fn() => (new CashVoucherController())->createForm());

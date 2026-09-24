@@ -38,4 +38,7 @@ return [
     'marked_paid' => 'Számla kifizetve jelölve.',
     'cancelled' => 'Számla stornózva.',
     'deleted' => 'Számla törölve.',
+    'not_payable' => 'Csak kifizetetlen bejövő számla jelölhető kifizetettnek.',
+    'not_cancellable' => 'Csak kifizetetlen bejövő számla stornózható.',
+    'cancel_shortage' => 'A számlával bevételezett áru egy része már nincs a raktárban, ezért a sztornó nem tudja kivezetni; előbb rendezd a készletet.',
 ];

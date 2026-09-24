@@ -261,6 +261,9 @@ class StockMovementModel
     public function lockWarehouses(array $warehouseIds): void
     {
         $ids = array_values(array_unique(array_map('intval', $warehouseIds)));
+        if (!$ids) {
+            return;
+        }
         sort($ids);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 

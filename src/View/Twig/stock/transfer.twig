@@ -121,7 +121,7 @@
                                     <td class="text-muted">{{ m.location_code ?: '—' }}</td>
                                     <td>{{ m.sku }} — {{ m.product_name }}</td>
                                     <td class="text-end fw-medium {{ m.type == 'out' ? 'text-danger' : 'text-success' }}">
-                                        {{ m.type == 'out' ? '-' : '+' }}{{ m.quantity|number_format(0, ',', ' ') }} {{ m.unit }}
+                                        {{ m.type == 'out' ? '-' : '+' }}{{ m.quantity|qty }} {{ m.unit }}
                                     </td>
                                 </tr>
                             {% else %}

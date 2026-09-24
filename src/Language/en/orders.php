@@ -31,5 +31,7 @@ return [
     'created' => 'Sales order created.',
     'cancelled' => 'Order voided.',
     'deleted' => 'Order deleted.',
+    'not_cancellable' => 'Only a draft or confirmed order can be cancelled; reopen an invoiced one by reversing its invoice first.',
+    'not_deletable' => 'Only a draft or cancelled order that was never invoiced can be deleted.',
     'title_prefix' => 'Order',
 ];
