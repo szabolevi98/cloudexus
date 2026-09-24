@@ -122,6 +122,15 @@ class CashVoucherModel
         }
     }
 
+    public function findNumber(int $id): ?string
+    {
+        $stmt = DatabaseConnection::get()->prepare('SELECT voucher_number FROM cash_vouchers WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $number = $stmt->fetchColumn();
+
+        return $number === false ? null : (string) $number;
+    }
+
     public function delete(int $id): void
     {
         DatabaseConnection::get()->prepare('DELETE FROM cash_vouchers WHERE id = :id')->execute(['id' => $id]);

@@ -11,7 +11,7 @@ class LoginController extends BaseController
     public function show(): void
     {
         if (Auth::check()) {
-            $this->redirect('/dashboard');
+            $this->redirect($this->homePath());
         }
 
         $this->render('login.twig', [
@@ -37,7 +37,7 @@ class LoginController extends BaseController
             $this->redirect('/login');
         }
 
-        $this->redirect('/dashboard');
+        $this->redirect($this->homePath());
     }
 
     public function logout(): void

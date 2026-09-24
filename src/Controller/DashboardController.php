@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
 use Cloudexus\Model\Sales\InvoiceModel;
@@ -11,7 +12,7 @@ class DashboardController extends BaseController
 {
     public function show(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::DASHBOARD_VIEW);
 
         $orders = new OrderModel();
         $invoices = new InvoiceModel();

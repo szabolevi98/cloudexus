@@ -9,7 +9,9 @@
             <div class="cx-card mb-3">
                 <div class="cx-card__header">
                     <h2>{{ partner.name }}</h2>
-                    <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                    {% if can('partners.manage') %}
+                        <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                    {% endif %}
                 </div>
                 <div class="cx-card__body">
                     <div class="mb-2">
@@ -51,40 +53,44 @@
                     {% else %}
                         <div class="text-muted small">{{ t('partners.no_addresses') }}</div>
                     {% endfor %}
-                    <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary w-100 mt-2">
-                        <i class="bi bi-pencil me-1"></i>{{ t('partners.edit_addresses') }}
-                    </a>
+                    {% if can('partners.manage') %}
+                        <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary w-100 mt-2">
+                            <i class="bi bi-pencil me-1"></i>{{ t('partners.edit_addresses') }}
+                        </a>
+                    {% endif %}
                 </div>
             </div>
 
             <div class="cx-card mb-3">
                 <div class="cx-card__header"><h2>{{ t('partners.new_entry') }}</h2></div>
                 <div class="cx-card__body">
-                    <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities">
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label for="type" class="form-label">{{ t('partners.type') }}</label>
-                                <select id="type" name="type" class="form-select">
-                                    {% for key, label in typeLabels %}
-                                        <option value="{{ key }}">{{ label }}</option>
-                                    {% endfor %}
-                                </select>
+                    {% if can('crm.manage') %}
+                        <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities">
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label for="type" class="form-label">{{ t('partners.type') }}</label>
+                                    <select id="type" name="type" class="form-select">
+                                        {% for key, label in typeLabels %}
+                                            <option value="{{ key }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label for="activity_date" class="form-label">{{ t('partners.activity_datetime') }}</label>
+                                    <input type="datetime-local" id="activity_date" name="activity_date" class="form-control" value="{{ "now"|date("Y-m-d\\TH:i") }}">
+                                </div>
                             </div>
-                            <div class="col-6 mb-3">
-                                <label for="activity_date" class="form-label">{{ t('partners.activity_datetime') }}</label>
-                                <input type="datetime-local" id="activity_date" name="activity_date" class="form-control" value="{{ "now"|date("Y-m-d\\TH:i") }}">
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">{{ t('partners.activity_subject') }}</label>
+                                <input type="text" id="subject" name="subject" class="form-control" required>
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="subject" class="form-label">{{ t('partners.activity_subject') }}</label>
-                            <input type="text" id="subject" name="subject" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="note" class="form-label">{{ t('common.note') }}</label>
-                            <textarea id="note" name="note" class="form-control" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
-                    </form>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">{{ t('common.note') }}</label>
+                                <textarea id="note" name="note" class="form-control" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -107,9 +113,11 @@
                                     </div>
                                     <div class="text-nowrap">
                                         <span class="text-muted small me-2">{{ a.activity_date }}</span>
-                                        <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities/{{ a.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('partners.confirm_delete_activity')|e('js') }}');">
-                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
-                                        </form>
+                                        {% if can('crm.manage') %}
+                                            <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities/{{ a.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('partners.confirm_delete_activity')|e('js') }}');">
+                                                <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% if a.note %}<div class="text-muted small mt-1">{{ a.note|nl2br }}</div>{% endif %}

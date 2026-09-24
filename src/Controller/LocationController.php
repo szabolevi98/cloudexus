@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\LocationModel;
 use Cloudexus\Model\Core\WarehouseModel;
 
@@ -21,7 +22,7 @@ class LocationController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -41,7 +42,7 @@ class LocationController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $this->pageTitle = $this->t('locations.new');
         $this->render('locations/form.twig', [
@@ -52,7 +53,7 @@ class LocationController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $data = $this->collectInput();
         if ($error = $this->validate($data, null)) {
@@ -67,7 +68,7 @@ class LocationController extends BaseController
 
     public function editForm(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $location = $this->locations->findById($id);
         if (!$location) {
@@ -83,7 +84,7 @@ class LocationController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $data = $this->collectInput();
         if ($error = $this->validate($data, $id)) {
@@ -98,7 +99,7 @@ class LocationController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $this->locations->delete($id);
         $this->flashSuccess($this->t('locations.deleted'));

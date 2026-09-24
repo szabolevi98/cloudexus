@@ -123,16 +123,20 @@
             <i class="bi bi-printer me-1"></i>{{ t('common.print') }}
         </a>
         {% if invoice.status == 'unpaid' and invoice.invoice_type == 'normal' %}
-            <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/mark-paid">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle me-1"></i>{{ t('invoices.mark_paid') }}
-                </button>
-            </form>
-            <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-x-circle me-1"></i>{{ t('invoices.void') }}
-                </button>
-            </form>
+            {% if can('finance.mark_paid') %}
+                <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/mark-paid">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>{{ t('invoices.mark_paid') }}
+                    </button>
+                </form>
+            {% endif %}
+            {% if can('invoices.storno') %}
+                <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i>{{ t('invoices.void') }}
+                    </button>
+                </form>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

@@ -4,6 +4,7 @@ namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CategoryModel;
 use Cloudexus\Model\Core\CustomerGroupModel;
 use Cloudexus\Model\Core\ProductModel;
@@ -33,7 +34,7 @@ class ProductController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -53,7 +54,7 @@ class ProductController extends BaseController
 
     public function export(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -88,7 +89,7 @@ class ProductController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $this->pageTitle = $this->t('products.new');
         $this->render('products/form.twig', $this->formData(null));
@@ -96,7 +97,7 @@ class ProductController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $data = $this->collectInput();
         $errors = $this->validate($data, null);
@@ -117,7 +118,7 @@ class ProductController extends BaseController
 
     public function editForm(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $product = $this->products->findFull($id);
         if (!$product) {
@@ -130,7 +131,7 @@ class ProductController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $data = $this->collectInput();
         $errors = $this->validate($data, $id);
@@ -150,7 +151,7 @@ class ProductController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         try {
             $this->products->delete($id);
@@ -165,7 +166,7 @@ class ProductController extends BaseController
 
     public function deleteImage(int $id, int $imageId): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $image = $this->products->findImage($imageId);
         if ($image && (int) $image['product_id'] === $id) {
@@ -182,7 +183,7 @@ class ProductController extends BaseController
 
     public function setPrimaryImage(int $id, int $imageId): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
         $image = $this->products->findImage($imageId);
         if ($image && (int) $image['product_id'] === $id) {

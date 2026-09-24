@@ -4,9 +4,11 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('warehouses.list_title') }}</h2>
-            <a href="{{ base_url }}/warehouses/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ t('warehouses.new') }}
-            </a>
+            {% if can('warehouses.manage') %}
+                <a href="{{ base_url }}/warehouses/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('warehouses.new') }}
+                </a>
+            {% endif %}
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
@@ -52,14 +54,18 @@
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <a href="{{ base_url }}/warehouses/{{ warehouse.id }}/edit" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" action="{{ base_url }}/warehouses/{{ warehouse.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                {% if can('warehouses.manage') %}
+                                    <a href="{{ base_url }}/warehouses/{{ warehouse.id }}/edit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                {% endif %}
+                                {% if can('warehouses.manage') %}
+                                    <form method="post" action="{{ base_url }}/warehouses/{{ warehouse.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}

@@ -4,9 +4,11 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('categories.list_title') }}</h2>
-            <a href="{{ base_url }}/categories/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ t('categories.new') }}
-            </a>
+            {% if can('catalog.manage') %}
+                <a href="{{ base_url }}/categories/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('categories.new') }}
+                </a>
+            {% endif %}
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
@@ -46,14 +48,18 @@
                                 </a>
                             </td>
                             <td class="text-end">
-                                <a href="{{ base_url }}/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" action="{{ base_url }}/categories/{{ category.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                {% if can('catalog.manage') %}
+                                    <a href="{{ base_url }}/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                {% endif %}
+                                {% if can('catalog.manage') %}
+                                    <form method="post" action="{{ base_url }}/categories/{{ category.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}

@@ -1,0 +1,124 @@
+{% extends 'common/layout.twig' %}
+
+{% macro value(v) %}{% if v is same as(true) %}{{ t('common.yes') }}{% elseif v is same as(false) %}{{ t('common.no') }}{% elseif v is null or v == '' %}—{% else %}{{ v }}{% endif %}{% endmacro %}
+
+{% block content %}
+    {% import _self as fmt %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('audit.title') }}</h2>
+        </div>
+        <div class="cx-card__body p-0">
+            <p class="text-muted small px-3 pt-3 mb-0">{{ t('audit.intro') }}</p>
+
+            <form method="get" class="p-3 border-bottom">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
+                        <input type="text" name="q" class="form-control form-control-sm" value="{{ filters.q }}">
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small text-muted mb-1">{{ t('audit.user') }}</label>
+                        <select name="user_id" class="form-select form-select-sm">
+                            <option value="">{{ t('common.all') }}</option>
+                            {% for id, name in users %}
+                                <option value="{{ id }}" {{ filters.user_id == id ? 'selected' : '' }}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small text-muted mb-1">{{ t('audit.action') }}</label>
+                        <select name="action" class="form-select form-select-sm">
+                            <option value="">{{ t('common.all') }}</option>
+                            {% for action in actions %}
+                                <option value="{{ action }}" {{ filters.action == action ? 'selected' : '' }}>{{ t('audit.actions.' ~ action) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small text-muted mb-1">{{ t('audit.entity') }}</label>
+                        <select name="entity_type" class="form-select form-select-sm">
+                            <option value="">{{ t('common.all') }}</option>
+                            {% for type in entity_types %}
+                                <option value="{{ type }}" {{ filters.entity_type == type ? 'selected' : '' }}>{{ t('audit.entities.' ~ type) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.date_from') }}</label>
+                        <input type="date" name="from" class="form-control form-control-sm" value="{{ filters.from }}">
+                    </div>
+                    <div class="col-6 col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.date_to') }}</label>
+                        <input type="date" name="to" class="form-control form-control-sm" value="{{ filters.to }}">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>{{ t('common.filter') }}</button>
+                        <a href="{{ base_url }}/audit" class="btn btn-sm btn-outline-secondary">{{ t('common.clear') }}</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 cx-table">
+                    <thead>
+                    <tr>
+                        <th>{{ t('audit.timestamp') }}</th>
+                        <th>{{ t('audit.user') }}</th>
+                        <th>{{ t('audit.action') }}</th>
+                        <th>{{ t('audit.entity') }}</th>
+                        <th>{{ t('audit.subject') }}</th>
+                        <th>{{ t('audit.ip') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for entry in entries %}
+                        {% set tone = entry.action in ['delete', 'permission_denied', 'login_failed', 'storno'] ? 'danger'
+                            : (entry.action in ['create', 'login', 'issue', 'paid'] ? 'success'
+                            : (entry.action == 'permissions' ? 'warning' : 'secondary')) %}
+                        <tr>
+                            <td class="text-nowrap small">{{ entry.created_at|date('Y.m.d. H:i:s') }}</td>
+                            <td>{{ entry.user_name ?: '—' }}</td>
+                            <td><span class="badge rounded-pill text-bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('audit.actions.' ~ entry.action) }}</span></td>
+                            <td class="small text-muted text-nowrap">
+                                {% if entry.entity_type %}
+                                    {{ t('audit.entities.' ~ entry.entity_type) }}{% if entry.entity_id %} #{{ entry.entity_id }}{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="small">
+                                {% if entry.action == 'permission_denied' %}<code>{{ entry.label }}</code>{% else %}{{ entry.label ?: '—' }}{% endif %}
+                                {% if entry.details is iterable and entry.details is not empty %}
+                                    <div class="cx-audit-details">
+                                        {% for key, v in entry.details %}
+                                            {% if key in ['added', 'removed'] %}
+                                                {% if v is not empty %}
+                                                    <div>
+                                                        <i class="bi {{ key == 'added' ? 'bi-plus-circle text-success' : 'bi-dash-circle text-danger' }} me-1"></i>
+                                                        {% for p in v %}<code>{{ p }}</code>{{ not loop.last ? ', ' }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            {% elseif v is iterable and v|length == 2 %}
+                                                <div>{{ t('audit.fields.' ~ key) }}: {{ fmt.value(v[0]) }} → {{ fmt.value(v[1]) }}</div>
+                                            {% elseif v is same as(true) %}
+                                                <div>{{ t('audit.fields.' ~ key ~ '_changed') }}</div>
+                                            {% elseif v is not iterable %}
+                                                <div>{{ t('audit.fields.' ~ key) }}: {{ fmt.value(v) }}</div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% elseif entry.details %}
+                                    <div class="cx-audit-details">{{ entry.details }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ entry.ip ?: '—' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">{{ t('audit.none_found') }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'common/pagination.twig' %}
+        </div>
+    </div>
+{% endblock %}

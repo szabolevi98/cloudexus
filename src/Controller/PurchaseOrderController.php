@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Purchasing\PurchaseOrderModel;
 
@@ -21,7 +22,7 @@ class PurchaseOrderController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -43,7 +44,7 @@ class PurchaseOrderController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $this->pageTitle = $this->t('purchase_orders.new_full');
         $this->render('purchase-orders/form.twig', [
@@ -53,7 +54,7 @@ class PurchaseOrderController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $items = $this->collectItems();
 
@@ -76,7 +77,7 @@ class PurchaseOrderController extends BaseController
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_VIEW);
 
         $order = $this->orders->findById($id);
         if (!$order) {
@@ -89,7 +90,7 @@ class PurchaseOrderController extends BaseController
 
     public function cancel(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $this->orders->updateStatus($id, 'cancelled');
         $this->flashSuccess($this->t('purchase_orders.cancelled'));
@@ -98,7 +99,7 @@ class PurchaseOrderController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $this->orders->delete($id);
         $this->flashSuccess($this->t('purchase_orders.deleted'));

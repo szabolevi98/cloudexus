@@ -1,0 +1,70 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('roles.matrix_title') }}</h2>
+            <a href="{{ base_url }}/roles/list" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-list-ul me-1"></i>{{ t('roles.edit_roles') }}
+            </a>
+        </div>
+        <div class="cx-card__body">
+            <p class="text-muted small mb-2">{{ t('roles.matrix_intro') }}</p>
+            <p class="text-muted small mb-0"><i class="bi bi-shield-lock me-1"></i>{{ t('roles.super_admin_note') }}</p>
+        </div>
+    </div>
+
+    <form method="post" action="{{ base_url }}/roles/matrix">
+        <div class="cx-card">
+            <div class="cx-card__body p-0">
+                <div class="cx-matrix-wrap">
+                    <table class="cx-matrix">
+                        <thead>
+                        <tr>
+                            <th>{{ t('roles.permission') }}</th>
+                            {% for role in roles %}
+                                <th>
+                                    {{ role.name }}
+                                    <div class="cx-matrix__count">{{ t('roles.users_count', {'count': role.user_count}) }}</div>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for group, permissions in groups %}
+                            <tr class="cx-matrix__group">
+                                <th>{{ t('permissions.groups.' ~ group) }}</th>
+                                {% for role in roles %}<td></td>{% endfor %}
+                            </tr>
+                            {% for permission in permissions %}
+                                <tr>
+                                    <th>
+                                        {{ t('permissions.keys.' ~ permission) }}
+                                        <code>{{ permission }}</code>
+                                    </th>
+                                    {% for role in roles %}
+                                        <td>
+                                            {% if role.code == super_admin_code %}
+                                                <i class="bi bi-check-circle-fill cx-matrix__locked" title="{{ t('roles.super_admin_locked') }}"></i>
+                                            {% else %}
+                                                <input type="checkbox" class="form-check-input"
+                                                       name="matrix[{{ role.id }}][]" value="{{ permission }}"
+                                                       {{ matrix[role.id][permission]|default(false) ? 'checked' : '' }}
+                                                       aria-label="{{ role.name }} — {{ t('permissions.keys.' ~ permission) }}">
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>{{ t('roles.save_matrix') }}</button>
+        </div>
+    </form>
+{% endblock %}

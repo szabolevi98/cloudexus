@@ -2,8 +2,10 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
@@ -34,7 +36,7 @@ class InvoiceController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -56,7 +58,7 @@ class InvoiceController extends BaseController
 
     public function export(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -89,7 +91,7 @@ class InvoiceController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_ISSUE);
 
         $fromOrder = null;
         if (!empty($_GET['order_id'])) {
@@ -116,7 +118,7 @@ class InvoiceController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_ISSUE);
 
         $items = $this->collectItems();
 
@@ -159,13 +161,17 @@ class InvoiceController extends BaseController
             'created_by' => Auth::id(),
         ], $items);
 
+        $issued = $this->invoices->findById($id);
+        AuditLog::record(AuditLog::ISSUE, 'invoice', $id, $issued['invoice_number'] ?? null,
+            ['total' => \Cloudexus\Core\Currency::format((float) ($issued['total_amount'] ?? 0))]);
+
         $this->flashSuccess($warehouseId ? $this->t('invoices.created_with_stock') : $this->t('invoices.created'));
         $this->redirect('/invoices/' . $id);
     }
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_VIEW);
 
         $invoice = $this->invoices->findById($id);
         if (!$invoice) {
@@ -179,7 +185,7 @@ class InvoiceController extends BaseController
     /** Printer-friendly invoice document. */
     public function printView(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_VIEW);
 
         $invoice = $this->invoices->findById($id);
         if (!$invoice) {
@@ -194,9 +200,10 @@ class InvoiceController extends BaseController
 
     public function markPaid(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::FINANCE_MARK_PAID);
 
         if ($this->invoices->markPaid($id)) {
+            AuditLog::record(AuditLog::PAID, 'invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
             $this->flashSuccess($this->t('invoices.marked_paid'));
         } else {
             $this->flashError($this->t('invoices.not_payable'));
@@ -211,7 +218,7 @@ class InvoiceController extends BaseController
      */
     public function storno(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::INVOICES_STORNO);
 
         try {
             $stornoId = $this->invoices->storno($id, Auth::id());
@@ -220,6 +227,10 @@ class InvoiceController extends BaseController
             $this->redirect('/invoices/' . $id);
         }
 
+        $original = $this->invoices->findById($id);
+        $storno = $this->invoices->findById($stornoId);
+        AuditLog::record(AuditLog::STORNO, 'invoice', $stornoId, $storno['invoice_number'] ?? null,
+            ['storno_of' => $original['invoice_number'] ?? $id]);
         $this->flashSuccess($this->t('invoices.stornoed'));
         $this->redirect('/invoices/' . $stornoId);
     }

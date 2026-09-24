@@ -18,6 +18,20 @@ class UserModel
         return $user ?: null;
     }
 
+    /** Egy aktív felhasználó a szerepkörével — minden kérés ezzel azonosít (Auth::user). */
+    public function findActiveWithRole(int $id): ?array
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            'SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.code AS role_code, r.name AS role_name
+             FROM users u LEFT JOIN roles r ON r.id = u.role_id
+             WHERE u.id = :id AND u.is_active = 1 LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $user = $stmt->fetch();
+
+        return $user ?: null;
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = DatabaseConnection::get()->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
@@ -30,7 +44,7 @@ class UserModel
     public function all(): array
     {
         return DatabaseConnection::get()
-            ->query('SELECT id, username, email, full_name, role, is_active, last_login_at, created_at FROM users ORDER BY id ASC')
+            ->query('SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, r.code AS role_code, u.is_active, u.last_login_at, u.created_at FROM users u LEFT JOIN roles r ON r.id = u.role_id ORDER BY u.id ASC')
             ->fetchAll();
     }
 
@@ -53,8 +67,8 @@ class UserModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT id, username, email, full_name, role, is_active, last_login_at, created_at
-             FROM users $where ORDER BY id ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, r.code AS role_code, u.is_active, u.last_login_at, u.created_at
+             FROM users u LEFT JOIN roles r ON r.id = u.role_id $where ORDER BY u.id ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 
@@ -64,15 +78,17 @@ class UserModel
     public function create(array $data): int
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'INSERT INTO users (username, email, password_hash, full_name, role, is_active, created_at)
-             VALUES (:username, :email, :password_hash, :full_name, :role, :is_active, NOW())'
+            "INSERT INTO users (username, email, password_hash, full_name, role, role_id, is_active, created_at)
+             VALUES (:username, :email, :password_hash, :full_name,
+                     IF((SELECT code FROM roles WHERE id = :role_id2) = 'super_admin', 'admin', 'user'), :role_id, :is_active, NOW())"
         );
         $stmt->execute([
             'username' => $data['username'],
             'email' => $data['email'],
             'password_hash' => password_hash($data['password'], PASSWORD_DEFAULT),
             'full_name' => $data['full_name'],
-            'role' => $data['role'] ?? 'user',
+            'role_id' => $data['role_id'],
+            'role_id2' => $data['role_id'],
             'is_active' => $data['is_active'] ?? 1,
         ]);
 
@@ -85,7 +101,8 @@ class UserModel
             'username = :username',
             'email = :email',
             'full_name = :full_name',
-            'role = :role',
+            "role = IF((SELECT code FROM roles WHERE id = :role_id2) = 'super_admin', 'admin', 'user')",
+            'role_id = :role_id',
             'is_active = :is_active',
         ];
         $params = [
@@ -93,7 +110,8 @@ class UserModel
             'username' => $data['username'],
             'email' => $data['email'],
             'full_name' => $data['full_name'],
-            'role' => $data['role'],
+            'role_id' => $data['role_id'],
+            'role_id2' => $data['role_id'],
             'is_active' => $data['is_active'],
         ];
 

@@ -61,7 +61,10 @@ A Cloudexus egy helyen kezeli a teljes kereskedelmi folyamatot: részletes term�
 ### ⚙️ Rendszer
 - Bejelentkezés felhasználónévvel vagy e-maillel, bcrypt jelszó-hash
 - Score-alapú Google reCAPTCHA v3 a bejelentkezésen (configból ki-/bekapcsolható)
-- Szerepkör-alapú jogosultságok (admin / felhasználó), admin felhasználókezelés
+- Szerepkörök és jogosultság-mátrix: hat beépített szerepkör (szuper admin, vezető, pénzügy, értékesítő, raktáros, csak olvasó) és saját szerepkörök; a mátrixban műveletenként állítható, ki mit tehet (pl. számla kiállítása, sztornó, kifizetettnek jelölés, készletmozgás)
+- A jogosultságot a szerver ellenőrzi minden kérésnél, a mobil API-n is; a menü és a gombok csak azt mutatják, amit a szerepkör elérhet, és egy szerepkör-változás a következő kattintástól él
+- A szuper admin mindenhez hozzáfér, és az utolsó aktív szuper admin nem veszítheti el a szerepkörét, így a rendszer nem zárható ki
+- Audit napló: belépések, sikertelen belépések, elutasított hozzáférések, jogosultság- és felhasználóváltozások (mit adott hozzá, mit vett el), számla kiállítása, sztornó, kifizetés, pénztár, leltár, cégadatok; szűrhető felhasználóra, műveletre, tárgyra és dátumra
 - Saját profil és jelszóváltás
 - CSRF-védelem minden űrlapon, HttpOnly + SameSite session süti
 - Világos és sötét téma, vagy a rendszer beállítása szerint; a választás sütiben marad meg, és a belépőoldalra is érvényes

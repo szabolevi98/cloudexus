@@ -1,0 +1,65 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('roles.list_title') }}</h2>
+            <div class="d-flex gap-2">
+                <a href="{{ base_url }}/roles" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-grid-3x3 me-1"></i>{{ t('roles.back_to_matrix') }}
+                </a>
+                <a href="{{ base_url }}/roles/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('roles.new') }}
+                </a>
+            </div>
+        </div>
+        <div class="cx-card__body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 cx-table">
+                    <thead>
+                    <tr>
+                        <th>{{ t('common.name') }}</th>
+                        <th>{{ t('roles.code') }}</th>
+                        <th>{{ t('roles.description') }}</th>
+                        <th class="text-end">{{ t('roles.user_count') }}</th>
+                        <th class="text-end">{{ t('roles.permission_count') }}</th>
+                        <th class="text-end">{{ t('common.actions') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for role in roles %}
+                        <tr>
+                            <td>
+                                <span class="fw-medium">{{ role.name }}</span>
+                                {% if role.is_system %}
+                                    <span class="badge rounded-pill text-bg-secondary ms-1">{{ t('roles.system_role') }}</span>
+                                {% endif %}
+                            </td>
+                            <td><code class="small">{{ role.code }}</code></td>
+                            <td class="text-muted small">{{ role.description ?: '—' }}</td>
+                            <td class="text-end">{{ role.user_count }}</td>
+                            <td class="text-end">
+                                {% if role.code == super_admin_code %}
+                                    <span class="text-muted" title="{{ t('roles.super_admin_locked') }}">{{ t('roles.all_permissions') }}</span>
+                                {% else %}
+                                    {{ role.permission_count }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ base_url }}/roles/{{ role.id }}/edit" class="btn btn-sm btn-outline-secondary" title="{{ t('common.edit') }}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not role.is_system and role.user_count == 0 %}
+                                    <form method="post" action="{{ base_url }}/roles/{{ role.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('roles.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

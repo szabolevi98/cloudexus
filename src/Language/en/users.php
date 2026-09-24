@@ -24,4 +24,7 @@ return [
     'invalid_email' => 'Invalid email address.',
     'password_required' => 'A password is required for a new user.',
     'username_email_taken' => 'The username or email address is already taken.',
+    'role_required' => 'Choose a role.',
+    'last_super_admin' => 'This is the last active super admin: they cannot lose the role, be deactivated or be deleted.',
+    'super_admin_only' => 'Only a super admin can change a super admin.',
 ];

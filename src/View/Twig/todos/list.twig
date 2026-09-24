@@ -2,39 +2,41 @@
 
 {% block content %}
     <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="cx-card">
-                <div class="cx-card__header"><h2>{{ t('todos.new') }}</h2></div>
-                <div class="cx-card__body">
-                    <form method="post" action="{{ base_url }}/todos/create">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">{{ t('todos.title_label') }}</label>
-                            <input type="text" id="title" name="title" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="due_date" class="form-label">{{ t('todos.due_date') }}</label>
-                            <input type="date" id="due_date" name="due_date" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="partner_id" class="form-label">{{ t('todos.partner') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
-                            <select id="partner_id" name="partner_id" class="form-select cx-ajax-select"
-                                    data-url="{{ base_url }}/partners/search" data-placeholder="{{ t('todos.none_option') }}"></select>
-                        </div>
-                        <div class="mb-4">
-                            <label for="assigned_to" class="form-label">{{ t('todos.assignee') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
-                            <select id="assigned_to" name="assigned_to" class="form-select">
-                                <option value="">{{ t('todos.none_option') }}</option>
-                                {% for u in users %}
-                                    <option value="{{ u.id }}">{{ u.full_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
-                    </form>
+        {% if can('crm.manage') %}
+            <div class="col-lg-4">
+                <div class="cx-card">
+                    <div class="cx-card__header"><h2>{{ t('todos.new') }}</h2></div>
+                    <div class="cx-card__body">
+                        <form method="post" action="{{ base_url }}/todos/create">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">{{ t('todos.title_label') }}</label>
+                                <input type="text" id="title" name="title" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="due_date" class="form-label">{{ t('todos.due_date') }}</label>
+                                <input type="date" id="due_date" name="due_date" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="partner_id" class="form-label">{{ t('todos.partner') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+                                <select id="partner_id" name="partner_id" class="form-select cx-ajax-select"
+                                        data-url="{{ base_url }}/partners/search" data-placeholder="{{ t('todos.none_option') }}"></select>
+                            </div>
+                            <div class="mb-4">
+                                <label for="assigned_to" class="form-label">{{ t('todos.assignee') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+                                <select id="assigned_to" name="assigned_to" class="form-select">
+                                    <option value="">{{ t('todos.none_option') }}</option>
+                                    {% for u in users %}
+                                        <option value="{{ u.id }}">{{ u.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-8">
+        {% endif %}
+        <div class="{{ can('crm.manage') ? 'col-lg-8' : 'col-12' }}">
             <div class="cx-card">
                 <div class="cx-card__header"><h2>{{ t('todos.list_title') }}</h2></div>
                 <div class="cx-card__body p-0">
@@ -63,18 +65,22 @@
                             {% for todo in todos %}
                                 <tr>
                                     <td class="text-nowrap" style="width:150px;">
-                                        <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
-                                            <input type="hidden" name="return" value="/todos?{{ filters|url_encode }}">
-                                            {% if todo.is_done %}
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ t('todos.reopen_title') }}">
-                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>{{ t('todos.reopen') }}
-                                                </button>
-                                            {% else %}
-                                                <button type="submit" class="btn btn-sm btn-success" title="{{ t('todos.mark_done_title') }}">
-                                                    <i class="bi bi-check-lg me-1"></i>{{ t('todos.mark_done') }}
-                                                </button>
-                                            {% endif %}
-                                        </form>
+                                        {% if can('crm.manage') %}
+                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
+                                                <input type="hidden" name="return" value="/todos?{{ filters|url_encode }}">
+                                                {% if todo.is_done %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ t('todos.reopen_title') }}">
+                                                        <i class="bi bi-arrow-counterclockwise me-1"></i>{{ t('todos.reopen') }}
+                                                    </button>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-sm btn-success" title="{{ t('todos.mark_done_title') }}">
+                                                        <i class="bi bi-check-lg me-1"></i>{{ t('todos.mark_done') }}
+                                                    </button>
+                                                {% endif %}
+                                            </form>
+                                        {% else %}
+                                            <span class="badge rounded-pill {{ todo.is_done ? 'text-bg-success-subtle text-success-emphasis' : 'text-bg-secondary' }}">{{ todo.is_done ? t('todos.done') : t('todos.open') }}</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="{{ todo.is_done ? 'text-decoration-line-through text-muted' : 'fw-medium' }}">{{ todo.title }}</div>
@@ -95,9 +101,11 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-end" style="width:56px;">
-                                        <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" onsubmit="return confirm('{{ t('todos.confirm_delete')|e('js') }}');">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                        </form>
+                                        {% if can('crm.manage') %}
+                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" onsubmit="return confirm('{{ t('todos.confirm_delete')|e('js') }}');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% else %}

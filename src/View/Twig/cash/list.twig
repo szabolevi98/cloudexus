@@ -16,9 +16,11 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('cash.list_title') }}</h2>
-            <a href="{{ base_url }}/cash/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ t('cash.new') }}
-            </a>
+            {% if can('cash.manage') %}
+                <a href="{{ base_url }}/cash/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('cash.new') }}
+                </a>
+            {% endif %}
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
@@ -80,11 +82,13 @@
                                 {{ v.type == 'bevetel' ? '+' : '-' }}{{ v.amount|money }}
                             </td>
                             <td class="text-end">
-                                <form method="post" action="{{ base_url }}/cash/{{ v.id }}/delete" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                {% if can('cash.manage') %}
+                                    <form method="post" action="{{ base_url }}/cash/{{ v.id }}/delete" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}

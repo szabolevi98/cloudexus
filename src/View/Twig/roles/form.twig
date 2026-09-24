@@ -1,0 +1,41 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card" style="max-width: 640px;">
+        <div class="cx-card__header">
+            <h2>{{ role ? t('roles.edit') : t('roles.new') }}</h2>
+            <a href="{{ base_url }}/roles/list" class="btn btn-sm btn-outline-secondary">{{ t('common.back_to_list') }}</a>
+        </div>
+        <div class="cx-card__body">
+            <form method="post" action="{{ base_url }}/roles{{ role ? '/' ~ role.id : '/create' }}">
+                <div class="mb-3">
+                    <label for="name" class="form-label">{{ t('common.name') }}</label>
+                    <input type="text" id="name" name="name" class="form-control" maxlength="80" value="{{ role.name|default('') }}" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="code" class="form-label">{{ t('roles.code') }}</label>
+                    <input type="text" id="code" name="code" class="form-control" maxlength="40" pattern="[a-z][a-z0-9_]{1,39}"
+                           value="{{ role.code|default('') }}" {{ role and role.is_system ? 'readonly' : 'required' }}>
+                    <div class="form-text">{{ role and role.is_system ? t('roles.code_locked') : t('roles.code_hint') }}</div>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">{{ t('roles.description') }}</label>
+                    <textarea id="description" name="description" class="form-control" rows="3" maxlength="255">{{ role.description|default('') }}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="sort_order" class="form-label">{{ t('roles.sort_order') }}</label>
+                    <input type="number" id="sort_order" name="sort_order" class="form-control" value="{{ role.sort_order|default(100) }}" style="max-width: 140px;">
+                </div>
+                <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+                <a href="{{ base_url }}/roles/list" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>
+            </form>
+        </div>
+    </div>
+
+    {% if role is null or role.code != 'super_admin' %}
+        <p class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>{{ t('roles.matrix_hint_before') }}
+            <a href="{{ base_url }}/roles">{{ t('roles.matrix_hint_link') }}</a>{{ t('roles.matrix_hint_after') }}
+        </p>
+    {% endif %}
+{% endblock %}

@@ -17,4 +17,13 @@ foreach ($files as $file) {
     $pdo->exec(file_get_contents($file));
 }
 
+// A kezdő jogosultság-mátrix: szerepkörönként egyszer, az új kulcsok is egyszer.
+$seeded = \Cloudexus\Core\PermissionSeeder::run();
+printf(
+    "Permissions: %d role(s) seeded, %d new grant(s), %d stale row(s) removed.\n",
+    $seeded['seeded'],
+    $seeded['granted'],
+    $seeded['removed']
+);
+
 echo "Done.\n";

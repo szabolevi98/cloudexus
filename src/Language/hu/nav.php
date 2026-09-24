@@ -31,6 +31,8 @@ return [
     'cash' => 'Pénztárbizonylat',
     'todos' => 'Teendők',
     'users' => 'Felhasználók',
+    'roles' => 'Jogosultságok',
+    'audit' => 'Audit napló',
     'settings_company' => 'Cégadatok',
     'parameters' => 'Paraméterek',
     'units' => 'Mennyiségi egységek',

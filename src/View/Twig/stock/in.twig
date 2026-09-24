@@ -2,54 +2,56 @@
 
 {% block content %}
     <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="cx-card">
-                <div class="cx-card__header">
-                    <h2>{{ t('stock.in_new') }}</h2>
-                </div>
-                <div class="cx-card__body">
-                    <form method="post" action="{{ base_url }}/stock/in/create">
-                        <div class="mb-3">
-                            <label for="warehouse_id" class="form-label">{{ t('common.warehouse') }}</label>
-                            <select id="warehouse_id" name="warehouse_id" class="form-select" required>
-                                <option value="">{{ t('stock.choose_warehouse') }}</option>
-                                {% for w in warehouses %}
-                                    <option value="{{ w.id }}">{{ w.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="location_id" class="form-label">{{ t('stock.location') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
-                            <select id="location_id" name="location_id" class="form-select">
-                                <option value="">{{ t('stock.no_location') }}</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="product_id" class="form-label">{{ t('common.product') }}</label>
-                            <select id="product_id" name="product_id" class="form-select cx-ajax-select"
-                                    data-url="{{ base_url }}/products/search" data-placeholder="{{ t('common.choose_product') }}" required>
-                                {% for opt in selected_product|default([]) %}
-                                    <option value="{{ opt.id }}" selected>{{ opt.text }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label">{{ t('common.quantity') }}</label>
-                            {# Előre kiválasztott termék esetén rögtön a mennyiség jön #}
-                            <input type="number" step="0.001" min="0" id="quantity" name="quantity" class="form-control" required {{ selected_product|default([]) ? 'autofocus' : '' }}>
-                        </div>
-                        <div class="mb-3">
-                            <label for="note" class="form-label">{{ t('common.note') }}</label>
-                            <input type="text" id="note" name="note" class="form-control">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-box-arrow-in-down me-1"></i>{{ t('stock.in_submit') }}
-                        </button>
-                    </form>
+        {% if can('stock.move') %}
+            <div class="col-lg-4">
+                <div class="cx-card">
+                    <div class="cx-card__header">
+                        <h2>{{ t('stock.in_new') }}</h2>
+                    </div>
+                    <div class="cx-card__body">
+                        <form method="post" action="{{ base_url }}/stock/in/create">
+                            <div class="mb-3">
+                                <label for="warehouse_id" class="form-label">{{ t('common.warehouse') }}</label>
+                                <select id="warehouse_id" name="warehouse_id" class="form-select" required>
+                                    <option value="">{{ t('stock.choose_warehouse') }}</option>
+                                    {% for w in warehouses %}
+                                        <option value="{{ w.id }}">{{ w.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="location_id" class="form-label">{{ t('stock.location') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
+                                <select id="location_id" name="location_id" class="form-select">
+                                    <option value="">{{ t('stock.no_location') }}</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="product_id" class="form-label">{{ t('common.product') }}</label>
+                                <select id="product_id" name="product_id" class="form-select cx-ajax-select"
+                                        data-url="{{ base_url }}/products/search" data-placeholder="{{ t('common.choose_product') }}" required>
+                                    {% for opt in selected_product|default([]) %}
+                                        <option value="{{ opt.id }}" selected>{{ opt.text }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">{{ t('common.quantity') }}</label>
+                                {# Előre kiválasztott termék esetén rögtön a mennyiség jön #}
+                                <input type="number" step="0.001" min="0" id="quantity" name="quantity" class="form-control" required {{ selected_product|default([]) ? 'autofocus' : '' }}>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">{{ t('common.note') }}</label>
+                                <input type="text" id="note" name="note" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-box-arrow-in-down me-1"></i>{{ t('stock.in_submit') }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-8">
+        {% endif %}
+        <div class="{{ can('stock.move') ? 'col-lg-8' : 'col-12' }}">
             <div class="cx-card">
                 <div class="cx-card__header">
                     <h2>{{ t('stock.in_list_title') }}</h2>

@@ -4,6 +4,7 @@ namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Account\UserModel;
 use Cloudexus\Model\Crm\TodoModel;
 
@@ -20,7 +21,7 @@ class TodoController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -41,7 +42,7 @@ class TodoController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_MANAGE);
 
         $title = trim($_POST['title'] ?? '');
         if ($title === '') {
@@ -63,14 +64,14 @@ class TodoController extends BaseController
 
     public function toggle(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_MANAGE);
         $this->todos->toggle($id);
         $this->redirect($_POST['return'] ?? '/todos');
     }
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_MANAGE);
         $this->todos->delete($id);
         $this->flashSuccess($this->t('todos.deleted'));
         $this->redirect('/todos');

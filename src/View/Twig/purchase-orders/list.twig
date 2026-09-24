@@ -4,9 +4,11 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('purchase_orders.list_title') }}</h2>
-            <a href="{{ base_url }}/purchase-orders/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ t('purchase_orders.new') }}
-            </a>
+            {% if can('purchasing.manage') %}
+                <a href="{{ base_url }}/purchase-orders/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('purchase_orders.new') }}
+                </a>
+            {% endif %}
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">

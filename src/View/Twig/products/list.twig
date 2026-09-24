@@ -8,9 +8,11 @@
                 <a href="{{ base_url }}/products/export?{{ filters|url_encode }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-download me-1"></i>{{ t('common.csv_export') }}
                 </a>
-                <a href="{{ base_url }}/products/create" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>{{ t('products.new') }}
-                </a>
+                {% if can('products.manage') %}
+                    <a href="{{ base_url }}/products/create" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>{{ t('products.new') }}
+                    </a>
+                {% endif %}
             </div>
         </div>
         <div class="cx-card__body p-0">
@@ -101,14 +103,18 @@
                                 {% endif %}
                             </td>
                             <td class="text-end text-nowrap">
-                                <a href="{{ base_url }}/products/{{ product.id }}/edit" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" action="{{ base_url }}/products/{{ product.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                {% if can('products.manage') %}
+                                    <a href="{{ base_url }}/products/{{ product.id }}/edit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                {% endif %}
+                                {% if can('products.manage') %}
+                                    <form method="post" action="{{ base_url }}/products/{{ product.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% else %}

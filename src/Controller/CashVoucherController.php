@@ -2,7 +2,9 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Cash\CashVoucherModel;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
@@ -27,7 +29,7 @@ class CashVoucherController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CASH_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -48,7 +50,7 @@ class CashVoucherController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CASH_MANAGE);
 
         $this->pageTitle = $this->t('cash.new_voucher');
         $this->render('cash/form.twig', [
@@ -60,7 +62,7 @@ class CashVoucherController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CASH_MANAGE);
 
         $amount = (float) str_replace(',', '.', $_POST['amount'] ?? '0');
 
@@ -69,27 +71,35 @@ class CashVoucherController extends BaseController
             $this->redirect('/cash/create');
         }
 
-        $this->vouchers->create([
-            'voucher_number' => $_POST['voucher_number'],
-            'type' => $_POST['type'] ?? 'bevetel',
+        // Egy üresen hagyott választó '' értéket küld, ami idegen kulcsként
+        // nem létező sorra mutatna: a hiányzót NULL-ként mentjük.
+        $ref = static fn(string $key): ?int => (int) ($_POST[$key] ?? 0) > 0 ? (int) $_POST[$key] : null;
+        $type = in_array($_POST['type'] ?? '', ['bevetel', 'kiadas'], true) ? $_POST['type'] : 'bevetel';
+
+        $id = $this->vouchers->create([
+            'type' => $type,
             'amount' => $amount,
-            'partner_id' => $_POST['partner_id'] ?? null,
-            'invoice_id' => $_POST['invoice_id'] ?? null,
-            'incoming_invoice_id' => $_POST['incoming_invoice_id'] ?? null,
+            'partner_id' => $ref('partner_id'),
+            'invoice_id' => $ref('invoice_id'),
+            'incoming_invoice_id' => $ref('incoming_invoice_id'),
             'note' => trim($_POST['note'] ?? ''),
             'voucher_date' => ($_POST['voucher_date'] ?? '') ?: date('Y-m-d'),
             'created_by' => Auth::id(),
         ]);
 
+        AuditLog::record(AuditLog::CREATE, 'cash_voucher', $id, $this->vouchers->findNumber($id),
+            ['type' => $this->t($type === 'kiadas' ? 'cash.expense' : 'cash.income'), 'total' => \Cloudexus\Core\Currency::format($amount)]);
         $this->flashSuccess($this->t('cash.created'));
         $this->redirect('/cash');
     }
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CASH_MANAGE);
 
+        $number = $this->vouchers->findNumber($id);
         $this->vouchers->delete($id);
+        AuditLog::record(AuditLog::DELETE, 'cash_voucher', $id, $number);
         $this->flashSuccess($this->t('cash.deleted'));
         $this->redirect('/cash');
     }

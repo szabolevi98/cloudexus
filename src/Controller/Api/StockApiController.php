@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller\Api;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Account\IdempotencyKeyModel;
 use Cloudexus\Model\Core\LocationModel;
 use Cloudexus\Model\Core\ProductModel;
@@ -57,7 +58,7 @@ class StockApiController extends ApiController
 
     public function transfer(): void
     {
-        $this->requireUser();
+        $this->requireUserPermission(Permissions::STOCK_MOVE);
 
         $body = $this->body();
         $from = $this->activeWarehouse($body['from_warehouse_id'] ?? null, 'from_warehouse_id');
@@ -128,7 +129,7 @@ class StockApiController extends ApiController
 
     private function bookInOrOut(string $type): void
     {
-        $this->requireUser();
+        $this->requireUserPermission(Permissions::STOCK_MOVE);
 
         $body = $this->body();
         $warehouse = $this->activeWarehouse($body['warehouse_id'] ?? null, 'warehouse_id');

@@ -2,10 +2,13 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\Acl;
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Config;
 use Cloudexus\Core\Currency;
 use Cloudexus\Core\Lang;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Core\Language;
 use Cloudexus\Core\Session;
 use Twig\Environment;
@@ -35,6 +38,9 @@ abstract class BaseController
         // {{ currency_symbol() }} önmagában, pl. beviteli mezők címkéihez. Twig
         // függvény és nem globális, hogy csak akkor kérdezze le a pénznemet, ha kell.
         $this->twig->addFunction(new TwigFunction('currency_symbol', [Currency::class, 'symbol']));
+        // {% if can('invoices.issue') %} — csak elrejt; a kaput a controller zárja.
+        $this->twig->addFunction(new TwigFunction('can', [Acl::class, 'can']));
+        $this->twig->addFunction(new TwigFunction('can_any', static fn(string ...$permissions): bool => Acl::canAny($permissions)));
     }
 
     /** Translate a key (controller-side: flash messages, page titles, …). */
@@ -52,8 +58,9 @@ abstract class BaseController
 
         echo $this->twig->render($template, array_merge([
             'auth_user_id' => Auth::id(),
-            'auth_user_name' => Auth::check() ? Session::get('user_name') : null,
-            'auth_is_admin' => Auth::isAdmin(),
+            'auth_user_name' => Auth::name(),
+            'auth_role_name' => Auth::user()['role_name'] ?? null,
+            'auth_is_admin' => Auth::isSuperAdmin(),
             'base_url' => Config::get('app.base_url'),
             'asset_version' => $this->assetVersion(),
             'csrf_token' => \Cloudexus\Core\Csrf::token(),
@@ -106,13 +113,67 @@ abstract class BaseController
         }
     }
 
-    protected function requireAdmin(): void
+    /**
+     * Az első oldal, amit a felhasználó megnyithat — a belépés után ide
+     * kerül, hogy egy vezérlőpult nélküli szerepkör se egy 403-on kezdjen.
+     */
+    protected function homePath(): string
+    {
+        $pages = [
+            Permissions::DASHBOARD_VIEW => '/dashboard',
+            Permissions::ORDERS_VIEW => '/orders',
+            Permissions::INVOICES_VIEW => '/invoices',
+            Permissions::STOCK_VIEW => '/stock',
+            Permissions::PRODUCTS_VIEW => '/products',
+            Permissions::PARTNERS_VIEW => '/partners',
+            Permissions::PURCHASING_VIEW => '/purchase-orders',
+            Permissions::CASH_VIEW => '/cash',
+            Permissions::CRM_VIEW => '/todos',
+            Permissions::USERS_MANAGE => '/users',
+        ];
+        foreach ($pages as $permission => $path) {
+            if (Acl::can($permission)) {
+                return $path;
+            }
+        }
+
+        return '/profile';
+    }
+
+    /**
+     * A jogosultság kapuja: belépés nélkül a login oldalra visz, a jog
+     * hiányában naplóz, és a menüvel együtt egy 403-as oldalt mutat.
+     */
+    protected function requirePermission(string $permission): void
     {
         $this->requireAuth();
-        if (!Auth::isAdmin()) {
-            http_response_code(403);
-            echo $this->t('errors.forbidden');
-            exit;
+        if (!Acl::can($permission)) {
+            $this->forbidden($permission);
         }
+    }
+
+    /** Legalább az egyik a felsoroltak közül (pl. egy több területet érintő oldal). */
+    protected function requireAnyPermission(string ...$permissions): void
+    {
+        $this->requireAuth();
+        if (!Acl::canAny($permissions)) {
+            $this->forbidden(implode('|', $permissions));
+        }
+    }
+
+    private function forbidden(string $permission): never
+    {
+        AuditLog::record(AuditLog::DENIED, 'permission', null, $permission);
+        http_response_code(403);
+
+        $isAjax = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest'
+            || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+        if ($isAjax) {
+            $this->json(['success' => false, 'message' => $this->t('errors.forbidden')]);
+        }
+
+        $this->pageTitle = $this->t('errors.forbidden_title');
+        $this->render('common/forbidden.twig');
+        exit;
     }
 }

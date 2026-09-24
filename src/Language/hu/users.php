@@ -24,4 +24,7 @@ return [
     'invalid_email' => 'Érvénytelen e-mail cím.',
     'password_required' => 'Új felhasználóhoz jelszó megadása kötelező.',
     'username_email_taken' => 'A felhasználónév vagy e-mail cím már foglalt.',
+    'role_required' => 'Válassz egy szerepkört.',
+    'last_super_admin' => 'Ő az utolsó aktív szuper admin: nem veszítheti el a szerepkörét, nem tiltható le és nem törölhető.',
+    'super_admin_only' => 'Szuper admint csak szuper admin módosíthat.',
 ];

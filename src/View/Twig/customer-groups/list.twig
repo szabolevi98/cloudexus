@@ -2,25 +2,27 @@
 
 {% block content %}
     <div class="row g-3">
-        <div class="col-lg-4">
-            <div class="cx-card">
-                <div class="cx-card__header"><h2>{{ t('customer_groups.new') }}</h2></div>
-                <div class="cx-card__body">
-                    <form method="post" action="{{ base_url }}/customer-groups/create">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">{{ t('common.name') }}</label>
-                            <input type="text" id="name" name="name" class="form-control" placeholder="{{ t('customer_groups.name_placeholder') }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">{{ t('customer_groups.description') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
-                            <input type="text" id="description" name="description" class="form-control">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
-                    </form>
+        {% if can('customer_groups.manage') %}
+            <div class="col-lg-4">
+                <div class="cx-card">
+                    <div class="cx-card__header"><h2>{{ t('customer_groups.new') }}</h2></div>
+                    <div class="cx-card__body">
+                        <form method="post" action="{{ base_url }}/customer-groups/create">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">{{ t('common.name') }}</label>
+                                <input type="text" id="name" name="name" class="form-control" placeholder="{{ t('customer_groups.name_placeholder') }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">{{ t('customer_groups.description') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
+                                <input type="text" id="description" name="description" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-8">
+        {% endif %}
+        <div class="{{ can('customer_groups.manage') ? 'col-lg-8' : 'col-12' }}">
             <div class="cx-card">
                 <div class="cx-card__header">
                     <h2>{{ t('customer_groups.list_title') }}</h2>
@@ -45,14 +47,16 @@
                             <tbody>
                             {% for g in groups %}
                                 <tr>
-                                    <td><input type="text" name="name" form="cg-{{ g.id }}" class="form-control form-control-sm" value="{{ g.name }}"></td>
-                                    <td><input type="text" name="description" form="cg-{{ g.id }}" class="form-control form-control-sm" value="{{ g.description }}"></td>
+                                    <td>{% if can('customer_groups.manage') %}<input type="text" name="name" form="cg-{{ g.id }}" class="form-control form-control-sm" value="{{ g.name }}">{% else %}<span class="fw-medium">{{ g.name }}</span>{% endif %}</td>
+                                    <td>{% if can('customer_groups.manage') %}<input type="text" name="description" form="cg-{{ g.id }}" class="form-control form-control-sm" value="{{ g.description }}">{% else %}<span class="text-muted">{{ g.description ?: '—' }}</span>{% endif %}</td>
                                     <td class="text-end text-muted">
                                         <a href="{{ base_url }}/partners?customer_group_id={{ g.id }}">{{ g.partner_count }} {{ t('common.pcs') }}</a>
                                     </td>
                                     <td class="text-end text-nowrap">
-                                        <button type="submit" form="cg-{{ g.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
-                                        <button type="submit" form="cg-del-{{ g.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                        {% if can('customer_groups.manage') %}
+                                            <button type="submit" form="cg-{{ g.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
+                                            <button type="submit" form="cg-del-{{ g.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% else %}

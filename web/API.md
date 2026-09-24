@@ -57,7 +57,11 @@ A missing or invalid token returns `401`:
   "data": {
     "token": "cxu_3f9c…",
     "expires_at": "2026-12-21 08:00:00",
-    "user": { "id": 7, "username": "kovacs.anna", "full_name": "Kovács Anna", "email": "anna@example.com", "role": "user" }
+    "user": {
+      "id": 7, "username": "kovacs.anna", "full_name": "Kovács Anna", "email": "anna@example.com",
+      "role": "user", "role_code": "warehouse", "role_name": "Raktáros",
+      "permissions": ["dashboard.view", "products.view", "stock.view", "stock.move", "stocktaking.manage", "orders.view", "purchasing.view"]
+    }
   }
 }
 ```
@@ -72,6 +76,10 @@ A missing or invalid token returns `401`:
   password signs them out on every device.
 - `GET /api/auth/me` and `POST /api/auth/logout` return `403` when called with an
   integration token.
+- `permissions` lists what the user's role may do, the same keys as the permission matrix
+  in the admin UI (a super admin gets every key). The app can use it to hide what the user
+  cannot do; the server still checks each call. `role` is the older admin / user split,
+  kept for existing clients: `admin` means super admin.
 
 ## Rate limiting
 
@@ -170,7 +178,7 @@ All API messages (including error messages) are in **English**:
 ```
 
 Status codes used: `200` OK, `201` created, `400/422` bad request,
-`401` authentication missing/invalid, `403` the endpoint needs a user token,
+`401` authentication missing/invalid, `403` the endpoint needs a user token, or the user's role lacks the permission,
 `404` resource or endpoint not found, `429` rate limit exceeded, `500` unexpected server error.
 Every error, including an unknown endpoint and a server error, has this JSON shape.
 
@@ -502,9 +510,10 @@ returned.
 ## Stock bookings (POST)
 
 Stock in, stock out and warehouse-to-warehouse transfers, as booked from the mobile / PDA
-app. These endpoints need a **user token** (see [Authentication](#authentication)); an
-integration token gets `403`. Every movement is credited to the signed-in user, just as
-if they had booked it in the admin UI.
+app. These endpoints need a **user token** (see [Authentication](#authentication)) whose
+user's role has the `stock.move` permission; an integration token, or a role without it,
+gets `403`. Every movement is credited to the signed-in user, just as if they had booked it
+in the admin UI.
 
 | Method | Path | Description |
 |---|---|---|

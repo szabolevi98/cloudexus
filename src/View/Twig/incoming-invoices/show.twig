@@ -60,16 +60,20 @@
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
         </a>
         {% if invoice.status == 'unpaid' %}
-            <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/mark-paid">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle me-1"></i>{{ t('incoming_invoices.mark_paid') }}
-                </button>
-            </form>
-            <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('{{ t('incoming_invoices.confirm_void')|e('js') }}');">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-x-circle me-1"></i>{{ t('incoming_invoices.void') }}
-                </button>
-            </form>
+            {% if can('finance.mark_paid') %}
+                <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/mark-paid">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>{{ t('incoming_invoices.mark_paid') }}
+                    </button>
+                </form>
+            {% endif %}
+            {% if can('purchasing.manage') %}
+                <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('{{ t('incoming_invoices.confirm_void')|e('js') }}');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i>{{ t('incoming_invoices.void') }}
+                    </button>
+                </form>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

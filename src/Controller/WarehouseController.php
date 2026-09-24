@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\WarehouseModel;
 
 class WarehouseController extends BaseController
@@ -18,7 +19,7 @@ class WarehouseController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -36,7 +37,7 @@ class WarehouseController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $this->pageTitle = $this->t('warehouses.new');
         $this->render('warehouses/form.twig', ['warehouse' => null]);
@@ -44,7 +45,7 @@ class WarehouseController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $data = $this->collectInput();
 
@@ -60,7 +61,7 @@ class WarehouseController extends BaseController
 
     public function editForm(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $warehouse = $this->warehouses->findById($id);
         if (!$warehouse) {
@@ -73,7 +74,7 @@ class WarehouseController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $data = $this->collectInput();
 
@@ -89,7 +90,7 @@ class WarehouseController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::WAREHOUSES_MANAGE);
 
         $this->warehouses->delete($id);
         $this->flashSuccess($this->t('warehouses.deleted'));

@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CustomerGroupModel;
 use Cloudexus\Model\Core\PartnerAddressModel;
 use Cloudexus\Model\Core\PartnerModel;
@@ -38,7 +39,7 @@ class PartnerController extends BaseController
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_VIEW);
 
         $partner = $this->partners->findById($id);
         if (!$partner) {
@@ -55,7 +56,7 @@ class PartnerController extends BaseController
 
     public function addAddress(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         if (!$this->partners->findById($id)) {
             $this->redirect('/partners');
@@ -85,7 +86,7 @@ class PartnerController extends BaseController
 
     public function updateAddress(int $id, int $addressId): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $address = $this->addresses->findById($addressId);
         if (!$address || (int) $address['partner_id'] !== $id) {
@@ -115,7 +116,7 @@ class PartnerController extends BaseController
 
     public function deleteAddress(int $id, int $addressId): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $address = $this->addresses->findById($addressId);
         if ($address && (int) $address['partner_id'] === $id) {
@@ -128,7 +129,7 @@ class PartnerController extends BaseController
 
     public function addActivity(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_MANAGE);
 
         if (!$this->partners->findById($id)) {
             $this->redirect('/partners');
@@ -155,7 +156,7 @@ class PartnerController extends BaseController
 
     public function deleteActivity(int $id, int $activityId): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CRM_MANAGE);
 
         $activity = $this->activities->findById($activityId);
         if ($activity && (int) $activity['partner_id'] === $id) {
@@ -168,7 +169,7 @@ class PartnerController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -189,7 +190,7 @@ class PartnerController extends BaseController
 
     public function export(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -222,7 +223,7 @@ class PartnerController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $this->pageTitle = $this->t('partners.new');
         $this->render('partners/form.twig', ['partner' => null, 'customer_groups' => $this->customerGroups->all()]);
@@ -230,7 +231,7 @@ class PartnerController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $data = $this->collectInput();
 
@@ -246,7 +247,7 @@ class PartnerController extends BaseController
 
     public function editForm(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $partner = $this->partners->findById($id);
         if (!$partner) {
@@ -263,7 +264,7 @@ class PartnerController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $data = $this->collectInput();
 
@@ -279,7 +280,7 @@ class PartnerController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $this->partners->delete($id);
         $this->flashSuccess($this->t('partners.deleted'));

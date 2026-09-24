@@ -27,9 +27,10 @@
                 </div>
                 <div class="mb-3">
                     <label for="role" class="form-label">{{ t('users.role') }}</label>
-                    <select id="role" name="role" class="form-select">
-                        <option value="user" {{ user.role == 'user' ? 'selected' : '' }}>{{ t('users.user') }}</option>
-                        <option value="admin" {{ user.role == 'admin' ? 'selected' : '' }}>{{ t('users.admin') }}</option>
+                    <select id="role" name="role_id" class="form-select" required>
+                        {% for role in roles %}
+                            <option value="{{ role.id }}" {{ (user.role_id|default(null) == role.id) or (user is null and role.code == 'viewer') ? 'selected' : '' }}>{{ role.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-check mb-4">

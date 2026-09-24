@@ -4,6 +4,7 @@ namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\LocationModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
@@ -27,7 +28,7 @@ class StockController extends BaseController
 
     public function overview(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -49,7 +50,7 @@ class StockController extends BaseController
 
     public function inList(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         [$filters, $pager, $rows] = $this->movementListData('in');
 
@@ -70,13 +71,13 @@ class StockController extends BaseController
 
     public function inCreate(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
         $this->createMovement('in', '/stock/in');
     }
 
     public function outList(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         [$filters, $pager, $rows] = $this->movementListData('out');
 
@@ -94,13 +95,13 @@ class StockController extends BaseController
 
     public function outCreate(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
         $this->createMovement('out', '/stock/out');
     }
 
     public function transferForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -123,7 +124,7 @@ class StockController extends BaseController
 
     public function transferCreate(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
 
         $fromId = (int) ($_POST['from_warehouse_id'] ?? 0);
         $toId = (int) ($_POST['to_warehouse_id'] ?? 0);
@@ -170,7 +171,7 @@ class StockController extends BaseController
 
     public function barcodeForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
 
         $this->activeMenu = 'stock-barcode';
         $this->pageTitle = $this->t('stock.barcode_title');
@@ -183,7 +184,7 @@ class StockController extends BaseController
     /** JSON lookup endpoint: resolves a scanned barcode or SKU to a product. */
     public function barcodeLookup(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
 
         $code = trim($_GET['code'] ?? '');
         $product = $code !== '' ? $this->products->findByCode($code) : null;
@@ -203,7 +204,7 @@ class StockController extends BaseController
     /** Books all collected barcode rows as stock movements in one batch. */
     public function barcodeSubmit(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_MOVE);
 
         $warehouseId = (int) ($_POST['warehouse_id'] ?? 0);
         $direction = $_POST['direction'] === 'out' ? 'out' : 'in';

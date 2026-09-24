@@ -23,107 +23,187 @@
         </a>
 
         <nav class="cx-nav">
-            <a class="cx-nav__link {{ active_menu == 'dashboard' ? 'is-active' : '' }}" href="{{ base_url }}/dashboard">
-                <i class="bi bi-speedometer2"></i><span>{{ t('nav.dashboard') }}</span>
-            </a>
+            {% if can('dashboard.view') %}
+                <a class="cx-nav__link {{ active_menu == 'dashboard' ? 'is-active' : '' }}" href="{{ base_url }}/dashboard">
+                    <i class="bi bi-speedometer2"></i><span>{{ t('nav.dashboard') }}</span>
+                </a>
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.master_data') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'products' ? 'is-active' : '' }}" href="{{ base_url }}/products">
-                <i class="bi bi-box-seam"></i><span>{{ t('nav.products') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'categories' ? 'is-active' : '' }}" href="{{ base_url }}/categories">
-                <i class="bi bi-tags"></i><span>{{ t('nav.categories') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'partners' ? 'is-active' : '' }}" href="{{ base_url }}/partners">
-                <i class="bi bi-people"></i><span>{{ t('nav.partners') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'customer-groups' ? 'is-active' : '' }}" href="{{ base_url }}/customer-groups">
-                <i class="bi bi-diagram-3"></i><span>{{ t('nav.customer_groups') }}</span>
-            </a>
+            {% if can_any('products.view', 'partners.view') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.master_data') }}</div>
+                {% if can('products.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'products' ? 'is-active' : '' }}" href="{{ base_url }}/products">
+                        <i class="bi bi-box-seam"></i><span>{{ t('nav.products') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('products.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'categories' ? 'is-active' : '' }}" href="{{ base_url }}/categories">
+                        <i class="bi bi-tags"></i><span>{{ t('nav.categories') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('partners.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'partners' ? 'is-active' : '' }}" href="{{ base_url }}/partners">
+                        <i class="bi bi-people"></i><span>{{ t('nav.partners') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('partners.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'customer-groups' ? 'is-active' : '' }}" href="{{ base_url }}/customer-groups">
+                        <i class="bi bi-diagram-3"></i><span>{{ t('nav.customer_groups') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.inventory') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'warehouses' ? 'is-active' : '' }}" href="{{ base_url }}/warehouses">
-                <i class="bi bi-building"></i><span>{{ t('nav.warehouses') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'locations' ? 'is-active' : '' }}" href="{{ base_url }}/locations">
-                <i class="bi bi-grid-3x3-gap"></i><span>{{ t('nav.locations') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stock-in' ? 'is-active' : '' }}" href="{{ base_url }}/stock/in">
-                <i class="bi bi-box-arrow-in-down"></i><span>{{ t('nav.stock_in') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stock-out' ? 'is-active' : '' }}" href="{{ base_url }}/stock/out">
-                <i class="bi bi-box-arrow-up"></i><span>{{ t('nav.stock_out') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stock-transfer' ? 'is-active' : '' }}" href="{{ base_url }}/stock/transfer">
-                <i class="bi bi-arrow-left-right"></i><span>{{ t('nav.stock_transfer') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stock-barcode' ? 'is-active' : '' }}" href="{{ base_url }}/stock/barcode">
-                <i class="bi bi-upc-scan"></i><span>{{ t('nav.barcode') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stocktaking' ? 'is-active' : '' }}" href="{{ base_url }}/stocktaking">
-                <i class="bi bi-clipboard-check"></i><span>{{ t('nav.stocktaking') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'stock-overview' ? 'is-active' : '' }}" href="{{ base_url }}/stock">
-                <i class="bi bi-bar-chart-steps"></i><span>{{ t('nav.stock_overview') }}</span>
-            </a>
+            {% if can_any('stock.view', 'stock.move') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.inventory') }}</div>
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'warehouses' ? 'is-active' : '' }}" href="{{ base_url }}/warehouses">
+                        <i class="bi bi-building"></i><span>{{ t('nav.warehouses') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'locations' ? 'is-active' : '' }}" href="{{ base_url }}/locations">
+                        <i class="bi bi-grid-3x3-gap"></i><span>{{ t('nav.locations') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'stock-in' ? 'is-active' : '' }}" href="{{ base_url }}/stock/in">
+                        <i class="bi bi-box-arrow-in-down"></i><span>{{ t('nav.stock_in') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'stock-out' ? 'is-active' : '' }}" href="{{ base_url }}/stock/out">
+                        <i class="bi bi-box-arrow-up"></i><span>{{ t('nav.stock_out') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.move') %}
+                    <a class="cx-nav__link {{ active_menu == 'stock-transfer' ? 'is-active' : '' }}" href="{{ base_url }}/stock/transfer">
+                        <i class="bi bi-arrow-left-right"></i><span>{{ t('nav.stock_transfer') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.move') %}
+                    <a class="cx-nav__link {{ active_menu == 'stock-barcode' ? 'is-active' : '' }}" href="{{ base_url }}/stock/barcode">
+                        <i class="bi bi-upc-scan"></i><span>{{ t('nav.barcode') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'stocktaking' ? 'is-active' : '' }}" href="{{ base_url }}/stocktaking">
+                        <i class="bi bi-clipboard-check"></i><span>{{ t('nav.stocktaking') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('stock.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'stock-overview' ? 'is-active' : '' }}" href="{{ base_url }}/stock">
+                        <i class="bi bi-bar-chart-steps"></i><span>{{ t('nav.stock_overview') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.sales') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'orders' ? 'is-active' : '' }}" href="{{ base_url }}/orders">
-                <i class="bi bi-cart-check"></i><span>{{ t('nav.orders') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'invoices' ? 'is-active' : '' }}" href="{{ base_url }}/invoices">
-                <i class="bi bi-receipt"></i><span>{{ t('nav.invoices') }}</span>
-            </a>
+            {% if can_any('orders.view', 'invoices.view') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.sales') }}</div>
+                {% if can('orders.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'orders' ? 'is-active' : '' }}" href="{{ base_url }}/orders">
+                        <i class="bi bi-cart-check"></i><span>{{ t('nav.orders') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('invoices.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'invoices' ? 'is-active' : '' }}" href="{{ base_url }}/invoices">
+                        <i class="bi bi-receipt"></i><span>{{ t('nav.invoices') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.purchasing') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'purchase-orders' ? 'is-active' : '' }}" href="{{ base_url }}/purchase-orders">
-                <i class="bi bi-truck"></i><span>{{ t('nav.purchase_orders') }}</span>
-            </a>
-            <a class="cx-nav__link {{ active_menu == 'incoming-invoices' ? 'is-active' : '' }}" href="{{ base_url }}/incoming-invoices">
-                <i class="bi bi-receipt-cutoff"></i><span>{{ t('nav.incoming_invoices') }}</span>
-            </a>
+            {% if can_any('purchasing.view') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.purchasing') }}</div>
+                {% if can('purchasing.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'purchase-orders' ? 'is-active' : '' }}" href="{{ base_url }}/purchase-orders">
+                        <i class="bi bi-truck"></i><span>{{ t('nav.purchase_orders') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('purchasing.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'incoming-invoices' ? 'is-active' : '' }}" href="{{ base_url }}/incoming-invoices">
+                        <i class="bi bi-receipt-cutoff"></i><span>{{ t('nav.incoming_invoices') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.cash') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'cash' ? 'is-active' : '' }}" href="{{ base_url }}/cash">
-                <i class="bi bi-cash-coin"></i><span>{{ t('nav.cash') }}</span>
-            </a>
+            {% if can_any('cash.view') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.cash') }}</div>
+                {% if can('cash.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'cash' ? 'is-active' : '' }}" href="{{ base_url }}/cash">
+                        <i class="bi bi-cash-coin"></i><span>{{ t('nav.cash') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            <div class="cx-nav__group-label">{{ t('nav.groups.crm') }}</div>
-            <a class="cx-nav__link {{ active_menu == 'todos' ? 'is-active' : '' }}" href="{{ base_url }}/todos">
-                <i class="bi bi-check2-square"></i><span>{{ t('nav.todos') }}</span>
-            </a>
+            {% if can_any('crm.view') %}
+                <div class="cx-nav__group-label">{{ t('nav.groups.crm') }}</div>
+                {% if can('crm.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'todos' ? 'is-active' : '' }}" href="{{ base_url }}/todos">
+                        <i class="bi bi-check2-square"></i><span>{{ t('nav.todos') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
-            {% if auth_is_admin %}
+            {% if can_any('system.users', 'system.roles', 'system.settings', 'catalog.manage', 'system.audit') %}
                 <div class="cx-nav__group-label">{{ t('nav.groups.settings') }}</div>
-                <a class="cx-nav__link {{ active_menu == 'users' ? 'is-active' : '' }}" href="{{ base_url }}/users">
-                    <i class="bi bi-person-gear"></i><span>{{ t('nav.users') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'settings-company' ? 'is-active' : '' }}" href="{{ base_url }}/settings/company">
-                    <i class="bi bi-building-gear"></i><span>{{ t('nav.settings_company') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'parameters' ? 'is-active' : '' }}" href="{{ base_url }}/parameters">
-                    <i class="bi bi-sliders"></i><span>{{ t('nav.parameters') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'units' ? 'is-active' : '' }}" href="{{ base_url }}/units">
-                    <i class="bi bi-rulers"></i><span>{{ t('nav.units') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'currencies' ? 'is-active' : '' }}" href="{{ base_url }}/currencies">
-                    <i class="bi bi-currency-exchange"></i><span>{{ t('nav.currencies') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'languages' ? 'is-active' : '' }}" href="{{ base_url }}/languages">
-                    <i class="bi bi-translate"></i><span>{{ t('nav.languages') }}</span>
-                </a>
+                {% if can('system.users') %}
+                    <a class="cx-nav__link {{ active_menu == 'users' ? 'is-active' : '' }}" href="{{ base_url }}/users">
+                        <i class="bi bi-person-gear"></i><span>{{ t('nav.users') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.roles') %}
+                    <a class="cx-nav__link {{ active_menu == 'roles' ? 'is-active' : '' }}" href="{{ base_url }}/roles">
+                        <i class="bi bi-shield-lock"></i><span>{{ t('nav.roles') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.audit') %}
+                    <a class="cx-nav__link {{ active_menu == 'audit' ? 'is-active' : '' }}" href="{{ base_url }}/audit">
+                        <i class="bi bi-journal-text"></i><span>{{ t('nav.audit') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.settings') %}
+                    <a class="cx-nav__link {{ active_menu == 'settings-company' ? 'is-active' : '' }}" href="{{ base_url }}/settings/company">
+                        <i class="bi bi-building-gear"></i><span>{{ t('nav.settings_company') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('catalog.manage') %}
+                    <a class="cx-nav__link {{ active_menu == 'parameters' ? 'is-active' : '' }}" href="{{ base_url }}/parameters">
+                        <i class="bi bi-sliders"></i><span>{{ t('nav.parameters') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('catalog.manage') %}
+                    <a class="cx-nav__link {{ active_menu == 'units' ? 'is-active' : '' }}" href="{{ base_url }}/units">
+                        <i class="bi bi-rulers"></i><span>{{ t('nav.units') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.settings') %}
+                    <a class="cx-nav__link {{ active_menu == 'currencies' ? 'is-active' : '' }}" href="{{ base_url }}/currencies">
+                        <i class="bi bi-currency-exchange"></i><span>{{ t('nav.currencies') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.settings') %}
+                    <a class="cx-nav__link {{ active_menu == 'languages' ? 'is-active' : '' }}" href="{{ base_url }}/languages">
+                        <i class="bi bi-translate"></i><span>{{ t('nav.languages') }}</span>
+                    </a>
+                {% endif %}
+            {% endif %}
 
+            {% if can_any('system.api') %}
                 <div class="cx-nav__group-label">{{ t('nav.groups.api') }}</div>
-                <a class="cx-nav__link {{ active_menu == 'api-users' ? 'is-active' : '' }}" href="{{ base_url }}/api-users">
-                    <i class="bi bi-key"></i><span>{{ t('nav.api_users') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'api-logs' ? 'is-active' : '' }}" href="{{ base_url }}/api-logs">
-                    <i class="bi bi-list-check"></i><span>{{ t('nav.api_logs') }}</span>
-                </a>
-                <a class="cx-nav__link {{ active_menu == 'api-docs' ? 'is-active' : '' }}" href="{{ base_url }}/api-docs">
-                    <i class="bi bi-file-earmark-code"></i><span>{{ t('nav.api_docs') }}</span>
-                </a>
+                {% if can('system.api') %}
+                    <a class="cx-nav__link {{ active_menu == 'api-users' ? 'is-active' : '' }}" href="{{ base_url }}/api-users">
+                        <i class="bi bi-key"></i><span>{{ t('nav.api_users') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.api') %}
+                    <a class="cx-nav__link {{ active_menu == 'api-logs' ? 'is-active' : '' }}" href="{{ base_url }}/api-logs">
+                        <i class="bi bi-list-check"></i><span>{{ t('nav.api_logs') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('system.api') %}
+                    <a class="cx-nav__link {{ active_menu == 'api-docs' ? 'is-active' : '' }}" href="{{ base_url }}/api-docs">
+                        <i class="bi bi-file-earmark-code"></i><span>{{ t('nav.api_docs') }}</span>
+                    </a>
+                {% endif %}
             {% endif %}
         </nav>
 
@@ -177,6 +257,10 @@
                             <i class="bi bi-chevron-down cx-user-pill__caret" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            {% if auth_role_name %}
+                                <li><span class="dropdown-item-text small text-muted"><i class="bi bi-shield-check me-2"></i>{{ auth_role_name }}</span></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{{ base_url }}/profile"><i class="bi bi-person me-2"></i>{{ t('nav.profile') }}</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ base_url }}/logout"><i class="bi bi-box-arrow-right me-2"></i>{{ t('nav.logout') }}</a></li>

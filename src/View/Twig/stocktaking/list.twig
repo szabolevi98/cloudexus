@@ -4,9 +4,11 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('stocktaking.list_title') }}</h2>
-            <a href="{{ base_url }}/stocktaking/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>{{ t('stocktaking.new') }}
-            </a>
+            {% if can('stocktaking.manage') %}
+                <a href="{{ base_url }}/stocktaking/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('stocktaking.new') }}
+                </a>
+            {% endif %}
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">

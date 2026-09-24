@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\UnitModel;
 
 class UnitController extends BaseController
@@ -18,7 +19,7 @@ class UnitController extends BaseController
 
     public function list(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new Paginator(30);
@@ -33,7 +34,7 @@ class UnitController extends BaseController
 
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $data = $this->collectInput();
         if ($data['code'] === '' || $this->defaultText($data['name']) === '') {
@@ -49,7 +50,7 @@ class UnitController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $data = $this->collectInput();
         if ($data['code'] === '' || $this->defaultText($data['name']) === '') {
@@ -65,7 +66,7 @@ class UnitController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $this->units->delete($id);
         $this->flashSuccess($this->t('units.deleted'));

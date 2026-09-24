@@ -2,7 +2,11 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
+use Cloudexus\Core\RoleCode;
+use Cloudexus\Model\Account\RoleModel;
 use Cloudexus\Model\Account\UserModel;
 
 class UserController extends BaseController
@@ -18,7 +22,7 @@ class UserController extends BaseController
 
     public function list(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new \Cloudexus\Core\Paginator(25);
@@ -33,15 +37,15 @@ class UserController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         $this->pageTitle = $this->t('users.new');
-        $this->render('users/form.twig', ['user' => null]);
+        $this->render('users/form.twig', ['user' => null, 'roles' => $this->assignableRoles()]);
     }
 
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         $data = $this->collectInput();
         $errors = $this->validate($data, null);
@@ -51,14 +55,15 @@ class UserController extends BaseController
             $this->redirect('/users/create');
         }
 
-        $this->users->create($data);
+        $id = $this->users->create($data);
+        AuditLog::record(AuditLog::CREATE, 'user', $id, $data['username'], ['role' => $this->roleName((int) $data['role_id'])]);
         $this->flashSuccess($this->t('users.created'));
         $this->redirect('/users');
     }
 
     public function editForm(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         $user = $this->users->findById($id);
         if (!$user) {
@@ -66,12 +71,12 @@ class UserController extends BaseController
         }
 
         $this->pageTitle = $this->t('users.edit');
-        $this->render('users/form.twig', ['user' => $user]);
+        $this->render('users/form.twig', ['user' => $user, 'roles' => $this->assignableRoles()]);
     }
 
     public function update(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         $data = $this->collectInput();
         $errors = $this->validate($data, $id);
@@ -81,21 +86,53 @@ class UserController extends BaseController
             $this->redirect('/users/' . $id . '/edit');
         }
 
+        $before = $this->users->findById($id);
+
+        // Az utolsó aktív szuper admin nem veszítheti el a szerepkörét, és
+        // nem tiltható le: a rendszert valakinek kezelnie kell.
+        if ($this->wouldOrphanSuperAdmin($id, (int) $data['role_id'], (int) $data['is_active'])) {
+            $this->flashError($this->t('users.last_super_admin'));
+            $this->redirect('/users/' . $id . '/edit');
+        }
+
         $this->users->update($id, $data);
+
+        $changes = [];
+        if ($before && (int) $before['role_id'] !== (int) $data['role_id']) {
+            $changes['role'] = [$this->roleName((int) $before['role_id']), $this->roleName((int) $data['role_id'])];
+        }
+        if ($before && (int) $before['is_active'] !== (int) $data['is_active']) {
+            $changes['active'] = [(bool) $before['is_active'], (bool) $data['is_active']];
+        }
+        if ($data['password'] !== '') {
+            $changes['password'] = true;
+        }
+        AuditLog::record(AuditLog::UPDATE, 'user', $id, $data['username'], $changes ?: null);
         $this->flashSuccess($this->t('users.updated'));
         $this->redirect('/users');
     }
 
     public function delete(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::USERS_MANAGE);
 
         if ($id === Auth::id()) {
             $this->flashError($this->t('users.cannot_delete_self'));
             $this->redirect('/users');
         }
 
+        $user = $this->users->findById($id);
+        if ($user && $this->wouldOrphanSuperAdmin($id, 0, 0)) {
+            $this->flashError($this->t('users.last_super_admin'));
+            $this->redirect('/users');
+        }
+        if ($user && $this->isSuperAdminRole((int) $user['role_id']) && !Auth::isSuperAdmin()) {
+            $this->flashError($this->t('users.super_admin_only'));
+            $this->redirect('/users');
+        }
+
         $this->users->delete($id);
+        AuditLog::record(AuditLog::DELETE, 'user', $id, $user['username'] ?? null);
         $this->flashSuccess($this->t('users.deleted'));
         $this->redirect('/users');
     }
@@ -106,7 +143,7 @@ class UserController extends BaseController
             'username' => trim($_POST['username'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
             'full_name' => trim($_POST['full_name'] ?? ''),
-            'role' => $_POST['role'] ?? 'user',
+            'role_id' => (int) ($_POST['role_id'] ?? 0),
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
             'password' => $_POST['password'] ?? '',
         ];
@@ -132,6 +169,53 @@ class UserController extends BaseController
             $errors[] = $this->t('users.username_email_taken');
         }
 
+        $roles = array_column($this->assignableRoles(), 'id');
+        if (!in_array($data['role_id'], array_map('intval', $roles), true)) {
+            $errors[] = $this->t('users.role_required');
+        }
+
+        // Szuper admint csak szuper admin nevezhet ki — különben a felhasználó-
+        // kezelés joga csendben mindenhez hozzáférést adna.
+        if ($excludeId !== null) {
+            $current = $this->users->findById($excludeId);
+            if ($current && $this->isSuperAdminRole((int) $current['role_id']) && !Auth::isSuperAdmin()) {
+                $errors[] = $this->t('users.super_admin_only');
+            }
+        }
+
         return $errors;
+    }
+
+    /** @return list<array<string, mixed>> a kiosztható szerepkörök: a szuper admint csak szuper admin adhatja */
+    private function assignableRoles(): array
+    {
+        $roles = (new RoleModel())->all();
+
+        return Auth::isSuperAdmin()
+            ? $roles
+            : array_values(array_filter($roles, static fn(array $r): bool => $r['code'] !== RoleCode::SUPER_ADMIN));
+    }
+
+    private function isSuperAdminRole(int $roleId): bool
+    {
+        return ((new RoleModel())->findById($roleId)['code'] ?? null) === RoleCode::SUPER_ADMIN;
+    }
+
+    private function roleName(int $roleId): string
+    {
+        return (string) ((new RoleModel())->findById($roleId)['name'] ?? '—');
+    }
+
+    /** Az utolsó aktív szuper admin elvesztené-e a helyét ettől a változtatástól. */
+    private function wouldOrphanSuperAdmin(int $userId, int $newRoleId, int $active): bool
+    {
+        $user = $this->users->findById($userId);
+        if (!$user || !$user['is_active'] || !$this->isSuperAdminRole((int) $user['role_id'])) {
+            return false;
+        }
+
+        $staysSuperAdmin = $active === 1 && $this->isSuperAdminRole($newRoleId);
+
+        return !$staysSuperAdmin && (new RoleModel())->otherActiveSuperAdmins($userId) === 0;
     }
 }

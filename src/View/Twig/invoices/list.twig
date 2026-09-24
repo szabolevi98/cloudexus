@@ -8,9 +8,11 @@
                 <a href="{{ base_url }}/invoices/export?{{ filters|url_encode }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-download me-1"></i>{{ t('common.csv_export') }}
                 </a>
-                <a href="{{ base_url }}/invoices/create" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>{{ t('invoices.new') }}
-                </a>
+                {% if can('invoices.issue') %}
+                    <a href="{{ base_url }}/invoices/create" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>{{ t('invoices.new') }}
+                    </a>
+                {% endif %}
             </div>
         </div>
         <div class="cx-card__body p-0">

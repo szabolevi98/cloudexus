@@ -89,6 +89,23 @@ abstract class ApiController
         }
     }
 
+    /**
+     * requireUser(), plus the permission check: a user token acts with its
+     * user's role, the same as in the web UI.
+     */
+    protected function requireUserPermission(string $permission): void
+    {
+        $this->requireUser();
+
+        if (!\Cloudexus\Core\Acl::userCan((int) $this->user['id'], $permission)) {
+            \Cloudexus\Core\AuditLog::record(
+                \Cloudexus\Core\AuditLog::DENIED, 'permission', null, $permission, 'api',
+                ['id' => (int) $this->user['id'], 'name' => (string) $this->user['full_name']]
+            );
+            $this->error('Your role does not allow this: ' . $permission . '.', 403);
+        }
+    }
+
     /** Writes this request's api_request_logs row; the status is filled in at shutdown. */
     protected function startLog(): ApiRequestLogModel
     {

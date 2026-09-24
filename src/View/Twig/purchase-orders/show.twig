@@ -56,14 +56,18 @@
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
         </a>
         {% if order.status == 'confirmed' %}
-            <a href="{{ base_url }}/incoming-invoices/create?order_id={{ order.id }}" class="btn btn-primary">
-                <i class="bi bi-receipt me-1"></i>{{ t('purchase_orders.make_incoming_invoice') }}
-            </a>
-            <form method="post" action="{{ base_url }}/purchase-orders/{{ order.id }}/cancel" onsubmit="return confirm('{{ t('purchase_orders.confirm_void')|e('js') }}');">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-x-circle me-1"></i>{{ t('purchase_orders.void') }}
-                </button>
-            </form>
+            {% if can('purchasing.manage') %}
+                <a href="{{ base_url }}/incoming-invoices/create?order_id={{ order.id }}" class="btn btn-primary">
+                    <i class="bi bi-receipt me-1"></i>{{ t('purchase_orders.make_incoming_invoice') }}
+                </a>
+            {% endif %}
+            {% if can('purchasing.manage') %}
+                <form method="post" action="{{ base_url }}/purchase-orders/{{ order.id }}/cancel" onsubmit="return confirm('{{ t('purchase_orders.confirm_void')|e('js') }}');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i>{{ t('purchase_orders.void') }}
+                    </button>
+                </form>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

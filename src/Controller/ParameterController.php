@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\ParameterModel;
 
 class ParameterController extends BaseController
@@ -25,7 +26,7 @@ class ParameterController extends BaseController
 
     public function list(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new Paginator(30);
@@ -40,7 +41,7 @@ class ParameterController extends BaseController
 
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $name = $this->localized('name');
         if ($this->defaultText($name) === '') {
@@ -56,7 +57,7 @@ class ParameterController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $name = $this->localized('name');
         if ($this->defaultText($name) === '') {
@@ -72,7 +73,7 @@ class ParameterController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $this->names->delete($id);
         $this->flashSuccess($this->t('parameters.deleted'));

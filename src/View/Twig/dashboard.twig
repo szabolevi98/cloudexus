@@ -2,226 +2,246 @@
 
 {% block content %}
     <div class="row g-3 mb-3">
-        <div class="col-sm-6 col-xl-3">
-            <div class="cx-stat cx-stat--primary">
-                <a href="{{ base_url }}/orders" class="cx-stat__link" aria-label="{{ t('dashboard.orders_10_days') }}"></a>
-                <div class="cx-stat__icon"><i class="bi bi-cart-check"></i></div>
-                <div>
-                    <div class="cx-stat__label">{{ t('dashboard.orders_10_days') }}</div>
-                    <div class="cx-stat__value">{{ orders_total_value|default(0)|money }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="cx-stat cx-stat--warning">
-                <a href="{{ base_url }}/invoices?status=unpaid" class="cx-stat__link" aria-label="{{ t('dashboard.receivables') }}"></a>
-                <div class="cx-stat__icon"><i class="bi bi-hourglass-split"></i></div>
-                <div>
-                    <div class="cx-stat__label">{{ t('dashboard.receivables') }}</div>
-                    <div class="cx-stat__value">{{ outstanding.total|default(0)|money }}</div>
-                    {% if outstanding.overdue > 0 %}
-                        <a href="{{ base_url }}/invoices?status=overdue" class="small text-danger text-decoration-none">{{ t('dashboard.overdue_prefix') }}: {{ outstanding.overdue|money }}</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-            <div class="cx-stat cx-stat--danger">
-                <a href="{{ base_url }}/incoming-invoices?status=unpaid" class="cx-stat__link" aria-label="{{ t('dashboard.payables') }}"></a>
-                <div class="cx-stat__icon"><i class="bi bi-exclamation-circle"></i></div>
-                <div>
-                    <div class="cx-stat__label">{{ t('dashboard.payables') }}</div>
-                    <div class="cx-stat__value">{{ payable.total|default(0)|money }}</div>
-                    {% if payable.overdue > 0 %}
-                        <a href="{{ base_url }}/incoming-invoices?status=overdue" class="small text-danger text-decoration-none">{{ t('dashboard.overdue_prefix') }}: {{ payable.overdue|money }}</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="cx-stat cx-stat--success">
-                <a href="{{ base_url }}/products" class="cx-stat__link" aria-label="{{ t('dashboard.products') }}"></a>
-                <div class="cx-stat__icon"><i class="bi bi-box-seam"></i></div>
-                <div>
-                    <div class="cx-stat__label">{{ t('dashboard.products') }}</div>
-                    <div class="cx-stat__value">{{ product_count|default(0) }} {{ t('common.pcs') }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-3">
-        <div class="col-lg-8">
-            <div class="cx-card h-100 mb-0 d-flex flex-column">
-                <div class="cx-card__header">
-                    <h2>{{ t('dashboard.orders_chart') }}</h2>
-                    <span class="text-muted small">{{ t('dashboard.last_10_days') }}</span>
-                </div>
-                <div class="cx-card__body flex-grow-1" style="position: relative; min-height: 280px;">
-                    <canvas id="orders-chart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="cx-card h-100 mb-0">
-                <div class="cx-card__header">
-                    <h2>{{ t('dashboard.top_categories') }}</h2>
-                    <span class="text-muted small">{{ t('dashboard.days_30') }}</span>
-                </div>
-                <div class="cx-card__body">
-                    {% for cat in top_categories %}
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small mb-1">
-                                {% if cat.category_id %}
-                                    {# A kategóriára szűrt terméklista #}
-                                    <a href="{{ base_url }}/products?q=&amp;category_id={{ cat.category_id }}&amp;status=" class="fw-medium text-body text-decoration-none">{{ cat.name }}</a>
-                                {% else %}
-                                    <span class="fw-medium">{{ cat.name }}</span>
-                                {% endif %}
-                                <span class="text-muted">{{ cat.value|money }}</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar" style="width: {{ top_categories_max > 0 ? (cat.value / top_categories_max * 100)|round : 0 }}%; background: var(--cx-primary);"></div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-tags fs-1 d-block mb-2"></i>
-                            {{ t('dashboard.no_sales_data') }}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-3">
-        <div class="col-lg-8">
-            <div class="cx-card mb-0 h-100">
-                <div class="cx-card__header">
-                    <h2>{{ t('dashboard.recent_invoices') }}</h2>
-                    <a href="{{ base_url }}/invoices" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all_invoices') }}</a>
-                </div>
-                <div class="cx-card__body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 cx-table">
-                            <thead>
-                            <tr>
-                                <th>{{ t('dashboard.invoice_number') }}</th>
-                                <th>{{ t('common.partner') }}</th>
-                                <th class="text-nowrap">{{ t('dashboard.issue_date') }}</th>
-                                <th class="text-nowrap">{{ t('dashboard.due_date') }}</th>
-                                <th>{{ t('common.status') }}</th>
-                                <th class="text-end">{{ t('dashboard.amount') }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for invoice in recent_invoices %}
-                                <tr>
-                                    <td class="text-nowrap"><a href="{{ base_url }}/invoices/{{ invoice.id }}" class="fw-medium">{{ invoice.invoice_number }}</a></td>
-                                    <td><a href="{{ base_url }}/partners/{{ invoice.partner_id }}" class="text-body">{{ invoice.partner_name }}</a></td>
-                                    <td class="text-muted text-nowrap">{{ invoice.issue_date }}</td>
-                                    <td class="text-muted text-nowrap">{{ invoice.due_date }}</td>
-                                    <td>
-                                        {% if invoice.status == 'unpaid' and invoice.due_date < today %}
-                                            <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
-                                        {% elseif invoice.status == 'unpaid' %}
-                                            <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
-                                        {% elseif invoice.status == 'paid' %}
-                                            <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
-                                        {% else %}
-                                            <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-end text-nowrap">{{ invoice.total_amount|money }}</td>
-                                </tr>
-                            {% else %}
-                                <tr><td colspan="6" class="text-center text-muted py-4">{{ t('dashboard.no_invoices') }}</td></tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+        {% if can('orders.view') %}
+            <div class="col-sm-6 col-xl-3">
+                <div class="cx-stat cx-stat--primary">
+                    <a href="{{ base_url }}/orders" class="cx-stat__link" aria-label="{{ t('dashboard.orders_10_days') }}"></a>
+                    <div class="cx-stat__icon"><i class="bi bi-cart-check"></i></div>
+                    <div>
+                        <div class="cx-stat__label">{{ t('dashboard.orders_10_days') }}</div>
+                        <div class="cx-stat__value">{{ orders_total_value|default(0)|money }}</div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="cx-card mb-0 h-100">
-                <div class="cx-card__header">
-                    <h2>{{ t('dashboard.todos') }}</h2>
-                    <a href="{{ base_url }}/todos" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all') }}</a>
-                </div>
-                <div class="cx-card__body p-0">
-                    {% for todo in open_todos %}
-                        <div class="d-flex align-items-center gap-2 px-3 py-2 {{ not loop.last ? 'border-bottom' : '' }}">
-                            <i class="bi bi-circle text-muted"></i>
-                            <div class="flex-grow-1">
-                                <div class="small fw-medium">
-                                    <a href="{{ base_url }}/todos?q={{ todo.title|url_encode }}&status=open" class="text-body text-decoration-none">{{ todo.title }}</a>
-                                </div>
-                                {% if todo.partner_name %}
-                                    <div style="font-size:.75rem;">
-                                        <a href="{{ base_url }}/partners/{{ todo.partner_id }}" class="text-muted text-decoration-none">{{ todo.partner_name }}</a>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% if todo.due_date %}
-                                <span class="small text-nowrap {{ todo.due_date < today ? 'text-danger fw-medium' : 'text-muted' }}">{{ todo.due_date }}</span>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-check2-circle fs-1 d-block mb-2"></i>
-                            {{ t('dashboard.no_open_todos') }}
-                        </div>
-                    {% endfor %}
+        {% endif %}
+        {% if can('invoices.view') %}
+            <div class="col-sm-6 col-xl-3">
+                <div class="cx-stat cx-stat--warning">
+                    <a href="{{ base_url }}/invoices?status=unpaid" class="cx-stat__link" aria-label="{{ t('dashboard.receivables') }}"></a>
+                    <div class="cx-stat__icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="cx-stat__label">{{ t('dashboard.receivables') }}</div>
+                        <div class="cx-stat__value">{{ outstanding.total|default(0)|money }}</div>
+                        {% if outstanding.overdue > 0 %}
+                            <a href="{{ base_url }}/invoices?status=overdue" class="small text-danger text-decoration-none">{{ t('dashboard.overdue_prefix') }}: {{ outstanding.overdue|money }}</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
+        {% if can('purchasing.view') %}
+            <div class="col-sm-6 col-xl-3">
+                <div class="cx-stat cx-stat--danger">
+                    <a href="{{ base_url }}/incoming-invoices?status=unpaid" class="cx-stat__link" aria-label="{{ t('dashboard.payables') }}"></a>
+                    <div class="cx-stat__icon"><i class="bi bi-exclamation-circle"></i></div>
+                    <div>
+                        <div class="cx-stat__label">{{ t('dashboard.payables') }}</div>
+                        <div class="cx-stat__value">{{ payable.total|default(0)|money }}</div>
+                        {% if payable.overdue > 0 %}
+                            <a href="{{ base_url }}/incoming-invoices?status=overdue" class="small text-danger text-decoration-none">{{ t('dashboard.overdue_prefix') }}: {{ payable.overdue|money }}</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if can('products.view') %}
+            <div class="col-sm-6 col-lg-3">
+                <div class="cx-stat cx-stat--success">
+                    <a href="{{ base_url }}/products" class="cx-stat__link" aria-label="{{ t('dashboard.products') }}"></a>
+                    <div class="cx-stat__icon"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="cx-stat__label">{{ t('dashboard.products') }}</div>
+                        <div class="cx-stat__value">{{ product_count|default(0) }} {{ t('common.pcs') }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+        {% if can('orders.view') %}
+            <div class="col-lg-8">
+                <div class="cx-card h-100 mb-0 d-flex flex-column">
+                    <div class="cx-card__header">
+                        <h2>{{ t('dashboard.orders_chart') }}</h2>
+                        <span class="text-muted small">{{ t('dashboard.last_10_days') }}</span>
+                    </div>
+                    <div class="cx-card__body flex-grow-1" style="position: relative; min-height: 280px;">
+                        <canvas id="orders-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if can('products.view') %}
+            <div class="col-lg-4">
+                <div class="cx-card h-100 mb-0">
+                    <div class="cx-card__header">
+                        <h2>{{ t('dashboard.top_categories') }}</h2>
+                        <span class="text-muted small">{{ t('dashboard.days_30') }}</span>
+                    </div>
+                    <div class="cx-card__body">
+                        {% for cat in top_categories %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    {% if cat.category_id %}
+                                        {# A kategóriára szűrt terméklista #}
+                                        <a href="{{ base_url }}/products?q=&amp;category_id={{ cat.category_id }}&amp;status=" class="fw-medium text-body text-decoration-none">{{ cat.name }}</a>
+                                    {% else %}
+                                        <span class="fw-medium">{{ cat.name }}</span>
+                                    {% endif %}
+                                    <span class="text-muted">{{ cat.value|money }}</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" style="width: {{ top_categories_max > 0 ? (cat.value / top_categories_max * 100)|round : 0 }}%; background: var(--cx-primary);"></div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-tags fs-1 d-block mb-2"></i>
+                                {{ t('dashboard.no_sales_data') }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+        {% if can('invoices.view') %}
+            <div class="col-lg-8">
+                <div class="cx-card mb-0 h-100">
+                    <div class="cx-card__header">
+                        <h2>{{ t('dashboard.recent_invoices') }}</h2>
+                        <a href="{{ base_url }}/invoices" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all_invoices') }}</a>
+                    </div>
+                    <div class="cx-card__body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 cx-table">
+                                <thead>
+                                <tr>
+                                    <th>{{ t('dashboard.invoice_number') }}</th>
+                                    <th>{{ t('common.partner') }}</th>
+                                    <th class="text-nowrap">{{ t('dashboard.issue_date') }}</th>
+                                    <th class="text-nowrap">{{ t('dashboard.due_date') }}</th>
+                                    <th>{{ t('common.status') }}</th>
+                                    <th class="text-end">{{ t('dashboard.amount') }}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for invoice in recent_invoices %}
+                                    <tr>
+                                        <td class="text-nowrap"><a href="{{ base_url }}/invoices/{{ invoice.id }}" class="fw-medium">{{ invoice.invoice_number }}</a></td>
+                                        <td><a href="{{ base_url }}/partners/{{ invoice.partner_id }}" class="text-body">{{ invoice.partner_name }}</a></td>
+                                        <td class="text-muted text-nowrap">{{ invoice.issue_date }}</td>
+                                        <td class="text-muted text-nowrap">{{ invoice.due_date }}</td>
+                                        <td>
+                                            {% if invoice.status == 'unpaid' and invoice.due_date < today %}
+                                                <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
+                                            {% elseif invoice.status == 'unpaid' %}
+                                                <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
+                                            {% elseif invoice.status == 'paid' %}
+                                                <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
+                                            {% else %}
+                                                <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end text-nowrap">{{ invoice.total_amount|money }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="6" class="text-center text-muted py-4">{{ t('dashboard.no_invoices') }}</td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if can('crm.view') %}
+            <div class="col-lg-4">
+                <div class="cx-card mb-0 h-100">
+                    <div class="cx-card__header">
+                        <h2>{{ t('dashboard.todos') }}</h2>
+                        <a href="{{ base_url }}/todos" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all') }}</a>
+                    </div>
+                    <div class="cx-card__body p-0">
+                        {% for todo in open_todos %}
+                            <div class="d-flex align-items-center gap-2 px-3 py-2 {{ not loop.last ? 'border-bottom' : '' }}">
+                                <i class="bi bi-circle text-muted"></i>
+                                <div class="flex-grow-1">
+                                    <div class="small fw-medium">
+                                        <a href="{{ base_url }}/todos?q={{ todo.title|url_encode }}&status=open" class="text-body text-decoration-none">{{ todo.title }}</a>
+                                    </div>
+                                    {% if todo.partner_name %}
+                                        <div style="font-size:.75rem;">
+                                            <a href="{{ base_url }}/partners/{{ todo.partner_id }}" class="text-muted text-decoration-none">{{ todo.partner_name }}</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if todo.due_date %}
+                                    <span class="small text-nowrap {{ todo.due_date < today ? 'text-danger fw-medium' : 'text-muted' }}">{{ todo.due_date }}</span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-check2-circle fs-1 d-block mb-2"></i>
+                                {{ t('dashboard.no_open_todos') }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <div class="row g-3">
-        <div class="col-12">
-            <div class="cx-card mb-0">
-                <div class="cx-card__header">
-                    <h2>{{ t('dashboard.low_stock') }}</h2>
-                    <span class="text-muted small">{{ t('dashboard.below_minimum') }}</span>
-                </div>
-                <div class="cx-card__body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 cx-table">
-                            <thead>
-                            <tr>
-                                <th>{{ t('common.sku') }}</th>
-                                <th>{{ t('dashboard.product_name') }}</th>
-                                <th class="text-end">{{ t('dashboard.stock') }}</th>
-                                <th class="text-end">{{ t('dashboard.minimum') }}</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for p in low_stock %}
+        {% if can('stock.view') %}
+            <div class="col-12">
+                <div class="cx-card mb-0">
+                    <div class="cx-card__header">
+                        <h2>{{ t('dashboard.low_stock') }}</h2>
+                        <span class="text-muted small">{{ t('dashboard.below_minimum') }}</span>
+                    </div>
+                    <div class="cx-card__body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 cx-table">
+                                <thead>
                                 <tr>
-                                    <td class="text-nowrap"><a href="{{ base_url }}/products/{{ p.id }}/edit" class="fw-medium">{{ p.sku }}</a></td>
-                                    <td><a href="{{ base_url }}/products/{{ p.id }}/edit" class="text-body">{{ p.name }}</a></td>
-                                    <td class="text-end">
-                                        <span class="badge rounded-pill {{ p.stock_qty <= 0 ? 'text-bg-danger' : 'text-bg-warning-subtle text-warning-emphasis' }}">
-                                            {{ p.stock_qty|number_format(0, ',', ' ') }} {{ p.unit }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end text-muted text-nowrap">{{ p.min_stock|number_format(0, ',', ' ') }} {{ p.unit }}</td>
-                                    <td class="text-end">
-                                        <a href="{{ base_url }}/stock/in?product_id={{ p.id }}" class="btn btn-sm btn-outline-primary">{{ t('dashboard.receive') }}</a>
-                                    </td>
+                                    <th>{{ t('common.sku') }}</th>
+                                    <th>{{ t('dashboard.product_name') }}</th>
+                                    <th class="text-end">{{ t('dashboard.stock') }}</th>
+                                    <th class="text-end">{{ t('dashboard.minimum') }}</th>
+                                    <th></th>
                                 </tr>
-                            {% else %}
-                                <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-check-circle me-1"></i>{{ t('dashboard.all_above_minimum') }}</td></tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {% for p in low_stock %}
+                                    <tr>
+                                        <td class="text-nowrap"><a href="{{ base_url }}/products/{{ p.id }}/edit" class="fw-medium">{{ p.sku }}</a></td>
+                                        <td><a href="{{ base_url }}/products/{{ p.id }}/edit" class="text-body">{{ p.name }}</a></td>
+                                        <td class="text-end">
+                                            <span class="badge rounded-pill {{ p.stock_qty <= 0 ? 'text-bg-danger' : 'text-bg-warning-subtle text-warning-emphasis' }}">
+                                                {{ p.stock_qty|number_format(0, ',', ' ') }} {{ p.unit }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end text-muted text-nowrap">{{ p.min_stock|number_format(0, ',', ' ') }} {{ p.unit }}</td>
+                                        <td class="text-end">
+                                            {% if can('stock.move') %}
+                                                <a href="{{ base_url }}/stock/in?product_id={{ p.id }}" class="btn btn-sm btn-outline-primary">{{ t('dashboard.receive') }}</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-check-circle me-1"></i>{{ t('dashboard.all_above_minimum') }}</td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 
     <script src="{{ base_url }}/assets/vendor/chartjs/chart.umd.min.js"></script>

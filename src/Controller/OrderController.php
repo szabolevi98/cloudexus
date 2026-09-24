@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerAddressModel;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Sales\OrderModel;
@@ -24,7 +25,7 @@ class OrderController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -46,7 +47,7 @@ class OrderController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_MANAGE);
 
         $this->pageTitle = $this->t('orders.new_full');
         $this->render('orders/form.twig', [
@@ -57,7 +58,7 @@ class OrderController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_MANAGE);
 
         $items = $this->collectItems();
 
@@ -84,7 +85,7 @@ class OrderController extends BaseController
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_VIEW);
 
         $order = $this->orders->findById($id);
         if (!$order) {
@@ -97,7 +98,7 @@ class OrderController extends BaseController
 
     public function cancel(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_MANAGE);
 
         $this->orders->updateStatus($id, 'cancelled');
         $this->flashSuccess($this->t('orders.cancelled'));
@@ -106,7 +107,7 @@ class OrderController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::ORDERS_MANAGE);
 
         $this->orders->delete($id);
         $this->flashSuccess($this->t('orders.deleted'));

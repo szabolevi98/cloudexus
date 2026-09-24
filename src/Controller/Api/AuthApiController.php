@@ -3,6 +3,9 @@
 namespace Cloudexus\Controller\Api;
 
 use Cloudexus\Core\Config;
+use Cloudexus\Core\Permissions;
+use Cloudexus\Core\RoleCode;
+use Cloudexus\Model\Account\RoleModel;
 use Cloudexus\Model\Account\UserModel;
 use Cloudexus\Model\Account\UserTokenModel;
 
@@ -78,12 +81,21 @@ class AuthApiController extends ApiController
 
     private function userPayload(array $user): array
     {
+        $roles = new RoleModel();
+        $role = $roles->forUser((int) $user['id']);
+
         return [
             'id' => (int) $user['id'],
             'username' => $user['username'],
             'full_name' => $user['full_name'],
             'email' => $user['email'],
             'role' => $user['role'],
+            'role_code' => $role['code'] ?? null,
+            'role_name' => $role['name'] ?? null,
+            // The app can hide what the role cannot do; the server still checks every call.
+            'permissions' => $role === null ? [] : ($role['code'] === RoleCode::SUPER_ADMIN
+                ? Permissions::all()
+                : $roles->permissions((int) $role['id'])),
         ];
     }
 }

@@ -1,0 +1,12 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card" style="max-width: 560px;">
+        <div class="cx-card__body text-center py-5">
+            <div class="display-5 mb-2" style="color: var(--cx-primary);"><i class="bi bi-shield-lock"></i></div>
+            <h2 class="fs-5 fw-semibold">{{ t('errors.forbidden_title') }}</h2>
+            <p class="text-muted mb-4">{{ t('errors.forbidden') }}</p>
+            <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">&laquo; {{ t('errors.back_to_previous') }}</a>
+        </div>
+    </div>
+{% endblock %}

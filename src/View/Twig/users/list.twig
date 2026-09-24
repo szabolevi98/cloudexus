@@ -41,11 +41,7 @@
                             <td>{{ user.full_name }}</td>
                             <td class="text-muted">{{ user.email }}</td>
                             <td>
-                                {% if user.role == 'admin' %}
-                                    <span class="badge rounded-pill text-bg-primary">{{ t('users.admin') }}</span>
-                                {% else %}
-                                    <span class="badge rounded-pill text-bg-secondary">{{ t('users.user') }}</span>
-                                {% endif %}
+                                <span class="badge rounded-pill {{ user.role_code == 'super_admin' ? 'text-bg-primary' : 'text-bg-secondary' }}">{{ user.role_name ?: '—' }}</span>
                             </td>
                             <td>
                                 {% if user.is_active %}

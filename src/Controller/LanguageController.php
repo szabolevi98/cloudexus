@@ -4,6 +4,7 @@ namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Language;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\LanguageModel;
 use Cloudexus\Model\Core\SettingModel;
 
@@ -22,7 +23,7 @@ class LanguageController extends BaseController
 
     public function list(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new Paginator(30);
@@ -46,7 +47,7 @@ class LanguageController extends BaseController
 
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $data = $this->collectInput();
         $error = $this->validate($data, null);
@@ -64,7 +65,7 @@ class LanguageController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $language = $this->languages->findById($id);
         if (!$language) {
@@ -98,7 +99,7 @@ class LanguageController extends BaseController
 
     public function setDefault(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $language = $this->languages->findById($id);
         if (!$language) {
@@ -124,7 +125,7 @@ class LanguageController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $language = $this->languages->findById($id);
         if (!$language) {

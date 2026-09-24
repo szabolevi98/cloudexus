@@ -1,0 +1,109 @@
+/*
+ * Jogosultság-mátrix. Sok szerepkör × sok jogosultság, ezért a
+ * jogosultság-nevek oszlopa és a szerepkör-fejléc is tapad, hogy görgetés
+ * közben mindig látszódjon, melyik cellában vagyunk.
+ */
+.cx-matrix-wrap {
+    overflow: auto;
+    max-height: calc(100vh - 260px);
+}
+
+.cx-matrix {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    font-size: 0.86rem;
+}
+
+.cx-matrix th,
+.cx-matrix td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--cx-border);
+    background: var(--cx-surface);
+}
+
+.cx-matrix thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--cx-text);
+    text-align: center;
+    border-bottom: 2px solid var(--cx-border);
+    vertical-align: bottom;
+    line-height: 1.3;
+}
+
+.cx-matrix thead th:first-child {
+    left: 0;
+    z-index: 4;
+    text-align: left;
+    min-width: 260px;
+}
+
+.cx-matrix tbody th {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    text-align: left;
+    font-weight: 500;
+    min-width: 260px;
+    border-right: 1px solid var(--cx-border);
+}
+
+.cx-matrix tbody th code {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--cx-muted);
+    margin-top: 1px;
+}
+
+.cx-matrix td {
+    text-align: center;
+    width: 110px;
+}
+
+.cx-matrix tbody tr:hover th,
+.cx-matrix tbody tr:hover td {
+    background: var(--cx-primary-soft);
+}
+
+.cx-matrix__count {
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--cx-muted);
+}
+
+/* Csoportfejléc a jogosultság-csoportok között. */
+.cx-matrix__group th,
+.cx-matrix__group td,
+.cx-matrix tbody tr.cx-matrix__group:hover th,
+.cx-matrix tbody tr.cx-matrix__group:hover td {
+    background: var(--cx-bg);
+}
+
+.cx-matrix__group th {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--cx-muted);
+    padding-top: 14px;
+}
+
+/* A szuper admin oszlopa nem szerkeszthető: nála a hozzáférés a kódból jön. */
+.cx-matrix__locked {
+    color: var(--cx-success);
+    opacity: 0.65;
+}
+
+/* Az audit napló részletei: a hozzáadott és elvett jogok, a régi → új értékek. */
+.cx-audit-details {
+    font-size: 0.78rem;
+    color: var(--cx-muted);
+}
+
+.cx-audit-details code {
+    font-size: 0.72rem;
+}

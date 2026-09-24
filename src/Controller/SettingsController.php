@@ -2,6 +2,8 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\SettingModel;
 
 class SettingsController extends BaseController
@@ -17,7 +19,7 @@ class SettingsController extends BaseController
 
     public function company(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $this->pageTitle = $this->t('settings.company_title');
         $this->render('settings/company.twig', [
@@ -27,7 +29,7 @@ class SettingsController extends BaseController
 
     public function companyUpdate(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $fields = ['name', 'address', 'tax_number', 'bank_account', 'email', 'phone'];
         $pairs = [];
@@ -40,7 +42,13 @@ class SettingsController extends BaseController
             $this->redirect('/settings/company');
         }
 
+        $before = $this->settings->company();
         $this->settings->setMany($pairs);
+        $changed = array_keys(array_filter($fields, static fn(string $f): bool => (string) ($before[$f] ?? '') !== $pairs['company.' . $f]));
+        if ($changed) {
+            AuditLog::record(AuditLog::UPDATE, 'settings', null, $this->t('nav.settings_company'),
+                ['fields' => implode(', ', array_map(fn(string $f): string => $this->t('settings.' . ($f === 'name' ? 'company_name' : $f)), $changed))]);
+        }
         $this->flashSuccess($this->t('settings.company_saved'));
         $this->redirect('/settings/company');
     }

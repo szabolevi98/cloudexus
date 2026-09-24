@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CategoryModel;
 
 class CategoryController extends BaseController
@@ -17,7 +18,7 @@ class CategoryController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PRODUCTS_VIEW);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new \Cloudexus\Core\Paginator(25);
@@ -45,7 +46,7 @@ class CategoryController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $this->pageTitle = $this->t('categories.new');
         $this->render('categories/form.twig', [
@@ -56,7 +57,7 @@ class CategoryController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $data = $this->collectInput();
 
@@ -72,7 +73,7 @@ class CategoryController extends BaseController
 
     public function editForm(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $category = $this->categories->findById($id);
         if (!$category) {
@@ -91,7 +92,7 @@ class CategoryController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $data = $this->collectInput();
 
@@ -107,7 +108,7 @@ class CategoryController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CATALOG_MANAGE);
 
         $this->categories->delete($id);
         $this->flashSuccess($this->t('categories.deleted'));

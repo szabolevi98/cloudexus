@@ -3,6 +3,7 @@
 namespace Cloudexus\Controller;
 
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CustomerGroupModel;
 
 class CustomerGroupController extends BaseController
@@ -18,7 +19,7 @@ class CustomerGroupController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PARTNERS_VIEW);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new Paginator(30);
@@ -33,7 +34,7 @@ class CustomerGroupController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CUSTOMER_GROUPS_MANAGE);
 
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
@@ -52,7 +53,7 @@ class CustomerGroupController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CUSTOMER_GROUPS_MANAGE);
 
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
@@ -71,7 +72,7 @@ class CustomerGroupController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::CUSTOMER_GROUPS_MANAGE);
 
         $this->groups->delete($id);
         $this->flashSuccess($this->t('customer_groups.deleted'));

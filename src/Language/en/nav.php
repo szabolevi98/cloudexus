@@ -31,6 +31,8 @@ return [
     'cash' => 'Cash voucher',
     'todos' => 'To-dos',
     'users' => 'Users',
+    'roles' => 'Permissions',
+    'audit' => 'Audit log',
     'settings_company' => 'Company details',
     'parameters' => 'Parameters',
     'units' => 'Units of measure',

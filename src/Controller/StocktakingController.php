@@ -2,8 +2,10 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\StockMovementModel;
 use Cloudexus\Model\Core\StocktakingModel;
 use Cloudexus\Model\Core\WarehouseModel;
@@ -25,7 +27,7 @@ class StocktakingController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -44,7 +46,7 @@ class StocktakingController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCKTAKING_MANAGE);
 
         $warehouseId = (int) ($_GET['warehouse_id'] ?? 0);
         $sheet = $warehouseId > 0 ? $this->stock->stockSheet($warehouseId) : [];
@@ -59,7 +61,7 @@ class StocktakingController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCKTAKING_MANAGE);
 
         $warehouseId = (int) ($_POST['warehouse_id'] ?? 0);
         $note = trim($_POST['note'] ?? '');
@@ -91,6 +93,8 @@ class StocktakingController extends BaseController
         }
 
         $id = $this->stocktakings->book($warehouseId, $note, $items, Auth::id());
+        AuditLog::record(AuditLog::BOOK, 'stocktaking', $id, $this->stocktakings->findById($id)['stocktaking_number'] ?? null,
+            ['items' => count($items)]);
 
         $this->flashSuccess($this->t('stocktaking.booked'));
         $this->redirect('/stocktaking/' . $id);
@@ -98,7 +102,7 @@ class StocktakingController extends BaseController
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::STOCK_VIEW);
 
         $stocktaking = $this->stocktakings->findById($id);
         if (!$stocktaking) {

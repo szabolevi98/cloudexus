@@ -2,7 +2,9 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\WarehouseModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
@@ -27,7 +29,7 @@ class IncomingInvoiceController extends BaseController
 
     public function list(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_VIEW);
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -49,7 +51,7 @@ class IncomingInvoiceController extends BaseController
 
     public function createForm(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $fromOrder = null;
         if (!empty($_GET['order_id'])) {
@@ -67,7 +69,7 @@ class IncomingInvoiceController extends BaseController
 
     public function create(): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $items = $this->collectItems();
 
@@ -94,7 +96,7 @@ class IncomingInvoiceController extends BaseController
 
     public function show(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_VIEW);
 
         $invoice = $this->invoices->findById($id);
         if (!$invoice) {
@@ -107,16 +109,17 @@ class IncomingInvoiceController extends BaseController
 
     public function markPaid(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::FINANCE_MARK_PAID);
 
         $this->invoices->updateStatus($id, 'paid');
+        AuditLog::record(AuditLog::PAID, 'incoming_invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
         $this->flashSuccess($this->t('incoming_invoices.marked_paid'));
         $this->redirect('/incoming-invoices/' . $id);
     }
 
     public function cancel(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $this->invoices->updateStatus($id, 'cancelled');
         $this->flashSuccess($this->t('incoming_invoices.cancelled'));
@@ -125,7 +128,7 @@ class IncomingInvoiceController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAuth();
+        $this->requirePermission(Permissions::PURCHASING_MANAGE);
 
         $this->invoices->delete($id);
         $this->flashSuccess($this->t('incoming_invoices.deleted'));

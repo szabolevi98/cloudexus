@@ -5,6 +5,7 @@ namespace Cloudexus\Controller;
 use Cloudexus\Core\Currency;
 use Cloudexus\Core\CurrencyRateSync;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CurrencyModel;
 use Cloudexus\Model\Core\SettingModel;
 
@@ -23,7 +24,7 @@ class CurrencyController extends BaseController
 
     public function list(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $filters = ['q' => trim($_GET['q'] ?? '')];
         $pager = new Paginator(30);
@@ -50,7 +51,7 @@ class CurrencyController extends BaseController
 
     public function create(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $data = $this->collectInput();
         $error = $this->validate($data, null);
@@ -67,7 +68,7 @@ class CurrencyController extends BaseController
 
     public function update(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $currency = $this->currencies->findById($id);
         if (!$currency) {
@@ -98,7 +99,7 @@ class CurrencyController extends BaseController
     /** Kijelöli az elsődleges pénznemet, és 1-re állítja a váltószámát. */
     public function setPrimary(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $currency = $this->currencies->findById($id);
         if (!$currency) {
@@ -116,7 +117,7 @@ class CurrencyController extends BaseController
 
     public function delete(int $id): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $currency = $this->currencies->findById($id);
         if (!$currency) {
@@ -136,7 +137,7 @@ class CurrencyController extends BaseController
     /** "MNB közép árfolyam lekérése" gomb. */
     public function syncRates(): void
     {
-        $this->requireAdmin();
+        $this->requirePermission(Permissions::SETTINGS_MANAGE);
 
         $result = CurrencyRateSync::run();
 

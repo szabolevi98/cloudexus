@@ -96,14 +96,18 @@
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
         </a>
         {% if order.status != 'invoiced' and order.status != 'cancelled' %}
-            <a href="{{ base_url }}/invoices/create?order_id={{ order.id }}" class="btn btn-primary">
-                <i class="bi bi-receipt me-1"></i>{{ t('orders.make_invoice') }}
-            </a>
-            <form method="post" action="{{ base_url }}/orders/{{ order.id }}/cancel" onsubmit="return confirm('{{ t('orders.confirm_void')|e('js') }}');">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-x-circle me-1"></i>{{ t('orders.void') }}
-                </button>
-            </form>
+            {% if can('invoices.issue') %}
+                <a href="{{ base_url }}/invoices/create?order_id={{ order.id }}" class="btn btn-primary">
+                    <i class="bi bi-receipt me-1"></i>{{ t('orders.make_invoice') }}
+                </a>
+            {% endif %}
+            {% if can('orders.manage') %}
+                <form method="post" action="{{ base_url }}/orders/{{ order.id }}/cancel" onsubmit="return confirm('{{ t('orders.confirm_void')|e('js') }}');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i>{{ t('orders.void') }}
+                    </button>
+                </form>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}
