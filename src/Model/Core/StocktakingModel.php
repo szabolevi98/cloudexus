@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\DocumentNumber;
 use Cloudexus\Core\Paginator;
 
 class StocktakingModel
@@ -85,16 +86,10 @@ class StocktakingModel
         return $row;
     }
 
+    /** A várható következő leltárszám, tájékoztatásnak — a valódit a könyvelés kapja. */
     public function nextNumber(): string
     {
-        $year = date('Y');
-        $stmt = DatabaseConnection::get()->prepare(
-            'SELECT COUNT(*) FROM stocktakings WHERE stocktaking_number LIKE :pattern'
-        );
-        $stmt->execute(['pattern' => "LELT-$year-%"]);
-        $count = (int) $stmt->fetchColumn() + 1;
-
-        return sprintf('LELT-%s-%04d', $year, $count);
+        return DocumentNumber::preview('stocktaking');
     }
 
     /**
@@ -110,7 +105,7 @@ class StocktakingModel
         $pdo->beginTransaction();
 
         try {
-            $number = $this->nextNumber();
+            $number = DocumentNumber::take('stocktaking');
             $diffCount = 0;
 
             $stmt = $pdo->prepare(

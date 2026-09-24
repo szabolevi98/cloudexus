@@ -231,8 +231,8 @@ $router->post('/invoices/create', fn() => (new InvoiceController())->create());
 $router->get('/invoices/{id}', fn($id) => (new InvoiceController())->show((int) $id));
 $router->get('/invoices/{id}/print', fn($id) => (new InvoiceController())->printView((int) $id));
 $router->post('/invoices/{id}/mark-paid', fn($id) => (new InvoiceController())->markPaid((int) $id));
-$router->post('/invoices/{id}/cancel', fn($id) => (new InvoiceController())->cancel((int) $id));
-$router->post('/invoices/{id}/delete', fn($id) => (new InvoiceController())->delete((int) $id));
+// Kiállított számlát nem törlünk és nem érvénytelenítünk: sztornó számlával vonjuk vissza.
+$router->post('/invoices/{id}/storno', fn($id) => (new InvoiceController())->storno((int) $id));
 
 $router->get('/purchase-orders', fn() => (new PurchaseOrderController())->list());
 $router->get('/purchase-orders/create', fn() => (new PurchaseOrderController())->createForm());

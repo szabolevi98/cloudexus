@@ -29,8 +29,8 @@ return [
     'shipping_cost_row' => 'Shipping cost',
     'payment_cost_row' => 'Payment cost',
     'mark_paid' => 'Mark as paid',
-    'void' => 'Void',
-    'confirm_void' => 'Are you sure you want to void this invoice?',
+    'void' => 'Issue a cancellation invoice',
+    'confirm_void' => 'Issue a cancellation invoice? The original will be cancelled and its goods booked back into stock.',
     'title_prefix' => 'Invoice',
 
     // Print
@@ -56,6 +56,33 @@ return [
     'cancelled' => 'Invoice voided.',
     'deleted' => 'Invoice deleted.',
 
+    // VAT, storno, supply date, payment method
+    'fulfilment_date' => 'Date of supply',
+    'number_on_save' => 'The final number is given when the invoice is saved.',
+    'unit_price_net' => 'Net unit price',
+    'vat_rate' => 'VAT',
+    'net' => 'Net',
+    'vat' => 'VAT',
+    'gross' => 'Gross',
+    'vat_summary' => 'VAT summary',
+    'net_total' => 'Net total',
+    'vat_total' => 'VAT total',
+    'gross_total' => 'Gross total',
+    'storno_title' => 'CANCELLATION INVOICE',
+    'storno_badge' => 'Cancellation invoice',
+    'storno_of' => 'Cancels invoice {number}',
+    'stornoed_by' => 'Cancelled by invoice {number}',
+    'stornoed' => 'Cancellation invoice issued. The original is cancelled and its goods are back in stock.',
+    'not_stornoable' => 'This invoice cannot be cancelled: only an issued invoice that is not yet paid can be.',
+    'not_payable' => 'This invoice cannot be marked as paid.',
+    'order_not_invoiceable' => 'Order {number} cannot be invoiced: it has an invoice already, or it is not confirmed.',
+    'payment_methods' => [
+        'transfer' => 'Bank transfer',
+        'cash' => 'Cash',
+        'card' => 'Card',
+        'cod' => 'Cash on delivery',
+    ],
+
     // CSV
     'csv' => [
         'number' => 'Invoice number',
@@ -69,5 +96,6 @@ return [
         'unpaid' => 'awaiting payment',
         'paid' => 'paid',
         'cancelled' => 'voided',
+        'storno' => 'cancellation invoice',
     ],
 ];

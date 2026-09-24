@@ -42,7 +42,11 @@ A Cloudexus egy helyen kezeli a teljes kereskedelmi folyamatot: részletes term�
 - Vevői rendelések dinamikus tételsorokkal, automatikus árkitöltéssel és élő végösszeg-számítással
 - Számlázás önállóan vagy **egy kattintással rendelésből** (tételek előtöltve)
 - Opcionális automatikus raktári kiadás számlázáskor, készletellenőrzéssel
-- Számla-életciklus: fizetésre vár → kifizetve / stornózva, lejárt kiemeléssel
+- **ÁFA soronként** a termék kulcsával: nettó, ÁFA és bruttó összeg, ÁFA-összesítő kulcsonként, a szállítási és a fizetési költség is ÁFÁ-val; forintnál egész összegekre kerekítve
+- A vevő és az eladó neve, adószáma és címe **a kiállításkor rögzül** a számlán; teljesítési dátum és fizetési mód (átutalás, készpénz, bankkártya, utánvét)
+- **Sztornó számla**: kiállított számlát nem törlünk és nem írunk át, hanem ellentételező bizonylattal vonunk vissza — a kiadott áru visszakerül a raktárba, a rendelés újra számlázható lesz
+- Egy rendelésből egy élő számla; számla-életciklus: fizetésre vár → kifizetve / sztornózva, lejárt kiemeléssel
+- **Hézagmentes, évenkénti sorszámozás** minden bizonylatnál (számla, rendelés, beszerzés, bejövő számla, pénztár, leltár): a sorszámot a mentés adja, zárolt számlálóból, így két egyidejű mentés sem ütközik, és törölt bizonylat száma sem kerül újra kiosztásra
 
 ### 🚚 Beszerzés
 - Szállítói rendelések és bejövő számlák

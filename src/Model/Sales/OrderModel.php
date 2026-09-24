@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Sales;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\DocumentNumber;
 use Cloudexus\Core\Lang;
 
 class OrderModel
@@ -176,16 +177,10 @@ class OrderModel
         return $stmt->fetchAll();
     }
 
+    /** A várható következő sorszám, az űrlapon tájékoztatásnak — a valódit a mentés kapja. */
     public function nextOrderNumber(): string
     {
-        $year = date('Y');
-        $stmt = DatabaseConnection::get()->prepare(
-            "SELECT COUNT(*) FROM orders WHERE order_number LIKE :pattern"
-        );
-        $stmt->execute(['pattern' => "REND-$year-%"]);
-        $count = (int) $stmt->fetchColumn() + 1;
-
-        return sprintf('REND-%s-%04d', $year, $count);
+        return DocumentNumber::preview('order');
     }
 
     /**
@@ -197,6 +192,7 @@ class OrderModel
         $pdo->beginTransaction();
 
         try {
+            $number = DocumentNumber::take('order', (string) ($data['order_date'] ?? ''));
             $shippingCost = (float) ($data['shipping_cost'] ?? 0);
             $paymentCost = (float) ($data['payment_cost'] ?? 0);
             $total = array_sum(array_map(fn($i) => $i['quantity'] * $i['unit_price'], $items)) + $shippingCost + $paymentCost;
@@ -206,7 +202,7 @@ class OrderModel
                  VALUES (:order_number, :partner_id, :shipping_address_id, :billing_address_id, :status, :order_date, :total_amount, :shipping_cost, :payment_cost, :created_by, NOW())'
             );
             $stmt->execute([
-                'order_number' => $data['order_number'],
+                'order_number' => $number,
                 'partner_id' => $data['partner_id'],
                 'shipping_address_id' => $data['shipping_address_id'] ?: null,
                 'billing_address_id' => $data['billing_address_id'] ?: null,

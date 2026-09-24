@@ -46,10 +46,25 @@ class Currency
         return ($primary['symbol'] ?? '') !== '' ? (string) $primary['symbol'] : (string) $primary['code'];
     }
 
-    /** Összeg formázása az elsődleges pénznemben, pl. "89 900 Ft". */
-    public static function format(float|int|string|null $amount, int $decimals = 0): string
+    /** Pénznemek, amelyeknek nincs váltópénze a gyakorlatban: egész összegekben számolunk. */
+    private const WHOLE_UNITS = ['HUF', 'JPY', 'KRW', 'ISK', 'CLP'];
+
+    /** Hány tizedesjegyre kerekítünk és írunk ki az elsődleges pénznemben (HUF: 0, EUR: 2). */
+    public static function decimals(): int
     {
-        return number_format((float) $amount, $decimals, ',', ' ') . ' ' . self::symbol();
+        return in_array(self::code(), self::WHOLE_UNITS, true) ? 0 : 2;
+    }
+
+    /** Kerekítés az elsődleges pénznem pontosságára — minden számított összeg így tárolódik. */
+    public static function round(float|int|string|null $amount): float
+    {
+        return round((float) $amount, self::decimals());
+    }
+
+    /** Összeg formázása az elsődleges pénznemben, pl. "89 900 Ft" vagy "12,50 €". */
+    public static function format(float|int|string|null $amount, ?int $decimals = null): string
+    {
+        return number_format((float) $amount, $decimals ?? self::decimals(), ',', ' ') . ' ' . self::symbol();
     }
 
     /** Elsődleges pénznemben megadott összeg átszámítása a megadott pénznemre. */

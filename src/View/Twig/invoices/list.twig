@@ -37,6 +37,7 @@
                             <option value="overdue" {{ filters.status == 'overdue' ? 'selected' : '' }}>{{ t('common.invoice_status.overdue') }}</option>
                             <option value="paid" {{ filters.status == 'paid' ? 'selected' : '' }}>{{ t('common.invoice_status.paid') }}</option>
                             <option value="cancelled" {{ filters.status == 'cancelled' ? 'selected' : '' }}>{{ t('common.invoice_status.cancelled') }}</option>
+                            <option value="storno" {{ filters.status == 'storno' ? 'selected' : '' }}>{{ t('common.invoice_status.storno') }}</option>
                         </select>
                     </div>
                     <div class="col-sm-3 col-lg-2">
@@ -75,7 +76,9 @@
                             <td class="text-muted">{{ invoice.issue_date }}</td>
                             <td class="text-muted">{{ invoice.due_date }}</td>
                             <td>
-                                {% if invoice.status == 'unpaid' and invoice.due_date < today %}
+                                {% if invoice.status == 'storno' %}
+                                    <span class="badge rounded-pill bg-body-tertiary text-body border">{{ t('invoices.storno_badge') }}</span>
+                                {% elseif invoice.status == 'unpaid' and invoice.due_date < today %}
                                     <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
                                 {% elseif invoice.status == 'unpaid' %}
                                     <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>

@@ -40,7 +40,7 @@ echo "Truncating business tables...\n";
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 foreach ([
     'partner_activities', 'partner_addresses', 'todos', 'warehouse_locations', 'stocktaking_items', 'stocktakings',
-    'cash_vouchers', 'incoming_invoice_items', 'incoming_invoices',
+    'cash_vouchers', 'incoming_invoice_items', 'incoming_invoices', 'document_sequences',
     'purchase_order_items', 'purchase_orders', 'invoice_items', 'invoices',
     'order_items', 'orders', 'stock_movements', 'product_group_prices',
     // A termékhez kötött kapcsolótáblák is, különben az újraseedelés után árva
@@ -640,14 +640,13 @@ for ($i = 0; $i < 130; $i++) {
         ], $order['items']));
         $invoiceCount++;
 
-        // ~65% of invoices get paid via a cash voucher (bevétel + settlement).
-        // The invoice carries the same shipping/payment cost as the order it was
-        // created from, so its total_amount matches the order's total_amount.
+        // ~65% of invoices get paid via a cash voucher (bevétel + settlement),
+        // for the invoice's gross total: the order's net amount plus VAT.
         if (rand(1, 100) <= 65) {
             $cashModel->create([
                 'voucher_number' => $cashModel->nextVoucherNumber(),
                 'type' => 'bevetel',
-                'amount' => $order['total_amount'],
+                'amount' => $invoiceModel->findById($invoiceId)['total_amount'],
                 'partner_id' => $order['partner_id'],
                 'invoice_id' => $invoiceId,
                 'note' => 'Számla kiegyenlítése',

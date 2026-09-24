@@ -1,8 +1,16 @@
 <!DOCTYPE html>
+{# A nyomtatható számla: mindig világos, a téma-választótól függetlenül. #}
+{% set storno = invoice.invoice_type == 'storno' %}
+{% set seller = {
+    name: invoice.seller_name ?: company.name,
+    address: invoice.seller_address ?: company.address,
+    tax_number: invoice.seller_tax_number ?: company.tax_number,
+    bank_account: invoice.seller_bank_account ?: company.bank_account|default('')
+} %}
 <html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ invoice.invoice_number }} — {{ t('invoices.print_doc_title') }}</title>
+    <title>{{ invoice.invoice_number }} — {{ storno ? t('invoices.storno_title') : t('invoices.print_doc_title') }}</title>
     <link rel="icon" href="{{ base_url }}/assets/favicon.svg" type="image/svg+xml">
     <style>
         * { box-sizing: border-box; }
@@ -13,29 +21,37 @@
             background: #f2f4fb;
         }
         .sheet {
-            max-width: 800px;
+            max-width: 860px;
             margin: 24px auto;
             background: #fff;
             padding: 48px;
             box-shadow: 0 8px 24px rgba(29, 33, 70, 0.08);
         }
-        .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+        .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
         .doc-header h1 { font-size: 1.6rem; margin: 0 0 4px; color: #4f5bd5; }
         .doc-header .number { font-size: 1.05rem; font-weight: 600; }
-        .parties { display: flex; gap: 32px; margin-bottom: 32px; }
+        .doc-header .ref { font-size: 0.85rem; color: #7c8494; margin-top: 4px; }
+        .stamp { font-weight: 700; }
+        .stamp--paid { color: #1fa971; }
+        .stamp--cancelled { color: #e0526a; }
+        .parties { display: flex; gap: 32px; margin-bottom: 28px; }
         .party { flex: 1; }
         .party h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #7c8494; margin: 0 0 6px; }
         .party .name { font-weight: 700; margin-bottom: 2px; }
         .party div { font-size: 0.9rem; line-height: 1.45; }
-        .meta { display: flex; gap: 24px; margin-bottom: 28px; font-size: 0.9rem; }
-        .meta div span { display: block; color: #7c8494; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-        th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #7c8494; border-bottom: 2px solid #e7e9f2; padding: 8px 10px; }
-        td { padding: 10px; border-bottom: 1px solid #e7e9f2; font-size: 0.92rem; }
-        .num { text-align: right; }
-        tfoot td { font-weight: 700; font-size: 1.05rem; border-bottom: none; border-top: 2px solid #1c2333; }
-        .footer { margin-top: 40px; font-size: 0.8rem; color: #7c8494; text-align: center; }
-        .toolbar { max-width: 800px; margin: 16px auto 0; display: flex; gap: 8px; }
+        .meta { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 24px; font-size: 0.9rem; }
+        .meta div span { display: block; color: #7c8494; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: #7c8494; border-bottom: 2px solid #e7e9f2; padding: 8px 8px; }
+        td { padding: 8px; border-bottom: 1px solid #e7e9f2; font-size: 0.88rem; vertical-align: top; }
+        .num { text-align: right; white-space: nowrap; }
+        .summary { width: 60%; margin-left: auto; }
+        .summary td, .summary th { font-size: 0.85rem; }
+        .totals { width: 60%; margin-left: auto; }
+        .totals td { border-bottom: none; padding: 4px 8px; }
+        .totals .grand td { font-weight: 700; font-size: 1.05rem; border-top: 2px solid #1c2333; padding-top: 8px; }
+        .footer { margin-top: 36px; font-size: 0.78rem; color: #7c8494; text-align: center; }
+        .toolbar { max-width: 860px; margin: 16px auto 0; display: flex; gap: 8px; }
         .toolbar a, .toolbar button {
             font: inherit; padding: 8px 18px; border-radius: 8px; cursor: pointer; text-decoration: none;
             border: 1px solid #e7e9f2; background: #fff; color: #1c2333;
@@ -57,14 +73,19 @@
 <div class="sheet">
     <div class="doc-header">
         <div>
-            <h1>{{ t('invoices.print_doc_title') }}</h1>
+            <h1>{{ storno ? t('invoices.storno_title') : t('invoices.print_doc_title') }}</h1>
             <div class="number">{{ invoice.invoice_number }}</div>
+            {% if storno and invoice.storno_of_number %}
+                <div class="ref">{{ t('invoices.storno_of', {number: invoice.storno_of_number}) }}</div>
+            {% elseif invoice.storno_by_number %}
+                <div class="ref">{{ t('invoices.stornoed_by', {number: invoice.storno_by_number}) }}</div>
+            {% endif %}
         </div>
         <div style="text-align:right">
             {% if invoice.status == 'paid' %}
-                <div style="color:#1fa971;font-weight:700;">{{ t('invoices.stamp_paid') }}</div>
+                <div class="stamp stamp--paid">{{ t('invoices.stamp_paid') }}</div>
             {% elseif invoice.status == 'cancelled' %}
-                <div style="color:#e0526a;font-weight:700;">{{ t('invoices.stamp_cancelled') }}</div>
+                <div class="stamp stamp--cancelled">{{ t('invoices.stamp_cancelled') }}</div>
             {% endif %}
         </div>
     </div>
@@ -72,11 +93,11 @@
     <div class="parties">
         <div class="party">
             <h2>{{ t('invoices.seller') }}</h2>
-            <div class="name">{{ company.name|default('—') }}</div>
-            <div>{{ company.address|default('') }}</div>
-            <div>{{ t('invoices.tax_number') }}: {{ company.tax_number|default('—') }}</div>
-            {% if company.bank_account is defined and company.bank_account %}
-                <div>{{ t('invoices.bank_account') }}: {{ company.bank_account }}</div>
+            <div class="name">{{ seller.name|default('—') }}</div>
+            <div>{{ seller.address|default('') }}</div>
+            <div>{{ t('invoices.tax_number') }}: {{ seller.tax_number|default('—') }}</div>
+            {% if seller.bank_account %}
+                <div>{{ t('invoices.bank_account') }}: {{ seller.bank_account }}</div>
             {% endif %}
         </div>
         <div class="party">
@@ -91,49 +112,81 @@
 
     <div class="meta">
         <div><span>{{ t('invoices.issue_date_label') }}</span>{{ invoice.issue_date }}</div>
+        <div><span>{{ t('invoices.fulfilment_date') }}</span>{{ invoice.fulfilment_date ?: invoice.issue_date }}</div>
         <div><span>{{ t('invoices.due_date') }}</span>{{ invoice.due_date }}</div>
-        <div><span>{{ t('invoices.payment_method') }}</span>{{ t('invoices.payment_transfer') }}</div>
+        <div><span>{{ t('invoices.payment_method') }}</span>{{ t('invoices.payment_methods.' ~ (invoice.payment_method ?: 'transfer')) }}</div>
     </div>
 
     <table>
         <thead>
         <tr>
-            <th>{{ t('common.sku') }}</th>
             <th>{{ t('invoices.product_name') }}</th>
             <th class="num">{{ t('common.quantity') }}</th>
-            <th class="num">{{ t('common.unit_price') }}</th>
-            <th class="num">{{ t('common.total') }}</th>
+            <th class="num">{{ t('invoices.unit_price_net') }}</th>
+            <th class="num">{{ t('invoices.vat_rate') }}</th>
+            <th class="num">{{ t('invoices.net') }}</th>
+            <th class="num">{{ t('invoices.vat') }}</th>
+            <th class="num">{{ t('invoices.gross') }}</th>
         </tr>
         </thead>
         <tbody>
         {% for item in invoice.items %}
             <tr>
-                <td>{{ item.sku }}</td>
-                <td>{{ item.product_name }}</td>
-                <td class="num">{{ item.quantity|number_format(0, ',', ' ') }} {{ item.unit }}</td>
+                <td>{{ item.product_name }}<br><span style="color:#7c8494;font-size:0.78rem">{{ item.sku }}</span></td>
+                <td class="num">{{ item.quantity|qty }} {{ item.unit }}</td>
                 <td class="num">{{ item.unit_price|money }}</td>
-                <td class="num">{{ item.line_total|money }}</td>
+                <td class="num">{{ item.vat_rate|qty }}%</td>
+                <td class="num">{{ (item.net_amount ?? item.line_total)|money }}</td>
+                <td class="num">{{ (item.vat_amount ?? 0)|money }}</td>
+                <td class="num">{{ (item.gross_amount ?? item.line_total)|money }}</td>
+            </tr>
+        {% endfor %}
+        {% if invoice.shipping_cost != 0 %}
+            <tr>
+                <td>{{ t('invoices.shipping_cost_row') }}</td>
+                <td></td><td></td>
+                <td class="num">{{ invoice.extra_vat_rate|qty }}%</td>
+                <td class="num">{{ invoice.shipping_cost|money }}</td>
+                <td></td><td></td>
+            </tr>
+        {% endif %}
+        {% if invoice.payment_cost != 0 %}
+            <tr>
+                <td>{{ t('invoices.payment_cost_row') }}</td>
+                <td></td><td></td>
+                <td class="num">{{ invoice.extra_vat_rate|qty }}%</td>
+                <td class="num">{{ invoice.payment_cost|money }}</td>
+                <td></td><td></td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <table class="summary">
+        <thead>
+        <tr>
+            <th>{{ t('invoices.vat_summary') }}</th>
+            <th class="num">{{ t('invoices.net') }}</th>
+            <th class="num">{{ t('invoices.vat') }}</th>
+            <th class="num">{{ t('invoices.gross') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in invoice.vat_summary %}
+            <tr>
+                <td>{{ row.rate|qty }}%</td>
+                <td class="num">{{ row.net|money }}</td>
+                <td class="num">{{ row.vat|money }}</td>
+                <td class="num">{{ row.gross|money }}</td>
             </tr>
         {% endfor %}
         </tbody>
-        <tfoot>
-        {% if invoice.shipping_cost > 0 %}
-            <tr>
-                <td colspan="4" class="num" style="font-weight:400;border-top:none;">{{ t('invoices.shipping_cost_row') }}</td>
-                <td class="num" style="font-weight:400;border-top:none;">{{ invoice.shipping_cost|money }}</td>
-            </tr>
-        {% endif %}
-        {% if invoice.payment_cost > 0 %}
-            <tr>
-                <td colspan="4" class="num" style="font-weight:400;border-top:none;">{{ t('invoices.payment_cost_row') }}</td>
-                <td class="num" style="font-weight:400;border-top:none;">{{ invoice.payment_cost|money }}</td>
-            </tr>
-        {% endif %}
-        <tr>
-            <td colspan="4" class="num">{{ t('invoices.total_due') }}</td>
-            <td class="num">{{ invoice.total_amount|money }}</td>
-        </tr>
-        </tfoot>
+    </table>
+
+    <table class="totals">
+        <tr><td>{{ t('invoices.net_total') }}</td><td class="num">{{ (invoice.net_total ?? invoice.total_amount)|money }}</td></tr>
+        <tr><td>{{ t('invoices.vat_total') }}</td><td class="num">{{ (invoice.vat_total ?? 0)|money }}</td></tr>
+        <tr class="grand"><td>{{ t('invoices.total_due') }}</td><td class="num">{{ invoice.total_amount|money }}</td></tr>
     </table>
 
     <div class="footer">

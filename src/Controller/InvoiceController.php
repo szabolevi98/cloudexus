@@ -94,11 +94,19 @@ class InvoiceController extends BaseController
         $fromOrder = null;
         if (!empty($_GET['order_id'])) {
             $fromOrder = $this->orders->findById((int) $_GET['order_id']);
+
+            // Egy rendelésből egy élő számla: a már számlázott vagy lemondott
+            // rendelésből nem indul új.
+            if ($fromOrder && ($fromOrder['status'] !== 'confirmed' || $this->invoices->orderIsInvoiced((int) $fromOrder['id']))) {
+                $this->flashError($this->t('invoices.order_not_invoiceable', ['number' => $fromOrder['order_number']]));
+                $this->redirect('/orders/' . $fromOrder['id']);
+            }
         }
 
         $this->pageTitle = $this->t('invoices.new');
         $this->render('invoices/form.twig', [
             'invoice_number' => $this->invoices->nextInvoiceNumber(),
+            'payment_methods' => InvoiceModel::PAYMENT_METHODS,
             'warehouses' => $this->warehouses->activeList(),
             'from_order' => $fromOrder,
             // A rendelésből átvett partner felirata a Select2 AJAX előtöltéshez.
@@ -117,6 +125,15 @@ class InvoiceController extends BaseController
             $this->redirect('/invoices/create');
         }
 
+        $orderId = (int) ($_POST['order_id'] ?? 0);
+        if ($orderId > 0) {
+            $order = $this->orders->findById($orderId);
+            if (!$order || $order['status'] !== 'confirmed' || $this->invoices->orderIsInvoiced($orderId)) {
+                $this->flashError($this->t('invoices.order_not_invoiceable', ['number' => $order['order_number'] ?? $orderId]));
+                $this->redirect('/invoices');
+            }
+        }
+
         $warehouseId = (int) ($_POST['warehouse_id'] ?? 0);
 
         if ($warehouseId > 0) {
@@ -127,14 +144,16 @@ class InvoiceController extends BaseController
             }
         }
 
+        // A számlaszámot a mentés adja ki; az űrlapon látott csak előnézet.
         $id = $this->invoices->create([
-            'invoice_number' => $_POST['invoice_number'],
-            'order_id' => ($_POST['order_id'] ?? '') ?: null,
+            'order_id' => $orderId ?: null,
             'partner_id' => (int) $_POST['partner_id'],
             'warehouse_id' => $warehouseId ?: null,
             'status' => 'unpaid',
             'issue_date' => ($_POST['issue_date'] ?? '') ?: date('Y-m-d'),
+            'fulfilment_date' => ($_POST['fulfilment_date'] ?? '') ?: null,
             'due_date' => ($_POST['due_date'] ?? '') ?: date('Y-m-d', strtotime('+8 days')),
+            'payment_method' => (string) ($_POST['payment_method'] ?? 'transfer'),
             'shipping_cost' => (float) str_replace(',', '.', $_POST['shipping_cost'] ?? '0'),
             'payment_cost' => (float) str_replace(',', '.', $_POST['payment_cost'] ?? '0'),
             'created_by' => Auth::id(),
@@ -177,27 +196,32 @@ class InvoiceController extends BaseController
     {
         $this->requireAuth();
 
-        $this->invoices->updateStatus($id, 'paid');
-        $this->flashSuccess($this->t('invoices.marked_paid'));
+        if ($this->invoices->markPaid($id)) {
+            $this->flashSuccess($this->t('invoices.marked_paid'));
+        } else {
+            $this->flashError($this->t('invoices.not_payable'));
+        }
         $this->redirect('/invoices/' . $id);
     }
 
-    public function cancel(int $id): void
+    /**
+     * Sztornó számla: a kiállított számlát nem töröljük és nem írjuk át,
+     * hanem egy ellentételező bizonylattal vonjuk vissza. A kiadott áru
+     * visszakerül a raktárba, a rendelés újra számlázható lesz.
+     */
+    public function storno(int $id): void
     {
         $this->requireAuth();
 
-        $this->invoices->updateStatus($id, 'cancelled');
-        $this->flashSuccess($this->t('invoices.cancelled'));
-        $this->redirect('/invoices/' . $id);
-    }
+        try {
+            $stornoId = $this->invoices->storno($id, Auth::id());
+        } catch (\DomainException) {
+            $this->flashError($this->t('invoices.not_stornoable'));
+            $this->redirect('/invoices/' . $id);
+        }
 
-    public function delete(int $id): void
-    {
-        $this->requireAuth();
-
-        $this->invoices->delete($id);
-        $this->flashSuccess($this->t('invoices.deleted'));
-        $this->redirect('/invoices');
+        $this->flashSuccess($this->t('invoices.stornoed'));
+        $this->redirect('/invoices/' . $stornoId);
     }
 
     /** Returns human-readable shortage descriptions for items not coverable from the warehouse. */

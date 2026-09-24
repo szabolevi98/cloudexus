@@ -9,9 +9,16 @@
                     {{ invoice.partner_name }}
                     {% if invoice.tax_number %} · {{ t('invoices.tax_number') }}: {{ invoice.tax_number }}{% endif %}
                 </div>
+                {% if invoice.storno_of_id %}
+                    <div class="small mt-1"><a href="{{ base_url }}/invoices/{{ invoice.storno_of_id }}">{{ t('invoices.storno_of', {number: invoice.storno_of_number}) }}</a></div>
+                {% elseif invoice.storno_by_id %}
+                    <div class="small mt-1"><a href="{{ base_url }}/invoices/{{ invoice.storno_by_id }}">{{ t('invoices.stornoed_by', {number: invoice.storno_by_number}) }}</a></div>
+                {% endif %}
             </div>
             <div>
-                {% if invoice.status == 'unpaid' %}
+                {% if invoice.status == 'storno' %}
+                    <span class="badge rounded-pill bg-body-tertiary text-body border">{{ t('invoices.storno_badge') }}</span>
+                {% elseif invoice.status == 'unpaid' %}
                     <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
                 {% elseif invoice.status == 'paid' %}
                     <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
@@ -21,14 +28,22 @@
             </div>
         </div>
         <div class="cx-card__body">
-            <div class="row mb-3">
-                <div class="col-md-4">
+            <div class="row mb-3 g-3">
+                <div class="col-md-2">
                     <div class="text-muted small">{{ t('invoices.issue_date_label') }}</div>
                     <div class="fw-medium">{{ invoice.issue_date }}</div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
+                    <div class="text-muted small">{{ t('invoices.fulfilment_date') }}</div>
+                    <div class="fw-medium">{{ invoice.fulfilment_date ?: invoice.issue_date }}</div>
+                </div>
+                <div class="col-md-2">
                     <div class="text-muted small">{{ t('invoices.due_date') }}</div>
                     <div class="fw-medium">{{ invoice.due_date }}</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="text-muted small">{{ t('invoices.payment_method') }}</div>
+                    <div class="fw-medium">{{ t('invoices.payment_methods.' ~ (invoice.payment_method ?: 'transfer')) }}</div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-muted small">{{ t('invoices.address') }}</div>
@@ -44,8 +59,11 @@
                         <th>{{ t('common.sku') }}</th>
                         <th>{{ t('invoices.product_name') }}</th>
                         <th class="text-end">{{ t('common.quantity') }}</th>
-                        <th class="text-end">{{ t('common.unit_price') }}</th>
-                        <th class="text-end">{{ t('common.line_total') }}</th>
+                        <th class="text-end">{{ t('invoices.unit_price_net') }}</th>
+                        <th class="text-end">{{ t('invoices.vat_rate') }}</th>
+                        <th class="text-end">{{ t('invoices.net') }}</th>
+                        <th class="text-end">{{ t('invoices.vat') }}</th>
+                        <th class="text-end">{{ t('invoices.gross') }}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -53,27 +71,42 @@
                         <tr>
                             <td>{{ item.sku }}</td>
                             <td>{{ item.product_name }}</td>
-                            <td class="text-end">{{ item.quantity|number_format(0, ',', ' ') }} {{ item.unit }}</td>
+                            <td class="text-end">{{ item.quantity|qty }} {{ item.unit }}</td>
                             <td class="text-end">{{ item.unit_price|money }}</td>
-                            <td class="text-end">{{ item.line_total|money }}</td>
+                            <td class="text-end">{{ item.vat_rate|qty }}%</td>
+                            <td class="text-end">{{ (item.net_amount ?? item.line_total)|money }}</td>
+                            <td class="text-end">{{ (item.vat_amount ?? 0)|money }}</td>
+                            <td class="text-end">{{ (item.gross_amount ?? item.line_total)|money }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                     <tfoot>
-                    {% if invoice.shipping_cost > 0 %}
+                    {% if invoice.shipping_cost != 0 %}
                         <tr>
-                            <td colspan="4" class="text-end text-muted">{{ t('invoices.shipping_cost_row') }}</td>
+                            <td colspan="5" class="text-end text-muted">{{ t('invoices.shipping_cost_row') }} ({{ invoice.extra_vat_rate|qty }}%)</td>
                             <td class="text-end text-muted">{{ invoice.shipping_cost|money }}</td>
+                            <td colspan="2"></td>
                         </tr>
                     {% endif %}
-                    {% if invoice.payment_cost > 0 %}
+                    {% if invoice.payment_cost != 0 %}
                         <tr>
-                            <td colspan="4" class="text-end text-muted">{{ t('invoices.payment_cost_row') }}</td>
+                            <td colspan="5" class="text-end text-muted">{{ t('invoices.payment_cost_row') }} ({{ invoice.extra_vat_rate|qty }}%)</td>
                             <td class="text-end text-muted">{{ invoice.payment_cost|money }}</td>
+                            <td colspan="2"></td>
                         </tr>
                     {% endif %}
+                    {% for row in invoice.vat_summary %}
+                        <tr>
+                            <td colspan="5" class="text-end text-muted">{{ t('invoices.vat_summary') }} · {{ row.rate|qty }}%</td>
+                            <td class="text-end text-muted">{{ row.net|money }}</td>
+                            <td class="text-end text-muted">{{ row.vat|money }}</td>
+                            <td class="text-end text-muted">{{ row.gross|money }}</td>
+                        </tr>
+                    {% endfor %}
                     <tr>
-                        <td colspan="4" class="text-end fw-medium">{{ t('common.total') }}</td>
+                        <td colspan="5" class="text-end fw-medium">{{ t('common.total') }}</td>
+                        <td class="text-end fw-medium">{{ (invoice.net_total ?? invoice.total_amount)|money }}</td>
+                        <td class="text-end fw-medium">{{ (invoice.vat_total ?? 0)|money }}</td>
                         <td class="text-end fw-bold">{{ invoice.total_amount|money }}</td>
                     </tr>
                     </tfoot>
@@ -89,13 +122,13 @@
         <a href="{{ base_url }}/invoices/{{ invoice.id }}/print" target="_blank" class="btn btn-outline-secondary">
             <i class="bi bi-printer me-1"></i>{{ t('common.print') }}
         </a>
-        {% if invoice.status == 'unpaid' %}
+        {% if invoice.status == 'unpaid' and invoice.invoice_type == 'normal' %}
             <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/mark-paid">
                 <button type="submit" class="btn btn-success">
                     <i class="bi bi-check-circle me-1"></i>{{ t('invoices.mark_paid') }}
                 </button>
             </form>
-            <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
+            <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="bi bi-x-circle me-1"></i>{{ t('invoices.void') }}
                 </button>

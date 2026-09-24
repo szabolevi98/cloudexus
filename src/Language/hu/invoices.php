@@ -29,8 +29,8 @@ return [
     'shipping_cost_row' => 'Szállítási költség',
     'payment_cost_row' => 'Fizetési költség',
     'mark_paid' => 'Kifizetve jelölés',
-    'void' => 'Stornózás',
-    'confirm_void' => 'Biztosan stornózod a számlát?',
+    'void' => 'Sztornó számla kiállítása',
+    'confirm_void' => 'Kiállítod a sztornó számlát? Az eredeti számla sztornózva lesz, a kiadott áru visszakerül a raktárba.',
     'title_prefix' => 'Számla',
 
     // Print
@@ -56,6 +56,33 @@ return [
     'cancelled' => 'Számla stornózva.',
     'deleted' => 'Számla törölve.',
 
+    // VAT, storno, supply date, payment method
+    'fulfilment_date' => 'Teljesítés dátuma',
+    'number_on_save' => 'A végleges sorszámot a mentés adja ki.',
+    'unit_price_net' => 'Nettó egységár',
+    'vat_rate' => 'ÁFA',
+    'net' => 'Nettó',
+    'vat' => 'ÁFA',
+    'gross' => 'Bruttó',
+    'vat_summary' => 'ÁFA-összesítő',
+    'net_total' => 'Nettó összesen',
+    'vat_total' => 'ÁFA összesen',
+    'gross_total' => 'Bruttó összesen',
+    'storno_title' => 'SZTORNÓ SZÁMLA',
+    'storno_badge' => 'Sztornó számla',
+    'storno_of' => 'A(z) {number} számla sztornója',
+    'stornoed_by' => 'Sztornózva a(z) {number} számlával',
+    'stornoed' => 'Sztornó számla kiállítva. Az eredeti számla sztornózva, a kiadott áru visszakönyvelve.',
+    'not_stornoable' => 'Ez a számla nem sztornózható: csak kiállított, még ki nem fizetett számlát lehet sztornózni.',
+    'not_payable' => 'Ez a számla nem jelölhető kifizetettnek.',
+    'order_not_invoiceable' => 'A(z) {number} rendelésből nem állítható ki számla: már számlázva van, vagy nincs megerősítve.',
+    'payment_methods' => [
+        'transfer' => 'Átutalás',
+        'cash' => 'Készpénz',
+        'card' => 'Bankkártya',
+        'cod' => 'Utánvét',
+    ],
+
     // CSV
     'csv' => [
         'number' => 'Számlaszám',
@@ -69,5 +96,6 @@ return [
         'unpaid' => 'fizetésre vár',
         'paid' => 'kifizetve',
         'cancelled' => 'stornózva',
+        'storno' => 'sztornó számla',
     ],
 ];

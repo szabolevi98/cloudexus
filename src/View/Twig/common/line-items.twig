@@ -6,15 +6,15 @@
             <tr>
                 <th>{{ t('common.product') }}</th>
                 <th style="width:120px;">{{ t('common.quantity') }}</th>
-                <th style="width:150px;">{{ t('common.unit_price_ft', {'currency': currency_symbol()}) }}</th>
-                <th style="width:150px;" class="text-end">{{ t('common.line_total') }}</th>
+                <th style="width:150px;">{{ t('common.net_unit_price_ft', {'currency': currency_symbol()}) }}</th>
+                <th style="width:150px;" class="text-end">{{ t('common.net_line_total') }}</th>
                 <th style="width:40px;"></th>
             </tr>
             </thead>
             <tbody id="line-items-body"></tbody>
             <tfoot>
             <tr>
-                <td colspan="3" class="text-end fw-medium">{{ t('common.total') }}</td>
+                <td colspan="3" class="text-end fw-medium">{{ t('common.net_total') }}</td>
                 <td class="text-end fw-bold" id="line-items-total">0 {{ currency_symbol() }}</td>
                 <td></td>
             </tr>

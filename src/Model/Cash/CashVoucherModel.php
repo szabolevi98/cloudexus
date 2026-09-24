@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Cash;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\DocumentNumber;
 
 class CashVoucherModel
 {
@@ -71,16 +72,10 @@ class CashVoucherModel
         return $stmt->fetchAll();
     }
 
+    /** A várható következő sorszám, az űrlapon tájékoztatásnak — a valódit a mentés kapja. */
     public function nextVoucherNumber(): string
     {
-        $year = date('Y');
-        $stmt = DatabaseConnection::get()->prepare(
-            'SELECT COUNT(*) FROM cash_vouchers WHERE voucher_number LIKE :pattern'
-        );
-        $stmt->execute(['pattern' => "PB-$year-%"]);
-        $count = (int) $stmt->fetchColumn() + 1;
-
-        return sprintf('PB-%s-%04d', $year, $count);
+        return DocumentNumber::preview('cash_voucher');
     }
 
     public function create(array $data): int
@@ -89,12 +84,13 @@ class CashVoucherModel
         $pdo->beginTransaction();
 
         try {
+            $number = DocumentNumber::take('cash_voucher', (string) ($data['voucher_date'] ?? ''));
             $stmt = $pdo->prepare(
                 'INSERT INTO cash_vouchers (voucher_number, type, amount, partner_id, invoice_id, incoming_invoice_id, note, voucher_date, created_by, created_at)
                  VALUES (:voucher_number, :type, :amount, :partner_id, :invoice_id, :incoming_invoice_id, :note, :voucher_date, :created_by, NOW())'
             );
             $stmt->execute([
-                'voucher_number' => $data['voucher_number'],
+                'voucher_number' => $number,
                 'type' => $data['type'],
                 'amount' => $data['amount'],
                 'partner_id' => $data['partner_id'] ?? null,

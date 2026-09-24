@@ -19,7 +19,8 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">{{ t('invoices.invoice_number') }}</label>
-                        <input type="text" name="invoice_number" class="form-control" value="{{ invoice_number }}" readonly>
+                        <input type="text" class="form-control" value="{{ invoice_number }}" readonly aria-describedby="invoice-number-hint">
+                        <div class="form-text" id="invoice-number-hint">{{ t('invoices.number_on_save') }}</div>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label for="partner_id" class="form-label">{{ t('common.partner') }}</label>
@@ -37,6 +38,20 @@
                     <div class="col-md-3 mb-3">
                         <label class="form-label">{{ t('invoices.due_date') }}</label>
                         <input type="date" name="due_date" class="form-control" value="{{ "now"|date_modify("+8 days")|date("Y-m-d") }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label" for="fulfilment_date">{{ t('invoices.fulfilment_date') }}</label>
+                        <input type="date" id="fulfilment_date" name="fulfilment_date" class="form-control" value="{{ "now"|date("Y-m-d") }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label" for="payment_method">{{ t('invoices.payment_method') }}</label>
+                        <select id="payment_method" name="payment_method" class="form-select">
+                            {% for method in payment_methods %}
+                                <option value="{{ method }}">{{ t('invoices.payment_methods.' ~ method) }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
                 <div class="mb-3" style="max-width: 320px;">

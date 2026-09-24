@@ -47,12 +47,16 @@ return [
     'line_items' => 'Line items',
     'choose_product' => 'Choose a product…',
     'unit_price_ft' => 'Unit price ({currency})',
+    'net_unit_price_ft' => 'Net unit price ({currency})',
+    'net_line_total' => 'Net line total',
+    'net_total' => 'Net total',
     'add_line_item' => 'Add line item',
     'invoice_status' => [
         'unpaid' => 'Awaiting payment',
         'paid' => 'Paid',
         'overdue' => 'Overdue',
         'cancelled' => 'Cancelled',
+        'storno' => 'Cancellation invoice',
     ],
     'order_status' => [
         'draft' => 'Draft',

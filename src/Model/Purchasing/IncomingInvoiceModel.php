@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Purchasing;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\DocumentNumber;
 
 class IncomingInvoiceModel
 {
@@ -122,16 +123,10 @@ class IncomingInvoiceModel
         ];
     }
 
+    /** A várható következő sorszám, az űrlapon tájékoztatásnak — a valódit a mentés kapja. */
     public function nextInvoiceNumber(): string
     {
-        $year = date('Y');
-        $stmt = DatabaseConnection::get()->prepare(
-            'SELECT COUNT(*) FROM incoming_invoices WHERE invoice_number LIKE :pattern'
-        );
-        $stmt->execute(['pattern' => "BSZLA-$year-%"]);
-        $count = (int) $stmt->fetchColumn() + 1;
-
-        return sprintf('BSZLA-%s-%04d', $year, $count);
+        return DocumentNumber::preview('incoming_invoice');
     }
 
     /**
@@ -144,6 +139,7 @@ class IncomingInvoiceModel
         $pdo->beginTransaction();
 
         try {
+            $number = DocumentNumber::take('incoming_invoice', (string) ($data['issue_date'] ?? ''));
             $total = array_sum(array_map(fn($i) => $i['quantity'] * $i['unit_price'], $items));
 
             $stmt = $pdo->prepare(
@@ -151,7 +147,7 @@ class IncomingInvoiceModel
                  VALUES (:invoice_number, :purchase_order_id, :partner_id, :warehouse_id, :status, :issue_date, :due_date, :total_amount, :created_by, NOW())'
             );
             $stmt->execute([
-                'invoice_number' => $data['invoice_number'],
+                'invoice_number' => $number,
                 'purchase_order_id' => $data['purchase_order_id'] ?: null,
                 'partner_id' => $data['partner_id'],
                 'warehouse_id' => $data['warehouse_id'] ?: null,
@@ -194,7 +190,7 @@ class IncomingInvoiceModel
                         'warehouse_id' => $data['warehouse_id'],
                         'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
-                        'note' => 'Beszerzés: ' . $data['invoice_number'],
+                        'note' => 'Beszerzés: ' . $number,
                         'created_by' => $data['created_by'] ?: null,
                         'created_at' => $data['issue_date'] . ' 09:00:00',
                     ]);

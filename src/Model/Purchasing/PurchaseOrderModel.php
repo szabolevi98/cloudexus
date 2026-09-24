@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Purchasing;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\DocumentNumber;
 
 class PurchaseOrderModel
 {
@@ -101,16 +102,10 @@ class PurchaseOrderModel
         return $stmt->fetchAll();
     }
 
+    /** A várható következő sorszám, az űrlapon tájékoztatásnak — a valódit a mentés kapja. */
     public function nextPoNumber(): string
     {
-        $year = date('Y');
-        $stmt = DatabaseConnection::get()->prepare(
-            'SELECT COUNT(*) FROM purchase_orders WHERE po_number LIKE :pattern'
-        );
-        $stmt->execute(['pattern' => "BESZ-$year-%"]);
-        $count = (int) $stmt->fetchColumn() + 1;
-
-        return sprintf('BESZ-%s-%04d', $year, $count);
+        return DocumentNumber::preview('purchase_order');
     }
 
     public function create(array $data, array $items): int
@@ -119,6 +114,7 @@ class PurchaseOrderModel
         $pdo->beginTransaction();
 
         try {
+            $number = DocumentNumber::take('purchase_order', (string) ($data['order_date'] ?? ''));
             $total = array_sum(array_map(fn($i) => $i['quantity'] * $i['unit_price'], $items));
 
             $stmt = $pdo->prepare(
@@ -126,7 +122,7 @@ class PurchaseOrderModel
                  VALUES (:po_number, :partner_id, :status, :order_date, :total_amount, :created_by, NOW())'
             );
             $stmt->execute([
-                'po_number' => $data['po_number'],
+                'po_number' => $number,
                 'partner_id' => $data['partner_id'],
                 'status' => $data['status'],
                 'order_date' => $data['order_date'],

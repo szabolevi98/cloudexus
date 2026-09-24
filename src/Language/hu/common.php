@@ -47,12 +47,16 @@ return [
     'line_items' => 'Tételek',
     'choose_product' => 'Válassz terméket…',
     'unit_price_ft' => 'Egységár ({currency})',
+    'net_unit_price_ft' => 'Nettó egységár ({currency})',
+    'net_line_total' => 'Nettó sorösszeg',
+    'net_total' => 'Nettó végösszeg',
     'add_line_item' => 'Tétel hozzáadása',
     'invoice_status' => [
         'unpaid' => 'Fizetésre vár',
         'paid' => 'Kifizetve',
         'overdue' => 'Lejárt',
         'cancelled' => 'Stornózva',
+        'storno' => 'Sztornó számla',
     ],
     'order_status' => [
         'draft' => 'Piszkozat',

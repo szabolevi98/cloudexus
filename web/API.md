@@ -431,22 +431,38 @@ Example response (`GET /api/invoices/2`):
   "data": {
     "id": 2,
     "invoice_number": "SZLA-2026-0002",
+    "invoice_type": "normal",
+    "storno_of_id": null,
+    "storno_by_id": null,
     "order_id": 3,
     "partner_id": 10,
     "partner_name": "Kelemen Kereskedés",
     "tax_number": "33206217-1-06",
+    "address": "6720 Szeged, Kárász utca 5.",
     "warehouse_id": 1,
     "warehouse_name": "Központi raktár",
     "status": "paid",
     "issue_date": "2026-06-30",
+    "fulfilment_date": "2026-06-30",
     "due_date": "2026-07-08",
+    "payment_method": "transfer",
+    "net_total": "43980.00",
+    "vat_total": "11875.00",
+    "total_amount": "55855.00",
     "shipping_cost": "990.00",
     "payment_cost": "890.00",
-    "total_amount": "508140.00",
+    "extra_vat_rate": "27.00",
+    "seller_name": "Mintacég Kft.",
+    "seller_tax_number": "12345678-2-42",
     "created_at": "2026-07-24 16:44:35",
     "updated_at": "2026-07-24 16:44:35",
     "items": [
-      { "id": 5, "invoice_id": 2, "product_id": 26, "quantity": "6.000", "unit_price": "6850.00", "line_total": "41100.00", "sku": "PRD-0026", "product_name": "Jóga szőnyeg", "unit": "csomag" }
+      { "id": 5, "invoice_id": 2, "product_id": 26, "quantity": "6.000", "unit_price": "6850.00", "vat_rate": "27.00",
+        "line_total": "41100.00", "net_amount": "41100.00", "vat_amount": "11097.00", "gross_amount": "52197.00",
+        "sku": "PRD-0026", "product_name": "Jóga szőnyeg", "unit": "csomag" }
+    ],
+    "vat_summary": [
+      { "rate": 27, "net": 42980, "vat": 11605, "gross": 54585 }
     ]
   },
   "meta": {
@@ -455,8 +471,13 @@ Example response (`GET /api/invoices/2`):
 }
 ```
 
-`status`: `unpaid` / `paid` / `cancelled`. Invoices are read-only via the API. All amounts are
-in the currency named by `meta.currency`.
+- `status`: `unpaid` / `paid` / `cancelled` (a cancelled invoice has a cancellation invoice, `storno_by_id`) / `storno` (the cancellation invoice itself).
+- `invoice_type`: `normal` or `storno`; a cancellation invoice points to the one it cancels with `storno_of_id` and carries its lines with negative quantities and amounts.
+- Unit prices are net. Every line carries its VAT rate and its net, VAT and gross amounts; `total_amount` is the gross total, `net_total` + `vat_total`. Shipping and payment costs are net, at `extra_vat_rate`.
+- The buyer (`partner_name`, `tax_number`, `address`) and the seller (`seller_*`) are as they were when the invoice was issued.
+- `payment_method`: `transfer` / `cash` / `card` / `cod`.
+
+Invoices are read-only via the API. All amounts are in the currency named by `meta.currency`.
 
 ### Pricing
 
