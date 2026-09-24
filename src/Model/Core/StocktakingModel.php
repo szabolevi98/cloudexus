@@ -97,14 +97,18 @@ class StocktakingModel
      * product whose counted quantity differs from the book quantity, posts a
      * correction stock movement so the book stock matches the physical count.
      *
-     * @param array $items List of ['product_id', 'book_quantity', 'counted_quantity'].
+     * The book quantity is read here, with the warehouse locked — not taken
+     * from the form, which may have been opened before other bookings (or
+     * edited): the correction always brings the stock to the counted figure.
+     *
+     * @param array $items List of ['product_id', 'counted_quantity'].
      */
     public function book(int $warehouseId, string $note, array $items, ?int $userId): int
     {
-        $pdo = DatabaseConnection::get();
-        $pdo->beginTransaction();
+        $stock = new StockMovementModel();
 
-        try {
+        return $stock->locked([$warehouseId], function () use ($stock, $warehouseId, $note, $items, $userId): int {
+            $pdo = DatabaseConnection::get();
             $number = DocumentNumber::take('stocktaking');
             $diffCount = 0;
 
@@ -131,7 +135,8 @@ class StocktakingModel
             );
 
             foreach ($items as $item) {
-                $diff = $item['counted_quantity'] - $item['book_quantity'];
+                $item['book_quantity'] = $stock->availableQuantity((int) $item['product_id'], $warehouseId);
+                $diff = round($item['counted_quantity'] - $item['book_quantity'], 3);
 
                 $itemStmt->execute([
                     'stocktaking_id' => $stocktakingId,
@@ -157,12 +162,7 @@ class StocktakingModel
             $pdo->prepare('UPDATE stocktakings SET diff_count = :d WHERE id = :id')
                 ->execute(['d' => $diffCount, 'id' => $stocktakingId]);
 
-            $pdo->commit();
-
             return $stocktakingId;
-        } catch (\Throwable $e) {
-            $pdo->rollBack();
-            throw $e;
-        }
+        });
     }
 }

@@ -33,8 +33,7 @@ abstract class BaseController
         // {{ amount|money }} formázás az elsődleges pénznemben, pl. "89 900 Ft".
         $this->twig->addFilter(new TwigFilter('money', [Currency::class, 'format']));
         // Mennyiség annyi tizedessel, amennyi kell: 12, 2,5, 0,125 (kg, l, m is).
-        $this->twig->addFilter(new TwigFilter('qty', static fn(float|int|string|null $q): string =>
-            rtrim(rtrim(number_format((float) $q, 3, ',', ' '), '0'), ',')));
+        $this->twig->addFilter(new TwigFilter('qty', [\Cloudexus\Core\Quantity::class, 'format']));
         // {{ currency_symbol() }} önmagában, pl. beviteli mezők címkéihez. Twig
         // függvény és nem globális, hogy csak akkor kérdezze le a pénznemet, ha kell.
         $this->twig->addFunction(new TwigFunction('currency_symbol', [Currency::class, 'symbol']));

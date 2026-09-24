@@ -5,9 +5,11 @@ namespace Cloudexus\Controller;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
 use Cloudexus\Core\Permissions;
+use Cloudexus\Core\Quantity;
 use Cloudexus\Model\Core\LocationModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
+use Cloudexus\Model\Core\StockShortage;
 use Cloudexus\Model\Core\WarehouseModel;
 
 class StockController extends BaseController
@@ -142,28 +144,31 @@ class StockController extends BaseController
             $this->redirect('/stock/transfer');
         }
 
-        $available = $this->movements->availableQuantity($productId, $fromId);
-        if ($quantity > $available) {
-            $this->flashError($this->t('stock.transfer_not_enough', [
-                'available' => $available,
-                'requested' => $quantity,
-            ]));
-            $this->redirect('/stock/transfer');
-        }
-
         $from = $this->warehouses->findById($fromId);
         $to = $this->warehouses->findById($toId);
 
-        $this->movements->transfer(
-            $fromId,
-            $toId,
-            $productId,
-            $quantity,
-            'Raktárközi átadás: ' . ($from['name'] ?? $fromId) . ' → ' . ($to['name'] ?? $toId) . ($note !== '' ? ' — ' . $note : ''),
-            Auth::id(),
-            (int) ($_POST['from_location_id'] ?? 0) ?: null,
-            (int) ($_POST['to_location_id'] ?? 0) ?: null
-        );
+        try {
+            $this->movements->locked([$fromId, $toId], function () use ($fromId, $toId, $productId, $quantity, $note, $from, $to): void {
+                $this->movements->assertAvailable($fromId, [$productId => $quantity]);
+                $this->movements->transfer(
+                    $fromId,
+                    $toId,
+                    $productId,
+                    $quantity,
+                    'Raktárközi átadás: ' . ($from['name'] ?? $fromId) . ' → ' . ($to['name'] ?? $toId) . ($note !== '' ? ' — ' . $note : ''),
+                    Auth::id(),
+                    (int) ($_POST['from_location_id'] ?? 0) ?: null,
+                    (int) ($_POST['to_location_id'] ?? 0) ?: null
+                );
+            });
+        } catch (StockShortage $e) {
+            $short = $e->first();
+            $this->flashError($this->t('stock.transfer_not_enough', [
+                'available' => Quantity::format($short['available']),
+                'requested' => Quantity::format($short['requested']),
+            ]));
+            $this->redirect('/stock/transfer');
+        }
 
         $this->flashSuccess($this->t('stock.transfer_created'));
         $this->redirect('/stock/transfer');
@@ -225,32 +230,33 @@ class StockController extends BaseController
             $this->redirect('/stock/barcode');
         }
 
-        if ($direction === 'out') {
-            foreach ($items as $productId => $quantity) {
-                $available = $this->movements->availableQuantity($productId, $warehouseId);
-                if ($quantity > $available) {
-                    $product = $this->products->findById($productId);
-                    $this->flashError($this->t('stock.barcode_not_enough', [
-                        'sku' => $product['sku'] ?? $productId,
-                        'available' => $available,
-                        'requested' => $quantity,
-                    ]));
-                    $this->redirect('/stock/barcode');
-                }
-            }
-        }
-
         $locationId = (int) ($_POST['location_id'] ?? 0) ?: null;
-        foreach ($items as $productId => $quantity) {
-            $this->movements->create([
-                'warehouse_id' => $warehouseId,
-                'location_id' => $locationId,
-                'product_id' => $productId,
-                'type' => $direction,
-                'quantity' => $quantity,
-                'note' => 'Vonalkód gyűjtő',
-                'created_by' => Auth::id(),
-            ]);
+        try {
+            $this->movements->locked([$warehouseId], function () use ($direction, $warehouseId, $locationId, $items): void {
+                if ($direction === 'out') {
+                    $this->movements->assertAvailable($warehouseId, $items);
+                }
+                foreach ($items as $productId => $quantity) {
+                    $this->movements->create([
+                        'warehouse_id' => $warehouseId,
+                        'location_id' => $locationId,
+                        'product_id' => $productId,
+                        'type' => $direction,
+                        'quantity' => $quantity,
+                        'note' => 'Vonalkód gyűjtő',
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            });
+        } catch (StockShortage $e) {
+            $productId = array_key_first($e->shortages);
+            $product = $this->products->findById($productId);
+            $this->flashError($this->t('stock.barcode_not_enough', [
+                'sku' => $product['sku'] ?? $productId,
+                'available' => Quantity::format($e->shortages[$productId]['available']),
+                'requested' => Quantity::format($e->shortages[$productId]['requested']),
+            ]));
+            $this->redirect('/stock/barcode');
         }
 
         $this->flashSuccess($this->t('stock.barcode_booked', [
@@ -293,27 +299,29 @@ class StockController extends BaseController
             $this->redirect($redirectPath);
         }
 
-        if ($type === 'out') {
-            $available = $this->movements->availableQuantity($productId, $warehouseId);
-
-            if ($quantity > $available) {
-                $this->flashError($this->t('stock.not_enough', [
-                    'available' => $available,
-                    'requested' => $quantity,
-                ]));
-                $this->redirect($redirectPath);
-            }
+        try {
+            $this->movements->locked([$warehouseId], function () use ($type, $warehouseId, $productId, $quantity, $note): void {
+                if ($type === 'out') {
+                    $this->movements->assertAvailable($warehouseId, [$productId => $quantity]);
+                }
+                $this->movements->create([
+                    'warehouse_id' => $warehouseId,
+                    'location_id' => (int) ($_POST['location_id'] ?? 0) ?: null,
+                    'product_id' => $productId,
+                    'type' => $type,
+                    'quantity' => $quantity,
+                    'note' => $note,
+                    'created_by' => Auth::id(),
+                ]);
+            });
+        } catch (StockShortage $e) {
+            $short = $e->first();
+            $this->flashError($this->t('stock.not_enough', [
+                'available' => Quantity::format($short['available']),
+                'requested' => Quantity::format($short['requested']),
+            ]));
+            $this->redirect($redirectPath);
         }
-
-        $this->movements->create([
-            'warehouse_id' => $warehouseId,
-            'location_id' => (int) ($_POST['location_id'] ?? 0) ?: null,
-            'product_id' => $productId,
-            'type' => $type,
-            'quantity' => $quantity,
-            'note' => $note,
-            'created_by' => Auth::id(),
-        ]);
 
         $this->flashSuccess($this->t($type === 'in' ? 'stock.in_created' : 'stock.out_created'));
         $this->redirect($redirectPath);

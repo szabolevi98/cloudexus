@@ -66,7 +66,6 @@ class StocktakingController extends BaseController
         $warehouseId = (int) ($_POST['warehouse_id'] ?? 0);
         $note = trim($_POST['note'] ?? '');
         $productIds = $_POST['product_id'] ?? [];
-        $bookQtys = $_POST['book_quantity'] ?? [];
         $countedQtys = $_POST['counted_quantity'] ?? [];
 
         if ($warehouseId <= 0 || empty($productIds)) {
@@ -82,7 +81,6 @@ class StocktakingController extends BaseController
             }
             $items[] = [
                 'product_id' => (int) $productId,
-                'book_quantity' => (float) str_replace(',', '.', $bookQtys[$index] ?? '0'),
                 'counted_quantity' => (float) str_replace(',', '.', $counted),
             ];
         }

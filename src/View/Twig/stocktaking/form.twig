@@ -50,10 +50,9 @@
                             <tr>
                                 <td class="fw-medium">{{ row.sku }}
                                     <input type="hidden" name="product_id[]" value="{{ row.product_id }}">
-                                    <input type="hidden" name="book_quantity[]" value="{{ row.book_quantity }}">
                                 </td>
                                 <td>{{ row.product_name }}</td>
-                                <td class="text-end cx-book" data-book="{{ row.book_quantity }}">{{ row.book_quantity|number_format(0, ',', ' ') }} {{ row.unit }}</td>
+                                <td class="text-end cx-book" data-book="{{ row.book_quantity }}">{{ row.book_quantity|qty }} {{ row.unit }}</td>
                                 <td class="text-end">
                                     <input type="number" step="0.001" name="counted_quantity[]" class="form-control form-control-sm text-end cx-counted" placeholder="—">
                                 </td>

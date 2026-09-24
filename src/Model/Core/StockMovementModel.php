@@ -102,11 +102,70 @@ class StockMovementModel
         return (int) DatabaseConnection::get()->lastInsertId();
     }
 
-    /** Books a warehouse-to-warehouse transfer as an out + in movement pair, atomically. */
+    /**
+     * Runs $work in a transaction that holds the given warehouses' row locks:
+     * a stock check and the booking after it see the same stock, so two
+     * parallel stock-outs cannot both pass the check and oversell. The same
+     * lock the mobile API takes, so web and PDA bookings queue up too.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return T
+     */
+    public function locked(array $warehouseIds, callable $work): mixed
+    {
+        $pdo = DatabaseConnection::get();
+        // Every read sees the latest committed stock, not a snapshot from before the lock.
+        $pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+        $pdo->beginTransaction();
+
+        try {
+            $this->lockWarehouses($warehouseIds);
+            $result = $work();
+            $pdo->commit();
+
+            return $result;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Throws StockShortage when a warehouse cannot cover the quantities. Call
+     * it inside locked(), before booking.
+     *
+     * @param array<int, float> $needed product id => quantity
+     */
+    public function assertAvailable(int $warehouseId, array $needed): void
+    {
+        $shortages = [];
+        foreach ($needed as $productId => $quantity) {
+            $available = $this->availableQuantity((int) $productId, $warehouseId);
+            // Quantities have at most 3 decimals; the margin absorbs float noise.
+            if ($quantity > $available + 0.0005) {
+                $shortages[(int) $productId] = ['available' => $available, 'requested' => (float) $quantity];
+            }
+        }
+
+        if ($shortages) {
+            throw new StockShortage($shortages);
+        }
+    }
+
+    /**
+     * Books a warehouse-to-warehouse transfer as an out + in movement pair,
+     * atomically; inside locked() it joins that transaction.
+     */
     public function transfer(int $fromWarehouseId, int $toWarehouseId, int $productId, float $quantity, string $note, ?int $userId, ?int $fromLocationId = null, ?int $toLocationId = null): void
     {
         $pdo = DatabaseConnection::get();
-        $pdo->beginTransaction();
+        $own = !$pdo->inTransaction();
+        if ($own) {
+            $pdo->beginTransaction();
+        }
 
         try {
             $stmt = $pdo->prepare(
@@ -126,9 +185,13 @@ class StockMovementModel
                 ]);
             }
 
-            $pdo->commit();
+            if ($own) {
+                $pdo->commit();
+            }
         } catch (\Throwable $e) {
-            $pdo->rollBack();
+            if ($own && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
     }

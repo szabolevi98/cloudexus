@@ -138,14 +138,26 @@ class InvoiceModel
      * Kiállítja a számlát: sorszám a számlálóból, a tranzakción belül; minden
      * sor a termék ÁFA-kulcsával, nettó, ÁFA és bruttó összeggel; a vevő és
      * az eladó adatai rögzítve. Ha warehouse_id meg van adva, minden sort
-     * raktári kiadásként is könyvel (a készletet a hívó ellenőrzi előtte).
+     * raktári kiadásként is könyvel: a raktárat zárolja, és ha nincs elég
+     * készlet, StockShortage-et dob, a számla pedig el sem készül.
      */
     public function create(array $data, array $items): int
     {
         $pdo = DatabaseConnection::get();
+        $pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $pdo->beginTransaction();
 
         try {
+            if (!empty($data['warehouse_id'])) {
+                $stock = new \Cloudexus\Model\Core\StockMovementModel();
+                $stock->lockWarehouses([(int) $data['warehouse_id']]);
+                $needed = [];
+                foreach ($items as $item) {
+                    $needed[(int) $item['product_id']] = ($needed[(int) $item['product_id']] ?? 0) + (float) $item['quantity'];
+                }
+                $stock->assertAvailable((int) $data['warehouse_id'], $needed);
+            }
+
             $issueDate = (string) $data['issue_date'];
             $number = DocumentNumber::take('invoice', $issueDate);
             $lines = self::priceLines($items);

@@ -8,7 +8,6 @@ use Cloudexus\Core\Paginator;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\ProductModel;
-use Cloudexus\Model\Core\StockMovementModel;
 use Cloudexus\Model\Core\WarehouseModel;
 use Cloudexus\Model\Sales\InvoiceModel;
 use Cloudexus\Model\Sales\OrderModel;
@@ -20,7 +19,6 @@ class InvoiceController extends BaseController
     private ProductModel $products;
     private OrderModel $orders;
     private WarehouseModel $warehouses;
-    private StockMovementModel $stock;
 
     public function __construct()
     {
@@ -30,7 +28,6 @@ class InvoiceController extends BaseController
         $this->products = new ProductModel();
         $this->orders = new OrderModel();
         $this->warehouses = new WarehouseModel();
-        $this->stock = new StockMovementModel();
         $this->activeMenu = 'invoices';
     }
 
@@ -138,16 +135,10 @@ class InvoiceController extends BaseController
 
         $warehouseId = (int) ($_POST['warehouse_id'] ?? 0);
 
-        if ($warehouseId > 0) {
-            $shortages = $this->findShortages($items, $warehouseId);
-            if ($shortages) {
-                $this->flashError($this->t('invoices.shortage', ['items' => implode(', ', $shortages)]));
-                $this->redirect('/invoices/create');
-            }
-        }
-
         // A számlaszámot a mentés adja ki; az űrlapon látott csak előnézet.
-        $id = $this->invoices->create([
+        // A készletet is a mentés ellenőrzi, zárolt raktárral.
+        try {
+            $id = $this->invoices->create([
             'order_id' => $orderId ?: null,
             'partner_id' => (int) $_POST['partner_id'],
             'warehouse_id' => $warehouseId ?: null,
@@ -159,7 +150,11 @@ class InvoiceController extends BaseController
             'shipping_cost' => (float) str_replace(',', '.', $_POST['shipping_cost'] ?? '0'),
             'payment_cost' => (float) str_replace(',', '.', $_POST['payment_cost'] ?? '0'),
             'created_by' => Auth::id(),
-        ], $items);
+            ], $items);
+        } catch (\Cloudexus\Model\Core\StockShortage $e) {
+            $this->flashError($this->t('invoices.shortage', ['items' => implode(', ', $this->describeShortages($e->shortages))]));
+            $this->redirect('/invoices/create' . ($orderId ? '?order_id=' . $orderId : ''));
+        }
 
         $issued = $this->invoices->findById($id);
         AuditLog::record(AuditLog::ISSUE, 'invoice', $id, $issued['invoice_number'] ?? null,
@@ -235,28 +230,23 @@ class InvoiceController extends BaseController
         $this->redirect('/invoices/' . $stornoId);
     }
 
-    /** Returns human-readable shortage descriptions for items not coverable from the warehouse. */
-    private function findShortages(array $items, int $warehouseId): array
+    /**
+     * @param array<int, array{available: float, requested: float}> $shortages
+     * @return list<string> "SKU (elérhető: 2, kért: 5)" termékenként
+     */
+    private function describeShortages(array $shortages): array
     {
-        $needed = [];
-        foreach ($items as $item) {
-            $needed[$item['product_id']] = ($needed[$item['product_id']] ?? 0) + $item['quantity'];
+        $lines = [];
+        foreach ($shortages as $productId => $shortage) {
+            $product = $this->products->findById($productId);
+            $lines[] = $this->t('invoices.shortage_item', [
+                'sku' => $product['sku'] ?? $productId,
+                'available' => \Cloudexus\Core\Quantity::format($shortage['available']),
+                'requested' => \Cloudexus\Core\Quantity::format($shortage['requested']),
+            ]);
         }
 
-        $shortages = [];
-        foreach ($needed as $productId => $quantity) {
-            $available = $this->stock->availableQuantity($productId, $warehouseId);
-            if ($quantity > $available) {
-                $product = $this->products->findById($productId);
-                $shortages[] = $this->t('invoices.shortage_item', [
-                    'sku' => $product['sku'] ?? $productId,
-                    'available' => $available,
-                    'requested' => $quantity,
-                ]);
-            }
-        }
-
-        return $shortages;
+        return $lines;
     }
 
     private function collectItems(): array
