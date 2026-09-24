@@ -16,6 +16,7 @@ return [
     'categories' => 'Kategóriák',
     'partners' => 'Partnerek',
     'customer_groups' => 'Vevőcsoportok',
+    'price_rules' => 'Árszabályok',
     'warehouses' => 'Raktárak',
     'locations' => 'Tárhelyek',
     'stock_in' => 'Raktári bevét',

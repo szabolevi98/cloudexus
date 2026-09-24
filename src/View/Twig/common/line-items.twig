@@ -33,7 +33,10 @@
                     data-url="{{ base_url }}/products/search" data-placeholder="{{ t('common.choose_product') }}" required></select>
         </td>
         <td><input type="number" step="0.001" min="0.001" name="quantity[]" class="form-control form-control-sm cx-line-item__quantity" required></td>
-        <td><input type="number" step="0.01" min="0" name="unit_price[]" class="form-control form-control-sm cx-line-item__price" required></td>
+        <td>
+            <input type="number" step="0.01" min="0" name="unit_price[]" class="form-control form-control-sm cx-line-item__price" required>
+            <div class="form-text small text-success cx-line-item__rule" hidden></div>
+        </td>
         <td class="text-end cx-line-item__total">0 {{ currency_symbol() }}</td>
         <td class="text-end">
             <button type="button" class="btn btn-sm btn-outline-danger cx-line-item__remove">
@@ -52,6 +55,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const partnerSelectId = {{ partner_select_id ? ('"' ~ partner_select_id ~ '"')|raw : 'null' }};
     const partnerSelect = partnerSelectId ? document.getElementById(partnerSelectId) : null;
     const extraCostSelector = {{ extra_cost_selector ? ('"' ~ extra_cost_selector ~ '"')|raw : 'null' }};
+    // Sales forms (with a partner picker) get group prices and price rules for
+    // the line quantity and the document date; purchase forms the plain price.
+    const salesPricing = !!partnerSelect;
+    const dateInput = {{ date_input_name|default('') ? ('document.querySelector(\'[name="' ~ date_input_name ~ '"]\')')|raw : 'null' }};
+    const ruleLabel = '{{ t('price_rules.applied')|e('js') }}';
     const priceCache = {};
     const numberFormat = (n) => new Intl.NumberFormat('hu-HU').format(Math.round(n)) + ' {{ currency_symbol()|e('js') }}';
 
@@ -59,16 +67,45 @@ document.addEventListener('DOMContentLoaded', function () {
         return partnerSelect ? (parseInt(partnerSelect.value, 10) || 0) : 0;
     }
 
-    function fetchEffectivePrice(productId) {
-        const partnerId = currentPartnerId();
-        const key = productId + ':' + partnerId;
+    function fetchEffectivePrice(productId, quantity) {
+        const partnerId = salesPricing ? currentPartnerId() : 0;
+        const qty = salesPricing && quantity > 0 ? quantity : 1;
+        const date = salesPricing && dateInput ? dateInput.value : '';
+        const key = [productId, partnerId, qty, date].join(':');
         if (priceCache[key]) {
             return priceCache[key];
         }
-        const url = '{{ base_url }}/pricing/effective?product_id=' + encodeURIComponent(productId) + (partnerId ? '&partner_id=' + partnerId : '');
-        const promise = fetch(url).then((r) => r.json()).then((data) => data.price || 0);
+        const params = new URLSearchParams({ product_id: productId });
+        if (salesPricing) {
+            if (partnerId) params.set('partner_id', partnerId);
+            params.set('quantity', qty);
+            if (date) params.set('date', date);
+        } else {
+            params.set('base', '1');
+        }
+        const promise = fetch('{{ base_url }}/pricing/effective?' + params).then((r) => r.json());
         priceCache[key] = promise;
         return promise;
+    }
+
+    // Fills the row's price unless the user typed one; shows the rule that set it.
+    function applyPrice(row) {
+        const productId = row.querySelector('.cx-line-item__product').value;
+        if (!productId || row.dataset.manualPrice === '1') {
+            return;
+        }
+        const qty = parseFloat(row.querySelector('.cx-line-item__quantity').value) || 1;
+        fetchEffectivePrice(productId, qty).then((data) => {
+            row.querySelector('.cx-line-item__price').value = data.price || 0;
+            const hint = row.querySelector('.cx-line-item__rule');
+            hint.hidden = !data.rule;
+            hint.textContent = data.rule ? ruleLabel.replace('{name}', data.rule.name) : '';
+            recalcRow(row);
+        });
+    }
+
+    function repriceAll() {
+        body.querySelectorAll('tr').forEach(applyPrice);
     }
 
     function recalcRow(row) {
@@ -108,18 +145,25 @@ document.addEventListener('DOMContentLoaded', function () {
             productSelect.appendChild(opt);
         }
 
-        jQuery(productSelect).on('change', (e) => {
-            const productId = e.target.value;
-            if (!productId) {
-                return;
-            }
-            fetchEffectivePrice(productId).then((price) => {
-                row.querySelector('.cx-line-item__price').value = price;
-                recalcRow(row);
-            });
+        jQuery(productSelect).on('change', () => {
+            // A new product takes its own price again, even over a typed one.
+            delete row.dataset.manualPrice;
+            applyPrice(row);
         });
-        row.querySelector('.cx-line-item__quantity').addEventListener('input', () => recalcRow(row));
-        row.querySelector('.cx-line-item__price').addEventListener('input', () => recalcRow(row));
+        let repriceTimer = null;
+        row.querySelector('.cx-line-item__quantity').addEventListener('input', () => {
+            recalcRow(row);
+            if (salesPricing) {
+                // A quantity break may change the price; ask once the typing stops.
+                clearTimeout(repriceTimer);
+                repriceTimer = setTimeout(() => applyPrice(row), 350);
+            }
+        });
+        row.querySelector('.cx-line-item__price').addEventListener('input', () => {
+            row.dataset.manualPrice = '1';
+            row.querySelector('.cx-line-item__rule').hidden = true;
+            recalcRow(row);
+        });
         row.querySelector('.cx-line-item__remove').addEventListener('click', () => {
             row.remove();
             recalcTotal();
@@ -131,6 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data) {
             row.querySelector('.cx-line-item__quantity').value = data.quantity;
             row.querySelector('.cx-line-item__price').value = data.unit_price;
+            // A line taken over from an order keeps the order's price.
+            row.dataset.manualPrice = '1';
             recalcRow(row);
         }
     }
@@ -144,18 +190,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (partnerSelect) {
-        jQuery(partnerSelect).on('change', () => {
-            body.querySelectorAll('tr').forEach((row) => {
-                const productId = row.querySelector('.cx-line-item__product').value;
-                if (!productId) {
-                    return;
-                }
-                fetchEffectivePrice(productId).then((price) => {
-                    row.querySelector('.cx-line-item__price').value = price;
-                    recalcRow(row);
-                });
-            });
-        });
+        jQuery(partnerSelect).on('change', repriceAll);
+    }
+    if (dateInput) {
+        dateInput.addEventListener('change', repriceAll);
     }
 
     if (prefill.length) {

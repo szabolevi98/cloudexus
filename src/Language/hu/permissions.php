@@ -29,6 +29,9 @@ return [
         'customer_groups' => [
             'manage' => 'Vevőcsoportok kezelése',
         ],
+        'pricing' => [
+            'manage' => 'Árszabályok kezelése',
+        ],
         'stock' => [
             'view' => 'Raktárak, tárhelyek, készlet és leltárak megtekintése',
             'move' => 'Bevét, kiadás, átadás, vonalkód gyűjtő',

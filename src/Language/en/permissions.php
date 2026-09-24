@@ -29,6 +29,9 @@ return [
         'customer_groups' => [
             'manage' => 'Manage customer groups',
         ],
+        'pricing' => [
+            'manage' => 'Manage price rules',
+        ],
         'stock' => [
             'view' => 'View warehouses, locations, stock and stocktakings',
             'move' => 'Book stock in, out and between warehouses; barcode collector',

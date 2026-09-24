@@ -1,0 +1,100 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('price_rules.list_title') }}</h2>
+            {% if can('pricing.manage') %}
+                <a href="{{ base_url }}/price-rules/create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>{{ t('price_rules.new') }}
+                </a>
+            {% endif %}
+        </div>
+        <div class="cx-card__body p-0">
+            <p class="text-muted small px-3 pt-3 mb-0">{{ t('price_rules.intro') }}</p>
+            <form method="get" class="p-3 border-bottom">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-5 col-lg-3">
+                        <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
+                        <input type="text" name="q" class="form-control form-control-sm" value="{{ filters.q }}">
+                    </div>
+                    <div class="col-sm-4 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.status') }}</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">{{ t('common.all') }}</option>
+                            {% for s in ['active', 'scheduled', 'expired', 'inactive'] %}
+                                <option value="{{ s }}" {{ filters.status == s ? 'selected' : '' }}>{{ t('price_rules.status.' ~ s) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>{{ t('common.filter') }}</button>
+                        <a href="{{ base_url }}/price-rules" class="btn btn-sm btn-outline-secondary">{{ t('common.clear') }}</a>
+                    </div>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 cx-table">
+                    <thead>
+                    <tr>
+                        <th>{{ t('common.name') }}</th>
+                        <th>{{ t('price_rules.who') }}</th>
+                        <th>{{ t('price_rules.what') }}</th>
+                        <th class="text-end">{{ t('price_rules.min_quantity') }}</th>
+                        <th class="text-end">{{ t('price_rules.effect') }}</th>
+                        <th>{{ t('price_rules.validity') }}</th>
+                        <th>{{ t('common.status') }}</th>
+                        {% if can('pricing.manage') %}<th class="text-end">{{ t('common.actions') }}</th>{% endif %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for rule in rules %}
+                        {% set state = not rule.is_active ? 'inactive'
+                            : (rule.valid_to and rule.valid_to < today ? 'expired'
+                            : (rule.valid_from and rule.valid_from > today ? 'scheduled' : 'active')) %}
+                        <tr>
+                            <td class="fw-medium">{{ rule.name }}</td>
+                            <td>{{ rule.customer_group_name ?: t('price_rules.everyone') }}</td>
+                            <td>
+                                {% if rule.product_id %}
+                                    <span class="text-muted small">{{ rule.product_sku }}</span> {{ rule.product_name }}
+                                {% elseif rule.category_id %}
+                                    <i class="bi bi-tags me-1 text-muted"></i>{{ rule.category_name }}
+                                {% else %}
+                                    {{ t('price_rules.all_products') }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end">{{ rule.min_quantity > 0 ? rule.min_quantity|qty : '—' }}</td>
+                            <td class="text-end fw-medium text-nowrap">
+                                {% if rule.fixed_price is not null %}{{ rule.fixed_price|money }}{% else %}−{{ rule.discount_percent|qty }}%{% endif %}
+                            </td>
+                            <td class="small text-nowrap">
+                                {% if rule.valid_from or rule.valid_to %}
+                                    {{ rule.valid_from ? rule.valid_from|date('Y.m.d.') : '…' }} – {{ rule.valid_to ? rule.valid_to|date('Y.m.d.') : '…' }}
+                                {% else %}
+                                    <span class="text-muted">{{ t('price_rules.always') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set tone = {active: 'success', scheduled: 'primary', expired: 'secondary', inactive: 'secondary'}[state] %}
+                                <span class="badge rounded-pill text-bg-{{ tone }}-subtle text-{{ tone }}-emphasis">{{ t('price_rules.status.' ~ state) }}</span>
+                            </td>
+                            {% if can('pricing.manage') %}
+                                <td class="text-end text-nowrap">
+                                    <a href="{{ base_url }}/price-rules/{{ rule.id }}/edit" class="btn btn-sm btn-outline-secondary" title="{{ t('common.edit') }}"><i class="bi bi-pencil"></i></a>
+                                    <form method="post" action="{{ base_url }}/price-rules/{{ rule.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('price_rules.confirm_delete')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="8" class="text-center text-muted py-4">{{ t('price_rules.none_found') }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'common/pagination.twig' %}
+        </div>
+    </div>
+{% endblock %}

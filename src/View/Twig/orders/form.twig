@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                {% include 'common/line-items.twig' with {partner_select_id: 'partner_id', extra_cost_selector: '.cx-order-cost'} %}
+                {% include 'common/line-items.twig' with {partner_select_id: 'partner_id', extra_cost_selector: '.cx-order-cost', date_input_name: 'order_date'} %}
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <a href="{{ base_url }}/orders" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>

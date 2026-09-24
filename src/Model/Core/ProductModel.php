@@ -232,35 +232,70 @@ class ProductModel
     }
 
     /**
-     * The price to charge for a product to a given partner: group price (with
-     * its own optional sale price) if the partner's group has an override,
-     * otherwise the product's own price/sale price.
+     * The net unit price to prefill on a sales line.
+     *
+     * 1. The list price: the partner's customer-group price for the product if
+     *    there is one, else the product's own price. Its sale price (group or
+     *    product) is a candidate too.
+     * 2. Every active price rule that fits (group, product / category,
+     *    quantity, date) gives a candidate: a percentage off the list price,
+     *    or a fixed net price.
+     * 3. The lowest candidate wins, rounded to the currency; rules do not add up.
+     *
+     * $withRules = false stops after step 1 without the rules — purchase forms
+     * use it, where a sales promotion has no business.
+     *
+     * @return array{price: float, is_sale: bool, list_price: float, rule: array{id: int, name: string}|null}
      */
-    public function effectivePrice(int $productId, ?int $partnerId): array
+    public function effectivePrice(int $productId, ?int $partnerId, float $quantity = 1, ?string $date = null, bool $withRules = true): array
     {
         $product = $this->findById($productId);
         if (!$product) {
-            return ['price' => 0.0, 'is_sale' => false];
+            return ['price' => 0.0, 'is_sale' => false, 'list_price' => 0.0, 'rule' => null];
         }
+
+        $groupId = null;
+        $listPrice = (float) $product['price'];
+        $salePrice = $product['sale_price'] !== null ? (float) $product['sale_price'] : null;
 
         if ($partnerId) {
             $stmt = DatabaseConnection::get()->prepare(
-                'SELECT gp.price, gp.sale_price
+                'SELECT p.customer_group_id, gp.price, gp.sale_price
                  FROM partners p
-                 JOIN product_group_prices gp ON gp.customer_group_id = p.customer_group_id AND gp.product_id = :product_id
+                 LEFT JOIN product_group_prices gp ON gp.customer_group_id = p.customer_group_id AND gp.product_id = :product_id
                  WHERE p.id = :partner_id LIMIT 1'
             );
             $stmt->execute(['product_id' => $productId, 'partner_id' => $partnerId]);
-            $group = $stmt->fetch();
+            $partner = $stmt->fetch();
 
-            if ($group) {
-                $price = $group['sale_price'] !== null ? (float) $group['sale_price'] : (float) $group['price'];
-                return ['price' => $price, 'is_sale' => $group['sale_price'] !== null];
+            $groupId = $partner && $partner['customer_group_id'] !== null ? (int) $partner['customer_group_id'] : null;
+            if ($partner && $partner['price'] !== null) {
+                $listPrice = (float) $partner['price'];
+                $salePrice = $partner['sale_price'] !== null ? (float) $partner['sale_price'] : null;
             }
         }
 
-        $price = $product['sale_price'] !== null ? (float) $product['sale_price'] : (float) $product['price'];
-        return ['price' => $price, 'is_sale' => $product['sale_price'] !== null];
+        $best = ['price' => $salePrice ?? $listPrice, 'is_sale' => $salePrice !== null, 'rule' => null];
+
+        if ($withRules) {
+            $rules = (new PriceRuleModel())->applicable($productId, $groupId, max($quantity, 0), $date ?: date('Y-m-d'));
+            foreach ($rules as $rule) {
+                $candidate = $rule['fixed_price'] !== null
+                    ? (float) $rule['fixed_price']
+                    : $listPrice * (1 - (float) $rule['discount_percent'] / 100);
+                // Ties keep the earlier winner, so the sale price beats an equal rule.
+                if ($candidate < $best['price'] - 0.000001) {
+                    $best = ['price' => $candidate, 'is_sale' => false, 'rule' => ['id' => (int) $rule['id'], 'name' => $rule['name']]];
+                }
+            }
+        }
+
+        return [
+            'price' => \Cloudexus\Core\Currency::round(max($best['price'], 0)),
+            'is_sale' => $best['is_sale'],
+            'list_price' => \Cloudexus\Core\Currency::round($listPrice),
+            'rule' => $best['rule'],
+        ];
     }
 
     public function images(int $productId): array

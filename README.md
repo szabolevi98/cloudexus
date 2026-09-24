@@ -26,6 +26,7 @@ A Cloudexus egy helyen kezeli a teljes kereskedelmi folyamatot: részletes term�
 - Terméktörzs cikkszámmal, vonalkóddal, kategóriafával, választható mennyiségi egységgel, méretekkel és élő készletadattal
 - Rövid/hosszú leírás (önállóan hosztolt TinyMCE szerkesztővel), több kép (feltöltés vagy URL), termékparaméterek, több kategória, kapcsolódó/helyettesítő termékek
 - Nettó ár + ÁFA, opcionális **akciós ár**, és **vevőcsoportos árazás**: egy partner egy vevőcsoporthoz tartozhat, a csoportnak pedig termékenként saját fix ára (és akciós ára) lehet, amit a rendelés/számla tételsora automatikusan figyelembe vesz
+- Árszabályok: vevőcsoport-kedvezmény, mennyiségi kedvezmény és időszakos akció (százalék vagy fix nettó ár, termékre, kategóriára vagy mindenre); a tételsor a mennyiséghez és a bizonylat dátumához illőt tölti ki, több közül a legkedvezőbb nyer
 - Partnertörzs (vevő / szállító / mindkettő) adószámmal, elérhetőségekkel és vevőcsoport-hozzárendeléssel
 - Kereshető, szűrhető, lapozható listák minden modulban, nagy listákhoz (termékek, kategóriák, partnerek) önállóan hosztolt Select2 AJAX kereséssel
 - Pénznemek elsődleges pénznemmel és váltószámokkal; az összegek mindig az elsődleges pénznemben jelennek meg

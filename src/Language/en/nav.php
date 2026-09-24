@@ -16,6 +16,7 @@ return [
     'categories' => 'Categories',
     'partners' => 'Partners',
     'customer_groups' => 'Customer groups',
+    'price_rules' => 'Price rules',
     'warehouses' => 'Warehouses',
     'locations' => 'Storage locations',
     'stock_in' => 'Stock in',

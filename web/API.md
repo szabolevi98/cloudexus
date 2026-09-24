@@ -491,21 +491,36 @@ Invoices are read-only via the API. All amounts are in the currency named by `me
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/pricing/effective?product_id=&partner_id=` | The effective (partner/customer-group specific) price of a product |
+| GET | `/api/pricing/effective?product_id=&partner_id=&quantity=&date=` | The net unit price for a sales line: group price, sale price and price rules |
 
-Example response (`GET /api/pricing/effective?product_id=1&partner_id=12`):
+Example response (`GET /api/pricing/effective?product_id=1&partner_id=12&quantity=10`):
 
 ```json
 {
-  "data": { "price": 80910, "is_sale": false },
+  "data": {
+    "price": 76860,
+    "is_sale": false,
+    "list_price": 80910,
+    "rule": { "id": 2, "name": "10 db felett −5%" }
+  },
   "meta": { "currency": { "code": "HUF", "symbol": "Ft", "title": "Forint" } }
 }
 ```
 
-`price` is the net unit price actually applicable to the partner (the partner's customer-group
-fixed/sale price if any, otherwise the product's own price/sale price); `is_sale` is `true` if
-that price is a sale price. `partner_id` is optional — without it the product's list price is
-returned.
+- `list_price` is the partner's customer-group price for the product if it has one,
+  otherwise the product's own price.
+- `price` is the lowest of: the list price, the sale price (group or product), and every
+  active price rule that fits — the partner's customer group (or everyone), the product or
+  one of its categories (parent categories included), `quantity` at least the rule's minimum,
+  and `date` inside the rule's validity. A rule takes a percentage off the list price or
+  sets a fixed net price. Rules do not add up; the lowest price wins. It is rounded to the
+  currency's decimals.
+- `rule` names the price rule that set `price`, or `null`; `is_sale` is `true` when the sale
+  price won.
+- `partner_id` (optional) — without it only the product's own price and the rules for
+  everyone apply. `quantity` (optional, positive, default 1). `date` (optional,
+  `YYYY-MM-DD`, default today) — pass the document date to price a back- or forward-dated
+  document.
 
 ## Stock bookings (POST)
 

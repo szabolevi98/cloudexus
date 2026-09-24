@@ -36,6 +36,7 @@ return [
         'api_user' => 'API user',
         'order' => 'Customer order',
         'purchase_order' => 'Purchase order',
+        'price_rule' => 'Price rule',
     ],
     'fields' => [
         'role' => 'Role',
@@ -48,5 +49,7 @@ return [
         'fields' => 'Fields',
         'type' => 'Type',
         'items' => 'Lines',
+        'effect' => 'Discount',
+        'status' => 'Status',
     ],
 ];

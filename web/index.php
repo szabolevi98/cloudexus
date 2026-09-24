@@ -31,6 +31,7 @@ use Cloudexus\Controller\LoginController;
 use Cloudexus\Controller\OrderController;
 use Cloudexus\Controller\PartnerController;
 use Cloudexus\Controller\ParameterController;
+use Cloudexus\Controller\PriceRuleController;
 use Cloudexus\Controller\PricingController;
 use Cloudexus\Controller\ProductController;
 use Cloudexus\Controller\ProfileController;
@@ -142,6 +143,7 @@ $router->get('/categories/search', fn() => (new CategoryController())->search())
 $router->get('/parameters/search', fn() => (new ParameterController())->search());
 $router->get('/partners/search', fn() => (new PartnerController())->search());
 $router->get('/pricing/effective', fn() => (new PricingController())->effective());
+registerCrud($router, '/price-rules', PriceRuleController::class);
 
 $router->post('/products/{id}/images/{imageId}/delete', fn($id, $imageId) => (new ProductController())->deleteImage((int) $id, (int) $imageId));
 $router->post('/products/{id}/images/{imageId}/primary', fn($id, $imageId) => (new ProductController())->setPrimaryImage((int) $id, (int) $imageId));

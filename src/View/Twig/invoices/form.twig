@@ -82,7 +82,8 @@
                 {% include 'common/line-items.twig' with {
                     prefill: from_order ? from_order.items|map(i => {product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price, text: i.sku ~ ' — ' ~ i.product_name}) : [],
                     partner_select_id: 'partner_id',
-                    extra_cost_selector: '.cx-order-cost'
+                    extra_cost_selector: '.cx-order-cost',
+                    date_input_name: 'issue_date'
                 } %}
 
                 <div class="d-flex justify-content-between align-items-center mt-4">

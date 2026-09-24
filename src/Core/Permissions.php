@@ -30,6 +30,8 @@ final class Permissions
     public const PARTNERS_MANAGE = 'partners.manage';
     /** Vevőcsoportok és a csoportonkénti árak. */
     public const CUSTOMER_GROUPS_MANAGE = 'customer_groups.manage';
+    /** Árszabályok: csoportkedvezmény, mennyiségi kedvezmény, akció. */
+    public const PRICING_MANAGE = 'pricing.manage';
 
     // --- Készlet ---------------------------------------------------------
     public const STOCK_VIEW = 'stock.view';
@@ -74,7 +76,7 @@ final class Permissions
             'overview' => [self::DASHBOARD_VIEW],
             'master_data' => [
                 self::PRODUCTS_VIEW, self::PRODUCTS_MANAGE, self::CATALOG_MANAGE,
-                self::PARTNERS_VIEW, self::PARTNERS_MANAGE, self::CUSTOMER_GROUPS_MANAGE,
+                self::PARTNERS_VIEW, self::PARTNERS_MANAGE, self::CUSTOMER_GROUPS_MANAGE, self::PRICING_MANAGE,
             ],
             'inventory' => [self::STOCK_VIEW, self::STOCK_MOVE, self::STOCKTAKING_MANAGE, self::WAREHOUSES_MANAGE],
             'sales' => [self::ORDERS_VIEW, self::ORDERS_MANAGE, self::INVOICES_VIEW, self::INVOICES_ISSUE, self::INVOICES_STORNO],

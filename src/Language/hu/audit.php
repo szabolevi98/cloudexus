@@ -36,6 +36,7 @@ return [
         'api_user' => 'API felhasználó',
         'order' => 'Vevői rendelés',
         'purchase_order' => 'Szállítói rendelés',
+        'price_rule' => 'Árszabály',
     ],
     'fields' => [
         'role' => 'Szerepkör',
@@ -48,5 +49,7 @@ return [
         'fields' => 'Mezők',
         'type' => 'Típus',
         'items' => 'Tételek',
+        'effect' => 'Kedvezmény',
+        'status' => 'Állapot',
     ],
 ];

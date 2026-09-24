@@ -51,6 +51,11 @@
                         <i class="bi bi-diagram-3"></i><span>{{ t('nav.customer_groups') }}</span>
                     </a>
                 {% endif %}
+                {% if can('products.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'price-rules' ? 'is-active' : '' }}" href="{{ base_url }}/price-rules">
+                        <i class="bi bi-percent"></i><span>{{ t('nav.price_rules') }}</span>
+                    </a>
+                {% endif %}
             {% endif %}
 
             {% if can_any('stock.view', 'stock.move') %}

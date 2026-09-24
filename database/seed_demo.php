@@ -19,6 +19,7 @@ use Cloudexus\Model\Core\CategoryModel;
 use Cloudexus\Model\Core\CustomerGroupModel;
 use Cloudexus\Model\Core\PartnerAddressModel;
 use Cloudexus\Model\Core\PartnerModel;
+use Cloudexus\Model\Core\PriceRuleModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
 use Cloudexus\Model\Core\StocktakingModel;
@@ -42,7 +43,7 @@ foreach ([
     'partner_activities', 'partner_addresses', 'todos', 'warehouse_locations', 'stocktaking_items', 'stocktakings',
     'cash_vouchers', 'incoming_invoice_items', 'incoming_invoices', 'document_sequences',
     'purchase_order_items', 'purchase_orders', 'invoice_items', 'invoices',
-    'order_items', 'orders', 'stock_movements', 'product_group_prices',
+    'order_items', 'orders', 'stock_movements', 'product_group_prices', 'price_rules',
     // A termékhez kötött kapcsolótáblák is, különben az újraseedelés után árva
     // sorok maradnának (a TRUNCATE nem futtatja a CASCADE-et).
     'product_parameters', 'product_categories', 'product_images', 'product_links',
@@ -343,6 +344,25 @@ foreach ($products as $product) {
     }
 }
 echo "$groupPriceCount vevőcsoport-ár sor.\n";
+
+// Árszabályok: egy-egy példa mindhárom fajtára, a mai naphoz igazítva, hogy
+// a demóban az akció épp éljen.
+$priceRuleModel = new PriceRuleModel();
+$ruleBase = ['customer_group_id' => 0, 'product_id' => 0, 'category_id' => 0, 'min_quantity' => 0,
+             'discount_percent' => null, 'fixed_price' => null, 'valid_from' => null, 'valid_to' => null, 'is_active' => 1];
+$demoRules = [
+    ['name' => 'Viszonteladó −8%', 'customer_group_id' => $customerGroupIds['Viszonteladó'], 'discount_percent' => 8],
+    ['name' => '10 db felett −5%', 'min_quantity' => 10, 'discount_percent' => 5],
+    ['name' => 'Nagykereskedő: 50 db felett −15%', 'customer_group_id' => $customerGroupIds['Nagykereskedő'], 'min_quantity' => 50, 'discount_percent' => 15],
+    ['name' => 'Kerékpár-akció −12%', 'category_id' => $categoryIds['Kerékpár'], 'discount_percent' => 12,
+     'valid_from' => date('Y-m-01'), 'valid_to' => date('Y-m-t', strtotime('first day of next month'))],
+    ['name' => 'Tavaszi kertészeti akció −20%', 'category_id' => $categoryIds['Kertészet'], 'discount_percent' => 20,
+     'valid_from' => date('Y-03-01'), 'valid_to' => date('Y-04-30')],
+];
+foreach ($demoRules as $rule) {
+    $priceRuleModel->create($rule + $ruleBase);
+}
+echo count($demoRules) . " price rules.\n";
 
 // ---------------------------------------------------------------------------
 // Partners
