@@ -40,5 +40,6 @@ return [
     'deleted' => 'Invoice deleted.',
     'not_payable' => 'Only an unpaid incoming invoice can be marked as paid.',
     'not_cancellable' => 'Only an unpaid incoming invoice can be cancelled.',
+    'cancel_has_payments' => 'This invoice has payments: reverse them first, then it can be cancelled.',
     'cancel_shortage' => 'Some of the goods this invoice booked in have already left the warehouse, so the storno cannot book them out; sort out the stock first.',
 ];

@@ -457,6 +457,7 @@ Example response (`GET /api/invoices/2`):
     "net_total": "43980.00",
     "vat_total": "11875.00",
     "total_amount": "55855.00",
+    "paid_amount": "55855.00",
     "shipping_cost": "990.00",
     "payment_cost": "890.00",
     "extra_vat_rate": "27.00",
@@ -482,6 +483,10 @@ Example response (`GET /api/invoices/2`):
 - `status`: `unpaid` / `paid` / `cancelled` (a cancelled invoice has a cancellation invoice, `storno_by_id`) / `storno` (the cancellation invoice itself).
 - `invoice_type`: `normal` or `storno`; a cancellation invoice points to the one it cancels with `storno_of_id` and carries its lines with negative quantities and amounts.
 - Unit prices are net. Every line carries its VAT rate and its net, VAT and gross amounts; `total_amount` is the gross total, `net_total` + `vat_total`. Shipping and payment costs are net, at `extra_vat_rate`.
+- `paid_amount` is the sum of the payments received on the invoice (bank transfers, cards,
+  cash vouchers); the open balance is `total_amount` − `paid_amount`. An invoice can be paid
+  in parts: `status` stays `unpaid` until `paid_amount` reaches `total_amount`, then it is
+  `paid`.
 - The buyer (`partner_name`, `tax_number`, `address`) and the seller (`seller_*`) are as they were when the invoice was issued.
 - `payment_method`: `transfer` / `cash` / `card` / `cod`.
 

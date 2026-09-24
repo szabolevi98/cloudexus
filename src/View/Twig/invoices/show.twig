@@ -16,15 +16,7 @@
                 {% endif %}
             </div>
             <div>
-                {% if invoice.status == 'storno' %}
-                    <span class="badge rounded-pill bg-body-tertiary text-body border">{{ t('invoices.storno_badge') }}</span>
-                {% elseif invoice.status == 'unpaid' %}
-                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
-                {% elseif invoice.status == 'paid' %}
-                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
-                {% else %}
-                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
-                {% endif %}
+                {% include 'common/invoice-status.twig' with {doc: invoice} %}
             </div>
         </div>
         <div class="cx-card__body">
@@ -115,6 +107,10 @@
         </div>
     </div>
 
+    {% if invoice.invoice_type == 'normal' and invoice.status in ['unpaid', 'paid'] %}
+        {% include 'common/payments.twig' with {doc: invoice, payments: payments, base: base_url ~ '/invoices/' ~ invoice.id, payable: invoice.status == 'unpaid'} %}
+    {% endif %}
+
     <div class="d-flex gap-2">
         <a href="{{ base_url }}/invoices" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
@@ -126,11 +122,11 @@
             {% if can('finance.mark_paid') %}
                 <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/mark-paid">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i>{{ t('invoices.mark_paid') }}
+                        <i class="bi bi-check-circle me-1"></i>{{ invoice.paid_amount > 0 ? t('payments.settle_rest') : t('invoices.mark_paid') }}
                     </button>
                 </form>
             {% endif %}
-            {% if can('invoices.storno') %}
+            {% if can('invoices.storno') and invoice.paid_amount == 0 %}
                 <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>{{ t('invoices.void') }}

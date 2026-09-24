@@ -58,6 +58,8 @@ A Cloudexus egy helyen kezeli a teljes kereskedelmi folyamatot: részletes term�
 - Bevételi és kiadási pénztárbizonylatok
 - Számlához kapcsolt bizonylat = automatikus kiegyenlítés (a számla kifizetetté válik)
 - Élő pénzkészlet-egyenleg
+- Részfizetés: egy számlára több befizetés is rögzíthető (átutalás, kártya, utánvét, vagy pénztárbizonylat), a számla a teljes összeg beérkezésekor lesz kifizetett; túlfizetés nem lehetséges, egy téves befizetés visszavonható
+- Nyitott tételek korosítva: vevői kintlévőség és szállítói tartozás partnerenként, a lejárat óta eltelt napok szerint (nem járt le, 1–30, 31–60, 61–90, 90 napon túl), egy korábbi napra is, CSV exporttal
 
 ### ⚙️ Rendszer
 - Bejelentkezés felhasználónévvel vagy e-maillel, bcrypt jelszó-hash

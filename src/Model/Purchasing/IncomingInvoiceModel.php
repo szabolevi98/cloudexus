@@ -111,8 +111,8 @@ class IncomingInvoiceModel
     public function outstandingBreakdown(): array
     {
         $row = DatabaseConnection::get()->query(
-            "SELECT COALESCE(SUM(total_amount), 0) AS total,
-                    COALESCE(SUM(CASE WHEN due_date < CURDATE() THEN total_amount ELSE 0 END), 0) AS overdue
+            "SELECT COALESCE(SUM(total_amount - paid_amount), 0) AS total,
+                    COALESCE(SUM(CASE WHEN due_date < CURDATE() THEN total_amount - paid_amount ELSE 0 END), 0) AS overdue
              FROM incoming_invoices WHERE status = 'unpaid'"
         )->fetch();
 
@@ -211,13 +211,19 @@ class IncomingInvoiceModel
         }
     }
 
-    /** Kifizetettnek jelölés: csak kifizetetlen számlán (egy sztornózott nem válhat fizetetté). */
-    public function markPaid(int $id): bool
+    /**
+     * Kifizetettnek jelölés: a nyitott egyenleg egy átutalásos befizetésként
+     * kerül rá. Csak kifizetetlen számlán (egy sztornózott nem válhat fizetetté).
+     */
+    public function markPaid(int $id, ?int $userId = null): bool
     {
-        $stmt = DatabaseConnection::get()->prepare("UPDATE incoming_invoices SET status = 'paid' WHERE id = :id AND status = 'unpaid'");
-        $stmt->execute(['id' => $id]);
+        try {
+            (new \Cloudexus\Model\Finance\PaymentModel())->settle(\Cloudexus\Model\Finance\PaymentModel::INCOMING, $id, 'transfer', $userId);
+        } catch (\DomainException) {
+            return false;
+        }
 
-        return $stmt->rowCount() > 0;
+        return true;
     }
 
     /**
@@ -231,8 +237,8 @@ class IncomingInvoiceModel
     public function cancel(int $id, ?int $userId): void
     {
         $invoice = $this->findById($id);
-        if (!$invoice || $invoice['status'] !== 'unpaid') {
-            throw new \DomainException('Only an unpaid incoming invoice can be cancelled.');
+        if (!$invoice || $invoice['status'] !== 'unpaid' || (float) $invoice['paid_amount'] > 0) {
+            throw new \DomainException('Only an unpaid incoming invoice without payments can be cancelled.');
         }
 
         $stock = new \Cloudexus\Model\Core\StockMovementModel();
@@ -270,7 +276,7 @@ class IncomingInvoiceModel
     public function unpaidList(): array
     {
         return DatabaseConnection::get()->query(
-            "SELECT i.*, p.name AS partner_name
+            "SELECT i.*, i.total_amount - i.paid_amount AS balance, p.name AS partner_name
              FROM incoming_invoices i
              JOIN partners p ON p.id = i.partner_id
              WHERE i.status = 'unpaid'
@@ -281,7 +287,7 @@ class IncomingInvoiceModel
     public function outstandingTotal(): float
     {
         return (float) DatabaseConnection::get()
-            ->query("SELECT COALESCE(SUM(total_amount), 0) FROM incoming_invoices WHERE status = 'unpaid'")
+            ->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM incoming_invoices WHERE status = 'unpaid'")
             ->fetchColumn();
     }
 }

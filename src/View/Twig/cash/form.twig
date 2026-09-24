@@ -27,7 +27,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">{{ t('cash.date') }}</label>
-                        <input type="date" name="voucher_date" class="form-control" value="{{ "now"|date("Y-m-d") }}">
+                        <input type="date" name="voucher_date" class="form-control" value="{{ "now"|date("Y-m-d") }}" max="{{ "now"|date("Y-m-d") }}">
                     </div>
                 </div>
                 <div class="mb-3">
@@ -40,7 +40,7 @@
                     <select id="invoice_id" name="invoice_id" class="form-select">
                         <option value="">{{ t('cash.none_option') }}</option>
                         {% for i in unpaid_invoices %}
-                            <option value="{{ i.id }}">{{ i.invoice_number }} — {{ i.partner_name }} ({{ i.total_amount|money }})</option>
+                            <option value="{{ i.id }}" data-balance="{{ i.balance }}">{{ i.invoice_number }} — {{ i.partner_name }} ({{ t('payments.balance') }}: {{ i.balance|money }})</option>
                         {% endfor %}
                     </select>
                     <div class="form-text">{{ t('cash.auto_paid_hint') }}</div>
@@ -50,7 +50,7 @@
                     <select id="incoming_invoice_id" name="incoming_invoice_id" class="form-select">
                         <option value="">{{ t('cash.none_option') }}</option>
                         {% for i in unpaid_incoming_invoices %}
-                            <option value="{{ i.id }}">{{ i.invoice_number }} — {{ i.partner_name }} ({{ i.total_amount|money }})</option>
+                            <option value="{{ i.id }}" data-balance="{{ i.balance }}">{{ i.invoice_number }} — {{ i.partner_name }} ({{ t('payments.balance') }}: {{ i.balance|money }})</option>
                         {% endfor %}
                     </select>
                     <div class="form-text">{{ t('cash.auto_paid_hint') }}</div>

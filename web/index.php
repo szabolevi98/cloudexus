@@ -36,6 +36,7 @@ use Cloudexus\Controller\PricingController;
 use Cloudexus\Controller\ProductController;
 use Cloudexus\Controller\ProfileController;
 use Cloudexus\Controller\PurchaseOrderController;
+use Cloudexus\Controller\ReportController;
 use Cloudexus\Controller\RoleController;
 use Cloudexus\Controller\SettingsController;
 use Cloudexus\Controller\UnitController;
@@ -158,6 +159,8 @@ $router->get('/roles/{id}/edit', fn($id) => (new RoleController())->editForm((in
 $router->post('/roles/{id}', fn($id) => (new RoleController())->update((int) $id));
 $router->post('/roles/{id}/delete', fn($id) => (new RoleController())->delete((int) $id));
 $router->get('/audit', fn() => (new AuditController())->list());
+$router->get('/reports/aging', fn() => (new ReportController())->aging());
+$router->get('/reports/aging/export', fn() => (new ReportController())->agingExport());
 registerCrud($router, '/categories', CategoryController::class);
 registerCrud($router, '/products', ProductController::class);
 registerCrud($router, '/partners', PartnerController::class);
@@ -245,6 +248,8 @@ $router->post('/invoices/create', fn() => (new InvoiceController())->create());
 $router->get('/invoices/{id}', fn($id) => (new InvoiceController())->show((int) $id));
 $router->get('/invoices/{id}/print', fn($id) => (new InvoiceController())->printView((int) $id));
 $router->post('/invoices/{id}/mark-paid', fn($id) => (new InvoiceController())->markPaid((int) $id));
+$router->post('/invoices/{id}/payments', fn($id) => (new InvoiceController())->addPayment((int) $id));
+$router->post('/invoices/{id}/payments/{paymentId}/delete', fn($id, $paymentId) => (new InvoiceController())->deletePayment((int) $id, (int) $paymentId));
 // Kiállított számlát nem törlünk és nem érvénytelenítünk: sztornó számlával vonjuk vissza.
 $router->post('/invoices/{id}/storno', fn($id) => (new InvoiceController())->storno((int) $id));
 
@@ -260,6 +265,8 @@ $router->get('/incoming-invoices/create', fn() => (new IncomingInvoiceController
 $router->post('/incoming-invoices/create', fn() => (new IncomingInvoiceController())->create());
 $router->get('/incoming-invoices/{id}', fn($id) => (new IncomingInvoiceController())->show((int) $id));
 $router->post('/incoming-invoices/{id}/mark-paid', fn($id) => (new IncomingInvoiceController())->markPaid((int) $id));
+$router->post('/incoming-invoices/{id}/payments', fn($id) => (new IncomingInvoiceController())->addPayment((int) $id));
+$router->post('/incoming-invoices/{id}/payments/{paymentId}/delete', fn($id, $paymentId) => (new IncomingInvoiceController())->deletePayment((int) $id, (int) $paymentId));
 $router->post('/incoming-invoices/{id}/cancel', fn($id) => (new IncomingInvoiceController())->cancel((int) $id));
 
 $router->get('/cash', fn() => (new CashVoucherController())->list());

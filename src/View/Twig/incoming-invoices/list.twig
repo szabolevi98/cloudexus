@@ -72,15 +72,7 @@
                             <td class="text-muted">{{ invoice.issue_date }}</td>
                             <td class="text-muted">{{ invoice.due_date }}</td>
                             <td>
-                                {% if invoice.status == 'unpaid' and invoice.due_date < today %}
-                                    <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
-                                {% elseif invoice.status == 'unpaid' %}
-                                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
-                                {% elseif invoice.status == 'paid' %}
-                                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
-                                {% else %}
-                                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
-                                {% endif %}
+                                {% include 'common/invoice-status.twig' with {doc: invoice} %}
                             </td>
                             <td class="text-end">{{ invoice.total_amount|money }}</td>
                             <td class="text-end">

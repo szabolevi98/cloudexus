@@ -37,6 +37,7 @@ return [
         'order' => 'Customer order',
         'purchase_order' => 'Purchase order',
         'price_rule' => 'Price rule',
+        'payment' => 'Payment',
     ],
     'fields' => [
         'role' => 'Role',
@@ -50,6 +51,8 @@ return [
         'type' => 'Type',
         'items' => 'Lines',
         'effect' => 'Discount',
+        'amount' => 'Amount',
+        'method' => 'Method',
         'status' => 'Status',
     ],
 ];

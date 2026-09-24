@@ -20,6 +20,7 @@ use Cloudexus\Model\Core\CustomerGroupModel;
 use Cloudexus\Model\Core\PartnerAddressModel;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\PriceRuleModel;
+use Cloudexus\Model\Finance\PaymentModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
 use Cloudexus\Model\Core\StocktakingModel;
@@ -41,7 +42,7 @@ echo "Truncating business tables...\n";
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 foreach ([
     'partner_activities', 'partner_addresses', 'todos', 'warehouse_locations', 'stocktaking_items', 'stocktakings',
-    'cash_vouchers', 'incoming_invoice_items', 'incoming_invoices', 'document_sequences',
+    'payments', 'cash_vouchers', 'incoming_invoice_items', 'incoming_invoices', 'document_sequences',
     'purchase_order_items', 'purchase_orders', 'invoice_items', 'invoices',
     'order_items', 'orders', 'stock_movements', 'product_group_prices', 'price_rules',
     // A termékhez kötött kapcsolótáblák is, különben az újraseedelés után árva
@@ -603,6 +604,8 @@ echo "Seeding sales orders and invoices...\n";
 $orderCount = 0;
 $invoiceCount = 0;
 $paidCount = 0;
+$partialCount = 0;
+$paymentModel = new PaymentModel();
 $shippingCostOptions = [990, 1490, 1990, 2490];
 $paymentCostOptions = [390, 590, 890];
 
@@ -670,15 +673,22 @@ for ($i = 0; $i < 130; $i++) {
                 'partner_id' => $order['partner_id'],
                 'invoice_id' => $invoiceId,
                 'note' => 'Számla kiegyenlítése',
-                'voucher_date' => date('Y-m-d', strtotime($dueDate . ' -' . rand(0, 6) . ' days')),
+                'voucher_date' => date('Y-m-d', min(time(), strtotime($dueDate . ' -' . rand(0, 6) . ' days'))),
                 'created_by' => null,
             ]);
             $paidCount++;
+        } elseif (rand(1, 100) <= 30) {
+            // Néhányat részben átutalással fizettek: a nyitott tételek között
+            // így részben fizetett számla is van.
+            $invoice = $invoiceModel->findById($invoiceId);
+            $paymentModel->record(PaymentModel::INVOICE, $invoiceId, round((float) $invoice['total_amount'] * rand(30, 70) / 100),
+                date('Y-m-d', min(time(), strtotime($dueDate . ' -' . rand(0, 10) . ' days'))), 'transfer', 'Részteljesítés', null);
+            $partialCount++;
         }
     }
 }
 
-echo "$orderCount sales orders, $invoiceCount invoices ($paidCount paid via pénztár).\n";
+echo "$orderCount sales orders, $invoiceCount invoices ($paidCount paid via pénztár, $partialCount partly paid by transfer).\n";
 
 // ---------------------------------------------------------------------------
 // Purchasing: purchase orders + incoming invoices (auto stock-in)
@@ -741,7 +751,7 @@ for ($i = 0; $i < 45; $i++) {
                 'partner_id' => $po['partner_id'],
                 'incoming_invoice_id' => $incomingId,
                 'note' => 'Beszállítói számla kiegyenlítése',
-                'voucher_date' => date('Y-m-d', strtotime($dueDate . ' -' . rand(0, 6) . ' days')),
+                'voucher_date' => date('Y-m-d', min(time(), strtotime($dueDate . ' -' . rand(0, 6) . ' days'))),
                 'created_by' => null,
             ]);
             $incomingPaidCount++;

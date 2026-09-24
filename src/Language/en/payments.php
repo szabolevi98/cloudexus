@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Payments',
+    'paid' => 'Paid',
+    'balance' => 'Open',
+    'paid_on' => 'Date',
+    'amount' => 'Amount',
+    'note' => 'Note',
+    'recorded_by' => 'Recorded by',
+    'none' => 'No payment yet.',
+    'add' => 'Record payment',
+    'note_placeholder' => 'e.g. bank transaction reference',
+    'settle_rest' => 'Remainder paid',
+    'cash_hint' => 'Record a cash payment with a cash voucher: it moves the cash balance too, and shows up here.',
+    'recorded' => 'Payment recorded.',
+    'deleted' => 'Payment reversed.',
+    'delete' => 'Reverse',
+    'confirm_delete' => 'Reverse this payment? The invoice becomes open again.',
+    'future_date' => 'The payment date cannot be in the future.',
+    'error_amount' => 'Enter a positive amount.',
+    'error_not_payable' => 'This invoice no longer takes payments.',
+    'error_overpayment' => 'The amount is more than the invoice\'s open balance.',
+    'error_voucher' => 'A cash voucher recorded this payment: delete the voucher to reverse it.',
+];

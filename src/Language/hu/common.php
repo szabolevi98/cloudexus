@@ -55,6 +55,7 @@ return [
         'unpaid' => 'Fizetésre vár',
         'paid' => 'Kifizetve',
         'overdue' => 'Lejárt',
+        'partial' => 'Részben fizetve',
         'cancelled' => 'Stornózva',
         'storno' => 'Sztornó számla',
     ],

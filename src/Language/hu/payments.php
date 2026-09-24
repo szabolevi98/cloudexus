@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Befizetések',
+    'paid' => 'Befizetve',
+    'balance' => 'Nyitott',
+    'paid_on' => 'Dátum',
+    'amount' => 'Összeg',
+    'note' => 'Megjegyzés',
+    'recorded_by' => 'Rögzítette',
+    'none' => 'Még nem érkezett befizetés.',
+    'add' => 'Befizetés rögzítése',
+    'note_placeholder' => 'pl. banki tranzakció azonosítója',
+    'settle_rest' => 'Maradék kifizetve',
+    'cash_hint' => 'Készpénzes befizetést pénztárbizonylattal rögzíts: az a pénzkészletet is mozgatja, és itt is megjelenik.',
+    'recorded' => 'Befizetés rögzítve.',
+    'deleted' => 'Befizetés visszavonva.',
+    'delete' => 'Visszavonás',
+    'confirm_delete' => 'Biztosan visszavonod ezt a befizetést? A számla újra nyitott lesz.',
+    'future_date' => 'A befizetés dátuma nem lehet a jövőben.',
+    'error_amount' => 'Adj meg egy pozitív összeget.',
+    'error_not_payable' => 'Erre a számlára már nem rögzíthető befizetés.',
+    'error_overpayment' => 'Az összeg több a számla nyitott egyenlegénél.',
+    'error_voucher' => 'Ezt a befizetést egy pénztárbizonylat rögzítette: a bizonylat törlésével vonható vissza.',
+];

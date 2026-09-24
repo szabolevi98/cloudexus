@@ -37,6 +37,7 @@ return [
         'order' => 'Vevői rendelés',
         'purchase_order' => 'Szállítói rendelés',
         'price_rule' => 'Árszabály',
+        'payment' => 'Befizetés',
     ],
     'fields' => [
         'role' => 'Szerepkör',
@@ -50,6 +51,8 @@ return [
         'type' => 'Típus',
         'items' => 'Tételek',
         'effect' => 'Kedvezmény',
+        'amount' => 'Összeg',
+        'method' => 'Mód',
         'status' => 'Állapot',
     ],
 ];

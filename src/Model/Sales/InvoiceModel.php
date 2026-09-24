@@ -254,7 +254,9 @@ class InvoiceModel
             $lock->execute(['id' => $id]);
             $original = $lock->fetch();
 
-            if (!$original || $original['invoice_type'] !== 'normal' || $original['status'] !== 'unpaid') {
+            // Befizetés után a sztornó már pénzt is vissza kellene hogy adjon: ahhoz
+            // előbb a befizetést kell visszavonni.
+            if (!$original || $original['invoice_type'] !== 'normal' || $original['status'] !== 'unpaid' || (float) $original['paid_amount'] > 0) {
                 throw new \DomainException('This invoice cannot be cancelled with a storno invoice.');
             }
 
@@ -314,14 +316,26 @@ class InvoiceModel
     }
 
     /** Kifizetettnek jelöl egy kiállított, még nyitott számlát; másikat nem. */
-    public function markPaid(int $id): bool
+    /**
+     * Kifizetettnek jelölés: a még nyitott egyenleg egy befizetésként kerül
+     * rá, a számla fizetési módjával, mai dátummal.
+     */
+    public function markPaid(int $id, ?int $userId = null): bool
     {
-        $stmt = DatabaseConnection::get()->prepare(
-            "UPDATE invoices SET status = 'paid' WHERE id = :id AND status = 'unpaid' AND invoice_type = 'normal'"
-        );
-        $stmt->execute(['id' => $id]);
+        $invoice = $this->findById($id);
+        if (!$invoice) {
+            return false;
+        }
 
-        return $stmt->rowCount() > 0;
+        try {
+            (new \Cloudexus\Model\Finance\PaymentModel())->settle(
+                \Cloudexus\Model\Finance\PaymentModel::INVOICE, $id, (string) ($invoice['payment_method'] ?: 'transfer'), $userId
+            );
+        } catch (\DomainException) {
+            return false;
+        }
+
+        return true;
     }
 
     /** Van-e a rendelésnek élő (nem sztornózott) számlája. */
@@ -485,10 +499,10 @@ class InvoiceModel
     public function unpaidList(): array
     {
         return DatabaseConnection::get()->query(
-            "SELECT i.*, p.name AS partner_name
+            "SELECT i.*, i.total_amount - i.paid_amount AS balance, p.name AS partner_name
              FROM invoices i
              JOIN partners p ON p.id = i.partner_id
-             WHERE i.status = 'unpaid'
+             WHERE i.status = 'unpaid' AND i.invoice_type = 'normal'
              ORDER BY i.due_date ASC"
         )->fetchAll();
     }
@@ -507,7 +521,7 @@ class InvoiceModel
     public function outstandingTotal(): float
     {
         return (float) DatabaseConnection::get()
-            ->query("SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE status = 'unpaid'")
+            ->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM invoices WHERE status = 'unpaid'")
             ->fetchColumn();
     }
 
@@ -515,8 +529,8 @@ class InvoiceModel
     public function outstandingBreakdown(): array
     {
         $row = DatabaseConnection::get()->query(
-            "SELECT COALESCE(SUM(total_amount), 0) AS total,
-                    COALESCE(SUM(CASE WHEN due_date < CURDATE() THEN total_amount ELSE 0 END), 0) AS overdue
+            "SELECT COALESCE(SUM(total_amount - paid_amount), 0) AS total,
+                    COALESCE(SUM(CASE WHEN due_date < CURDATE() THEN total_amount - paid_amount ELSE 0 END), 0) AS overdue
              FROM invoices WHERE status = 'unpaid'"
         )->fetch();
 

@@ -12,13 +12,7 @@
                 </div>
             </div>
             <div>
-                {% if invoice.status == 'unpaid' %}
-                    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
-                {% elseif invoice.status == 'paid' %}
-                    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
-                {% else %}
-                    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
-                {% endif %}
+                {% include 'common/invoice-status.twig' with {doc: invoice} %}
             </div>
         </div>
         <div class="cx-card__body p-0">
@@ -55,6 +49,10 @@
         </div>
     </div>
 
+    {% if invoice.status in ['unpaid', 'paid'] %}
+        {% include 'common/payments.twig' with {doc: invoice, payments: payments, base: base_url ~ '/incoming-invoices/' ~ invoice.id, payable: invoice.status == 'unpaid'} %}
+    {% endif %}
+
     <div class="d-flex gap-2">
         <a href="{{ base_url }}/incoming-invoices" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
@@ -63,11 +61,11 @@
             {% if can('finance.mark_paid') %}
                 <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/mark-paid">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i>{{ t('incoming_invoices.mark_paid') }}
+                        <i class="bi bi-check-circle me-1"></i>{{ invoice.paid_amount > 0 ? t('payments.settle_rest') : t('incoming_invoices.mark_paid') }}
                     </button>
                 </form>
             {% endif %}
-            {% if can('purchasing.manage') %}
+            {% if can('purchasing.manage') and invoice.paid_amount == 0 %}
                 <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('{{ t('incoming_invoices.confirm_void')|e('js') }}');">
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>{{ t('incoming_invoices.void') }}

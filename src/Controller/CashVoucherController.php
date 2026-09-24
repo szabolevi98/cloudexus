@@ -71,21 +71,33 @@ class CashVoucherController extends BaseController
             $this->redirect('/cash/create');
         }
 
+        $voucherDate = ($_POST['voucher_date'] ?? '') ?: date('Y-m-d');
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $voucherDate, $m) || !checkdate((int) $m[2], (int) $m[3], (int) $m[1]) || $voucherDate > date('Y-m-d')) {
+            $this->flashError($this->t('cash.date_invalid'));
+            $this->redirect('/cash/create');
+        }
+
         // Egy üresen hagyott választó '' értéket küld, ami idegen kulcsként
         // nem létező sorra mutatna: a hiányzót NULL-ként mentjük.
         $ref = static fn(string $key): ?int => (int) ($_POST[$key] ?? 0) > 0 ? (int) $_POST[$key] : null;
         $type = in_array($_POST['type'] ?? '', ['bevetel', 'kiadas'], true) ? $_POST['type'] : 'bevetel';
 
-        $id = $this->vouchers->create([
+        try {
+            $id = $this->vouchers->create([
             'type' => $type,
             'amount' => $amount,
             'partner_id' => $ref('partner_id'),
             'invoice_id' => $ref('invoice_id'),
             'incoming_invoice_id' => $ref('incoming_invoice_id'),
             'note' => trim($_POST['note'] ?? ''),
-            'voucher_date' => ($_POST['voucher_date'] ?? '') ?: date('Y-m-d'),
+            'voucher_date' => $voucherDate,
             'created_by' => Auth::id(),
-        ]);
+            ]);
+        } catch (\DomainException $e) {
+            // overpayment / not_payable: a számla ennyit már nem fogad.
+            $this->flashError($this->t('payments.error_' . $e->getMessage()));
+            $this->redirect('/cash/create');
+        }
 
         AuditLog::record(AuditLog::CREATE, 'cash_voucher', $id, $this->vouchers->findNumber($id),
             ['type' => $this->t($type === 'kiadas' ? 'cash.expense' : 'cash.income'), 'total' => \Cloudexus\Core\Currency::format($amount)]);

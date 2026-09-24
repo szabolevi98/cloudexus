@@ -1,0 +1,90 @@
+{#
+    A számla befizetései és a befizetés-űrlap.
+    Paraméterek: doc (a számla), payments, base (pl. /invoices/12), payable (fizethető-e ez a számla).
+#}
+{% set balance = doc.total_amount - doc.paid_amount|default(0) %}
+<div class="cx-card">
+    <div class="cx-card__header">
+        <h2>{{ t('payments.title') }}</h2>
+        <div class="small text-muted text-end">
+            {{ t('payments.paid') }}: <span class="fw-medium text-body">{{ doc.paid_amount|default(0)|money }}</span>
+            · {{ t('payments.balance') }}: <span class="fw-bold {{ balance > 0 ? 'text-body' : 'text-success' }}">{{ max(balance, 0)|money }}</span>
+        </div>
+    </div>
+    <div class="cx-card__body p-0">
+        {% if payments %}
+            <div class="table-responsive">
+                <table class="table cx-table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>{{ t('payments.paid_on') }}</th>
+                        <th>{{ t('invoices.payment_method') }}</th>
+                        <th>{{ t('payments.note') }}</th>
+                        <th>{{ t('payments.recorded_by') }}</th>
+                        <th class="text-end">{{ t('payments.amount') }}</th>
+                        {% if can('finance.mark_paid') %}<th></th>{% endif %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for payment in payments %}
+                        <tr>
+                            <td class="text-nowrap">{{ payment.paid_on|date('Y.m.d.') }}</td>
+                            <td>{{ t('invoices.payment_methods.' ~ payment.method) }}</td>
+                            <td class="small">
+                                {% if payment.voucher_number %}
+                                    <a href="{{ base_url }}/cash?q={{ payment.voucher_number|url_encode }}"><i class="bi bi-cash-coin me-1"></i>{{ payment.voucher_number }}</a>
+                                {% endif %}
+                                {{ payment.note ?: (payment.voucher_number ? '' : '—') }}
+                            </td>
+                            <td class="small text-muted">{{ payment.created_by_name ?: '—' }}</td>
+                            <td class="text-end fw-medium">{{ payment.amount|money }}</td>
+                            {% if can('finance.mark_paid') %}
+                                <td class="text-end">
+                                    {% if not payment.cash_voucher_id and doc.status in ['unpaid', 'paid'] %}
+                                        <form method="post" action="{{ base }}/payments/{{ payment.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('payments.confirm_delete')|e('js') }}');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('payments.delete') }}"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted small px-3 py-3 mb-0">{{ t('payments.none') }}</p>
+        {% endif %}
+
+        {% if payable and balance > 0 and can('finance.mark_paid') %}
+            <form method="post" action="{{ base }}/payments" class="p-3 border-top">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-2">
+                        <label class="form-label small text-muted mb-1" for="pay-amount">{{ t('payments.amount') }} ({{ currency_symbol() }})</label>
+                        <input type="number" step="0.01" min="0.01" max="{{ balance }}" id="pay-amount" name="amount" class="form-control form-control-sm" value="{{ balance }}" required>
+                    </div>
+                    <div class="col-sm-6 col-lg-2">
+                        <label class="form-label small text-muted mb-1" for="pay-date">{{ t('payments.paid_on') }}</label>
+                        <input type="date" id="pay-date" name="paid_on" class="form-control form-control-sm" value="{{ "now"|date("Y-m-d") }}" max="{{ "now"|date("Y-m-d") }}" required>
+                    </div>
+                    <div class="col-sm-6 col-lg-2">
+                        <label class="form-label small text-muted mb-1" for="pay-method">{{ t('invoices.payment_method') }}</label>
+                        <select id="pay-method" name="payment_method" class="form-select form-select-sm">
+                            {% for method in ['transfer', 'card', 'cod'] %}
+                                <option value="{{ method }}" {{ doc.payment_method|default('transfer') == method ? 'selected' : '' }}>{{ t('invoices.payment_methods.' ~ method) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                        <label class="form-label small text-muted mb-1" for="pay-note">{{ t('payments.note') }}</label>
+                        <input type="text" id="pay-note" name="note" class="form-control form-control-sm" maxlength="255" placeholder="{{ t('payments.note_placeholder') }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-plus-circle me-1"></i>{{ t('payments.add') }}</button>
+                    </div>
+                </div>
+                <div class="form-text">{{ t('payments.cash_hint') }}</div>
+            </form>
+        {% endif %}
+    </div>
+</div>

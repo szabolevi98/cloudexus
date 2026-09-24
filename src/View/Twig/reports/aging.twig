@@ -1,0 +1,98 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    {% set list_path = type == 'payables' ? '/incoming-invoices' : '/invoices' %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('reports.aging_title') }}</h2>
+            <a href="{{ base_url }}/reports/aging/export?type={{ type }}&amp;as_of={{ as_of }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-download me-1"></i>{{ t('reports.export_csv') }}
+            </a>
+        </div>
+        <div class="cx-card__body p-0">
+            <p class="text-muted small px-3 pt-3 mb-0">{{ t('reports.aging_intro') }}</p>
+            <form method="get" class="p-3 border-bottom">
+                <div class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('reports.aging_title') }}">
+                            {% if can_receivables %}
+                                <a href="?type=receivables&amp;as_of={{ as_of }}" class="btn {{ type == 'receivables' ? 'btn-primary' : 'btn-outline-primary' }}">{{ t('reports.receivables') }}</a>
+                            {% endif %}
+                            {% if can_payables %}
+                                <a href="?type=payables&amp;as_of={{ as_of }}" class="btn {{ type == 'payables' ? 'btn-primary' : 'btn-outline-primary' }}">{{ t('reports.payables') }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label small text-muted mb-1" for="as_of">{{ t('reports.as_of') }}</label>
+                        <input type="hidden" name="type" value="{{ type }}">
+                        <input type="date" id="as_of" name="as_of" class="form-control form-control-sm" value="{{ as_of }}" max="{{ "now"|date("Y-m-d") }}">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-arrow-repeat me-1"></i>{{ t('reports.refresh') }}</button>
+                    </div>
+                </div>
+            </form>
+
+            {% set t_ = report.totals %}
+            <div class="row g-0 border-bottom text-center small">
+                {% for bucket in buckets %}
+                    {% set share = t_.total_open > 0 ? (t_[bucket] / t_.total_open * 100) : 0 %}
+                    <div class="col py-3 {{ not loop.last ? 'border-end' : '' }}">
+                        <div class="text-muted">{{ t('reports.buckets.' ~ bucket) }}</div>
+                        <div class="fs-6 fw-semibold {{ bucket != 'current_amount' and t_[bucket] > 0 ? 'text-danger' : '' }}">{{ t_[bucket]|money }}</div>
+                        <div class="text-muted">{{ share|round }}%</div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 cx-table">
+                    <thead>
+                    <tr>
+                        <th>{{ t('common.partner') }}</th>
+                        <th class="text-end">{{ t('reports.documents') }}</th>
+                        {% for bucket in buckets %}
+                            <th class="text-end">{{ t('reports.buckets.' ~ bucket) }}</th>
+                        {% endfor %}
+                        <th class="text-end">{{ t('reports.total_open') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in report.rows %}
+                        <tr>
+                            <td class="fw-medium">
+                                <a href="{{ base_url }}{{ list_path }}?partner_id={{ row.partner_id }}&amp;status=unpaid" class="text-body">{{ row.partner_name }}</a>
+                                {% if row.oldest_days > 0 %}
+                                    <div class="small text-muted">{{ t('reports.oldest', {days: row.oldest_days}) }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-muted">{{ row.document_count }}</td>
+                            {% for bucket in buckets %}
+                                <td class="text-end {{ row[bucket] == 0 ? 'text-muted' : (bucket != 'current_amount' ? 'text-danger' : '') }}">
+                                    {{ row[bucket] == 0 ? '—' : row[bucket]|money }}
+                                </td>
+                            {% endfor %}
+                            <td class="text-end fw-bold">{{ row.total_open|money }}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="{{ buckets|length + 3 }}" class="text-center text-muted py-4">{{ t('reports.none_open') }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                    {% if report.rows %}
+                        <tfoot>
+                        <tr>
+                            <td class="fw-medium">{{ t('common.total') }}</td>
+                            <td class="text-end">{{ t_.document_count }}</td>
+                            {% for bucket in buckets %}
+                                <td class="text-end fw-medium">{{ t_[bucket]|money }}</td>
+                            {% endfor %}
+                            <td class="text-end fw-bold">{{ t_.total_open|money }}</td>
+                        </tr>
+                        </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

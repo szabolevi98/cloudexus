@@ -7,11 +7,14 @@ use Cloudexus\Core\Auth;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\WarehouseModel;
+use Cloudexus\Model\Finance\PaymentModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
 use Cloudexus\Model\Purchasing\PurchaseOrderModel;
 
 class IncomingInvoiceController extends BaseController
 {
+    use HandlesPayments;
+
     private IncomingInvoiceModel $invoices;
     private PartnerModel $partners;
     private WarehouseModel $warehouses;
@@ -103,14 +106,17 @@ class IncomingInvoiceController extends BaseController
         }
 
         $this->pageTitle = $this->t('incoming_invoices.title_prefix') . ': ' . $invoice['invoice_number'];
-        $this->render('incoming-invoices/show.twig', ['invoice' => $invoice]);
+        $this->render('incoming-invoices/show.twig', [
+            'invoice' => $invoice,
+            'payments' => (new PaymentModel())->forDocument(PaymentModel::INCOMING, $id),
+        ]);
     }
 
     public function markPaid(int $id): void
     {
         $this->requirePermission(Permissions::FINANCE_MARK_PAID);
 
-        if (!$this->invoices->markPaid($id)) {
+        if (!$this->invoices->markPaid($id, Auth::id())) {
             $this->flashError($this->t('incoming_invoices.not_payable'));
             $this->redirect('/incoming-invoices/' . $id);
         }
@@ -129,7 +135,9 @@ class IncomingInvoiceController extends BaseController
             $this->flashError($this->t('incoming_invoices.cancel_shortage'));
             $this->redirect('/incoming-invoices/' . $id);
         } catch (\DomainException) {
-            $this->flashError($this->t('incoming_invoices.not_cancellable'));
+            $invoice = $this->invoices->findById($id);
+            $this->flashError($this->t($invoice && (float) $invoice['paid_amount'] > 0 && $invoice['status'] === 'unpaid'
+                ? 'incoming_invoices.cancel_has_payments' : 'incoming_invoices.not_cancellable'));
             $this->redirect('/incoming-invoices/' . $id);
         }
         AuditLog::record(AuditLog::STORNO, 'incoming_invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
@@ -159,5 +167,20 @@ class IncomingInvoiceController extends BaseController
         }
 
         return $items;
+    }
+
+    protected function paymentType(): string
+    {
+        return PaymentModel::INCOMING;
+    }
+
+    protected function paymentBasePath(): string
+    {
+        return '/incoming-invoices';
+    }
+
+    protected function paymentDocumentNumber(int $id): ?string
+    {
+        return $this->invoices->findById($id)['invoice_number'] ?? null;
     }
 }

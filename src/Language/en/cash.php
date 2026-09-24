@@ -25,6 +25,7 @@ return [
     'auto_paid_hint' => 'If selected, the invoice is automatically marked as paid.',
     'note' => 'Note',
     'amount_required' => 'The amount is required.',
+    'date_invalid' => 'The voucher date cannot be in the future.',
     'created' => 'Cash voucher recorded.',
     'deleted' => 'Cash voucher deleted.',
 ];

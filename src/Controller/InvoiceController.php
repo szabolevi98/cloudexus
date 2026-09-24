@@ -9,11 +9,14 @@ use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\WarehouseModel;
+use Cloudexus\Model\Finance\PaymentModel;
 use Cloudexus\Model\Sales\InvoiceModel;
 use Cloudexus\Model\Sales\OrderModel;
 
 class InvoiceController extends BaseController
 {
+    use HandlesPayments;
+
     private InvoiceModel $invoices;
     private PartnerModel $partners;
     private ProductModel $products;
@@ -174,7 +177,10 @@ class InvoiceController extends BaseController
         }
 
         $this->pageTitle = $this->t('invoices.title_prefix') . ': ' . $invoice['invoice_number'];
-        $this->render('invoices/show.twig', ['invoice' => $invoice]);
+        $this->render('invoices/show.twig', [
+            'invoice' => $invoice,
+            'payments' => (new PaymentModel())->forDocument(PaymentModel::INVOICE, $id),
+        ]);
     }
 
     /** Printer-friendly invoice document. */
@@ -197,7 +203,7 @@ class InvoiceController extends BaseController
     {
         $this->requirePermission(Permissions::FINANCE_MARK_PAID);
 
-        if ($this->invoices->markPaid($id)) {
+        if ($this->invoices->markPaid($id, Auth::id())) {
             AuditLog::record(AuditLog::PAID, 'invoice', $id, $this->invoices->findById($id)['invoice_number'] ?? null);
             $this->flashSuccess($this->t('invoices.marked_paid'));
         } else {
@@ -218,7 +224,9 @@ class InvoiceController extends BaseController
         try {
             $stornoId = $this->invoices->storno($id, Auth::id());
         } catch (\DomainException) {
-            $this->flashError($this->t('invoices.not_stornoable'));
+            $invoice = $this->invoices->findById($id);
+            $this->flashError($this->t($invoice && (float) $invoice['paid_amount'] > 0 && $invoice['status'] === 'unpaid'
+                ? 'invoices.storno_has_payments' : 'invoices.not_stornoable'));
             $this->redirect('/invoices/' . $id);
         }
 
@@ -271,5 +279,20 @@ class InvoiceController extends BaseController
         }
 
         return $items;
+    }
+
+    protected function paymentType(): string
+    {
+        return PaymentModel::INVOICE;
+    }
+
+    protected function paymentBasePath(): string
+    {
+        return '/invoices';
+    }
+
+    protected function paymentDocumentNumber(int $id): ?string
+    {
+        return $this->invoices->findById($id)['invoice_number'] ?? null;
     }
 }

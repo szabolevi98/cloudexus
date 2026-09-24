@@ -25,6 +25,7 @@ return [
     'auto_paid_hint' => 'Ha kiválasztod, a számla automatikusan kifizetve jelölődik.',
     'note' => 'Megjegyzés',
     'amount_required' => 'Az összeg megadása kötelező.',
+    'date_invalid' => 'A bizonylat dátuma nem lehet a jövőben.',
     'created' => 'Pénztárbizonylat rögzítve.',
     'deleted' => 'Pénztárbizonylat törölve.',
 ];

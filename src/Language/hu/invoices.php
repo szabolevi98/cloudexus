@@ -74,6 +74,7 @@ return [
     'stornoed_by' => 'Sztornózva a(z) {number} számlával',
     'stornoed' => 'Sztornó számla kiállítva. Az eredeti számla sztornózva, a kiadott áru visszakönyvelve.',
     'not_stornoable' => 'Ez a számla nem sztornózható: csak kiállított, még ki nem fizetett számlát lehet sztornózni.',
+    'storno_has_payments' => 'Erre a számlára már érkezett befizetés: előbb vond vissza a befizetést, csak utána sztornózható.',
     'not_payable' => 'Ez a számla nem jelölhető kifizetettnek.',
     'order_not_invoiceable' => 'A(z) {number} rendelésből nem állítható ki számla: már számlázva van, vagy nincs megerősítve.',
     'payment_methods' => [

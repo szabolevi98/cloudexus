@@ -1,0 +1,17 @@
+{# A számla állapota egy címkében: sztornó, lejárt, részben fizetve, fizetésre vár, kifizetve, sztornózva. #}
+{% set today = today|default("now"|date("Y-m-d")) %}
+{% set partial = doc.status == 'unpaid' and doc.paid_amount|default(0) > 0 %}
+{% if doc.status == 'storno' %}
+    <span class="badge rounded-pill bg-body-tertiary text-body border">{{ t('invoices.storno_badge') }}</span>
+{% elseif doc.status == 'unpaid' and doc.due_date < today %}
+    <span class="badge rounded-pill text-bg-danger">{{ t('common.invoice_status.overdue') }}</span>
+    {% if partial %}<span class="badge rounded-pill text-bg-info-subtle text-info-emphasis">{{ t('common.invoice_status.partial') }}</span>{% endif %}
+{% elseif partial %}
+    <span class="badge rounded-pill text-bg-info-subtle text-info-emphasis">{{ t('common.invoice_status.partial') }}</span>
+{% elseif doc.status == 'unpaid' %}
+    <span class="badge rounded-pill text-bg-warning-subtle text-warning-emphasis">{{ t('common.invoice_status.unpaid') }}</span>
+{% elseif doc.status == 'paid' %}
+    <span class="badge rounded-pill text-bg-success-subtle text-success-emphasis">{{ t('common.invoice_status.paid') }}</span>
+{% else %}
+    <span class="badge rounded-pill text-bg-danger-subtle text-danger-emphasis">{{ t('common.invoice_status.cancelled') }}</span>
+{% endif %}

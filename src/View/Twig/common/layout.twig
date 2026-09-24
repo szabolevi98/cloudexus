@@ -130,11 +130,16 @@
                 {% endif %}
             {% endif %}
 
-            {% if can_any('cash.view') %}
+            {% if can_any('cash.view', 'invoices.view', 'purchasing.view') %}
                 <div class="cx-nav__group-label">{{ t('nav.groups.cash') }}</div>
                 {% if can('cash.view') %}
                     <a class="cx-nav__link {{ active_menu == 'cash' ? 'is-active' : '' }}" href="{{ base_url }}/cash">
                         <i class="bi bi-cash-coin"></i><span>{{ t('nav.cash') }}</span>
+                    </a>
+                {% endif %}
+                {% if can_any('invoices.view', 'purchasing.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'aging' ? 'is-active' : '' }}" href="{{ base_url }}/reports/aging">
+                        <i class="bi bi-hourglass-split"></i><span>{{ t('nav.aging') }}</span>
                     </a>
                 {% endif %}
             {% endif %}
@@ -402,7 +407,8 @@
         const token = document.querySelector('meta[name="csrf-token"]')?.content;
         if (!token) return;
         document.querySelectorAll('form').forEach((form) => {
-            if ((form.method || '').toLowerCase() === 'post' && !form.querySelector('input[name="_token"]')) {
+            // getAttribute: a field named "method" would shadow form.method.
+            if ((form.getAttribute('method') || '').toLowerCase() === 'post' && !form.querySelector('input[name="_token"]')) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = '_token';

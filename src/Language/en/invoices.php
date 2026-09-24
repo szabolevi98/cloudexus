@@ -74,6 +74,7 @@ return [
     'stornoed_by' => 'Cancelled by invoice {number}',
     'stornoed' => 'Cancellation invoice issued. The original is cancelled and its goods are back in stock.',
     'not_stornoable' => 'This invoice cannot be cancelled: only an issued invoice that is not yet paid can be.',
+    'storno_has_payments' => 'This invoice has payments: reverse them first, then it can be reversed.',
     'not_payable' => 'This invoice cannot be marked as paid.',
     'order_not_invoiceable' => 'Order {number} cannot be invoiced: it has an invoice already, or it is not confirmed.',
     'payment_methods' => [

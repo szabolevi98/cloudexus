@@ -55,6 +55,7 @@ return [
         'unpaid' => 'Awaiting payment',
         'paid' => 'Paid',
         'overdue' => 'Overdue',
+        'partial' => 'Partly paid',
         'cancelled' => 'Cancelled',
         'storno' => 'Cancellation invoice',
     ],

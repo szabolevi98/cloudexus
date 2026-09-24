@@ -103,21 +103,23 @@ class CashVoucherModel
 
             $id = (int) $pdo->lastInsertId();
 
-            if (!empty($data['invoice_id'])) {
-                $pdo->prepare("UPDATE invoices SET status = 'paid' WHERE id = :id")
-                    ->execute(['id' => $data['invoice_id']]);
-            }
-
-            if (!empty($data['incoming_invoice_id'])) {
-                $pdo->prepare("UPDATE incoming_invoices SET status = 'paid' WHERE id = :id")
-                    ->execute(['id' => $data['incoming_invoice_id']]);
+            // A számlához kötött bizonylat egy befizetés a számlán: részben
+            // vagy egészen kiegyenlíti, de túl nem fizetheti (DomainException).
+            $payments = new \Cloudexus\Model\Finance\PaymentModel();
+            foreach ([['invoice_id', $payments::INVOICE], ['incoming_invoice_id', $payments::INCOMING]] as [$key, $type]) {
+                if (!empty($data[$key])) {
+                    $payments->record($type, (int) $data[$key], (float) $data['amount'], (string) $data['voucher_date'], 'cash',
+                        null, $data['created_by'] ?: null, $id);
+                }
             }
 
             $pdo->commit();
 
             return $id;
         } catch (\Throwable $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
     }
@@ -131,9 +133,25 @@ class CashVoucherModel
         return $number === false ? null : (string) $number;
     }
 
+    /** Törlés: ha számlát egyenlített, a befizetés is visszavonódik (a számla újra nyitott lesz). */
     public function delete(int $id): void
     {
-        DatabaseConnection::get()->prepare('DELETE FROM cash_vouchers WHERE id = :id')->execute(['id' => $id]);
+        $pdo = DatabaseConnection::get();
+        $pdo->beginTransaction();
+        try {
+            $payments = new \Cloudexus\Model\Finance\PaymentModel();
+            $paymentId = $payments->idForVoucher($id);
+            if ($paymentId !== null) {
+                $payments->delete($paymentId, true);
+            }
+            $pdo->prepare('DELETE FROM cash_vouchers WHERE id = :id')->execute(['id' => $id]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function currentBalance(): float

@@ -40,5 +40,6 @@ return [
     'deleted' => 'Számla törölve.',
     'not_payable' => 'Csak kifizetetlen bejövő számla jelölhető kifizetettnek.',
     'not_cancellable' => 'Csak kifizetetlen bejövő számla stornózható.',
+    'cancel_has_payments' => 'Erre a számlára már fizettél: előbb vond vissza a kifizetést, csak utána sztornózható.',
     'cancel_shortage' => 'A számlával bevételezett áru egy része már nincs a raktárban, ezért a sztornó nem tudja kivezetni; előbb rendezd a készletet.',
 ];
