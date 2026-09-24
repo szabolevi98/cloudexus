@@ -11,3 +11,5 @@ Thumbs.db
 !/var/sessions/.gitkeep
 /web/assets/uploads/*
 !/web/assets/uploads/.gitkeep
+/config/test.ini
+/var/cache/phpunit/

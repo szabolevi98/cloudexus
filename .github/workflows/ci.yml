@@ -1,0 +1,74 @@
+# Every push and pull request: every PHP file parses, the unit and integration
+# tests pass against a real MariaDB, the built stylesheet matches its sources,
+# and a fresh installation — migrated, seeded, signed into — is walked through
+# over HTTP.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, curl, intl
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Write the configuration
+        run: |
+          sed -e 's/^password =$/password = root/' \
+              -e 's/^name = cloudexus$/name = cloudexus_ci/' \
+              -e 's|^base_url = .*|base_url = "http://127.0.0.1:8080"|' \
+              config/config.ini.dist > config/config.ini
+          sed 's/^name = cloudexus_ci$/name = cloudexus_test/' config/config.ini > config/test.ini
+          mysql -h 127.0.0.1 -u root -proot -e "CREATE DATABASE cloudexus_ci CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE cloudexus_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+      - name: Every PHP file parses
+        run: find src web database bin tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Unit and integration tests
+        run: vendor/bin/phpunit
+
+      - name: The built stylesheet matches its sources
+        run: |
+          php bin/build_css.php
+          git diff --exit-code -- web/assets/css
+
+      - name: Install, seed and walk through over HTTP
+        run: |
+          php database/migrate.php
+          php database/create_admin.php admin ci-password
+          php database/seed_demo.php
+          php database/migrate.php
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t web bin/dev-router.php > server.log 2>&1 &
+          sleep 1
+          php tests/smoke.php --url=http://127.0.0.1:8080 --user=admin --password=ci-password
+
+      - name: Server log
+        if: failure()
+        run: |
+          cat server.log || true
+          cat var/log/*.log || true
