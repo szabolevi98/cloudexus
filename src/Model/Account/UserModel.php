@@ -168,6 +168,12 @@ class UserModel
         }
     }
 
+    public function setDigest(int $id, bool $on): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE users SET digest_enabled = :on WHERE id = :id')
+            ->execute(['id' => $id, 'on' => $on ? 1 : 0]);
+    }
+
     /** Új jelszó, ami a mobilalkalmazásból is kiléptet minden eszközön. */
     public function setPassword(int $id, string $password): void
     {

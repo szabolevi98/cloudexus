@@ -22,6 +22,7 @@ class ProfileController extends BaseController
         $this->pageTitle = $this->t('profile.title');
         $this->render('profile.twig', [
             'user' => $this->users->findById(Auth::id()),
+            'mail_enabled' => \Cloudexus\Core\Mailer::isConfigured(),
         ]);
     }
 
@@ -68,6 +69,17 @@ class ProfileController extends BaseController
         \Cloudexus\Core\Session::set('user_name', $fullName);
 
         $this->flashSuccess($this->t('profile.updated') . ($password !== '' ? ' ' . $this->t('profile.password_note') : ''));
+        $this->redirect('/profile');
+    }
+
+    /** A reggeli összefoglaló be- vagy kikapcsolása. */
+    public function digest(): void
+    {
+        $this->requireAuth();
+
+        $on = ($_POST['digest'] ?? '') === '1';
+        $this->users->setDigest((int) Auth::id(), $on);
+        $this->flashSuccess($this->t($on ? 'digest.turned_on' : 'digest.turned_off'));
         $this->redirect('/profile');
     }
 }

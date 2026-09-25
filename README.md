@@ -144,6 +144,10 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   daily mid rates with a button or from cron.
 - **A dark theme**, or the system's.
 - **To-dos** with a due date, a person and a partner.
+- **A morning digest** by email on weekdays, for whoever asks for it on their
+  profile: overdue customer and supplier invoices, products under their
+  minimum, their own to-dos that are due — only what their role can see, and
+  no email on a quiet day.
 
 ![The dashboard in the dark theme](docs/dark.png)
 
@@ -221,6 +225,7 @@ morning (the bank publishes them in the morning):
 
 ```
 * * * * *   php /path/to/cloudexus/bin/outbox.php
+30 7 * * 1-5 php /path/to/cloudexus/bin/digest.php
 10 7 * * 1-5 php /path/to/cloudexus/bin/sync_currency_rates.php --quiet
 ```
 

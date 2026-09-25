@@ -42,6 +42,21 @@
     </div>
 
     <div class="cx-card mt-4" style="max-width: 560px;">
+        <div class="cx-card__body">
+            <div class="fw-semibold"><i class="bi bi-sunrise me-1"></i>{{ t('digest.title') }}</div>
+            <p class="small text-muted mb-2">{{ t('digest.profile_text') }}</p>
+            {% if mail_enabled %}
+                <form method="post" action="{{ base_url }}/profile/digest" class="btn-group btn-group-sm" role="group" aria-label="{{ t('digest.title') }}">
+                    <button type="submit" name="digest" value="1" class="btn {{ user.digest_enabled ? 'btn-primary' : 'btn-outline-primary' }}" aria-pressed="{{ user.digest_enabled ? 'true' : 'false' }}">{{ t('digest.profile_on') }}</button>
+                    <button type="submit" name="digest" value="0" class="btn {{ user.digest_enabled ? 'btn-outline-secondary' : 'btn-secondary' }}" aria-pressed="{{ user.digest_enabled ? 'false' : 'true' }}">{{ t('digest.profile_off') }}</button>
+                </form>
+            {% else %}
+                <p class="small mb-0">{{ t('digest.no_mail') }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="cx-card mt-4" style="max-width: 560px;">
         <div class="cx-card__body d-flex align-items-center justify-content-between gap-3">
             <div>
                 <div class="fw-semibold"><i class="bi bi-shield-lock me-1"></i>{{ t('two_factor.title') }}</div>
