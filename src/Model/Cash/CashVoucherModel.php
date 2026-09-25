@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Cash;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\DocumentNumber;
+use Cloudexus\Core\Sort;
 
 class CashVoucherModel
 {
@@ -20,6 +21,17 @@ class CashVoucherModel
              ORDER BY v.voucher_date DESC, v.id DESC'
         )->fetchAll();
     }
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'number' => 'v.voucher_number',
+        'type' => 'v.type',
+        'partner' => 'partner_name',
+        'invoice' => 'COALESCE(i.invoice_number, ii.invoice_number)',
+        'date' => 'v.voucher_date',
+        // Signed, as the list shows it: income positive, expense negative.
+        'amount' => "CASE WHEN v.type = 'bevetel' THEN v.amount ELSE -v.amount END",
+    ];
 
     /** Filters: q (voucher_number/note/partner), type, date_from, date_to. */
     public function paginate(array $filters, \Cloudexus\Core\Paginator $pager): array
@@ -64,7 +76,7 @@ class CashVoucherModel
              LEFT JOIN invoices i ON i.id = v.invoice_id
              LEFT JOIN incoming_invoices ii ON ii.id = v.incoming_invoice_id
              $whereSql
-             ORDER BY v.voucher_date DESC, v.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'v.voucher_date DESC, v.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

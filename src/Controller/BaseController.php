@@ -11,6 +11,7 @@ use Cloudexus\Core\Lang;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Core\Language;
 use Cloudexus\Core\Session;
+use Cloudexus\Core\Sort;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
@@ -40,6 +41,11 @@ abstract class BaseController
         // {% if can('invoices.issue') %} — csak elrejt; a kaput a controller zárja.
         $this->twig->addFunction(new TwigFunction('can', [Acl::class, 'can']));
         $this->twig->addFunction(new TwigFunction('can_any', static fn(string ...$permissions): bool => Acl::canAny($permissions)));
+        // Oszloprendezés: <th {{ sort_aria('name') }}>{{ sort_link('name', t('…')) }}</th>,
+        // a szűrőűrlapba {{ sort_inputs() }}. Hogy mi rendezhető, azt a model SORTS-a dönti el.
+        $this->twig->addFunction(new TwigFunction('sort_link', [Sort::class, 'link'], ['is_safe' => ['html']]));
+        $this->twig->addFunction(new TwigFunction('sort_aria', [Sort::class, 'aria'], ['is_safe' => ['html']]));
+        $this->twig->addFunction(new TwigFunction('sort_inputs', [Sort::class, 'inputs'], ['is_safe' => ['html']]));
     }
 
     /** Translate a key (controller-side: flash messages, page titles, …). */

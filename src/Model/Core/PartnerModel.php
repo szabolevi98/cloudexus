@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\Sort;
 
 class PartnerModel
 {
@@ -109,6 +110,17 @@ class PartnerModel
         return $stmt->fetch() ?: null;
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'name' => 'p.name',
+        'type' => 'p.type',
+        'tax_number' => 'p.tax_number',
+        'email' => 'p.email',
+        'phone' => 'p.phone',
+        'customer_group' => 'customer_group_name',
+        'status' => 'p.is_active',
+    ];
+
     /**
      * Filters: q (name/tax_number/email), type ('customer'|'supplier'|'both'), status, customer_group_id.
      */
@@ -151,7 +163,7 @@ class PartnerModel
             "SELECT p.*, g.name AS customer_group_name
              FROM partners p
              LEFT JOIN customer_groups g ON g.id = p.customer_group_id
-             $whereSql ORDER BY p.name ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+             $whereSql ORDER BY " . Sort::orderBy(self::SORTS, 'p.name ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

@@ -4,9 +4,20 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class LocationModel
 {
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'warehouse' => 'warehouse_name',
+        'code' => 'l.code',
+        'name' => 'l.name',
+        'stock' => 'stock_qty',
+        'product_kinds' => 'product_count',
+        'status' => 'l.is_active',
+    ];
+
     /** Filters: q (code/name), code (exact, e.g. a scanned shelf label), warehouse_id, status. */
     public function paginate(array $filters, Paginator $pager): array
     {
@@ -51,7 +62,7 @@ class LocationModel
                  FROM stock_movements WHERE location_id IS NOT NULL GROUP BY location_id
              ) s ON s.location_id = l.id
              $whereSql
-             ORDER BY w.name ASC, l.code ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'w.name ASC, l.code ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

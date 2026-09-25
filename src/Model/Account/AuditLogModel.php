@@ -4,10 +4,21 @@ namespace Cloudexus\Model\Account;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 /** Az audit napló olvasása. Írni csak a Core\AuditLog ír bele. */
 class AuditLogModel
 {
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'created_at' => 'a.created_at',
+        'user' => 'a.user_name',
+        'action' => 'a.action',
+        'entity' => 'a.entity_type',
+        'subject' => 'a.label',
+        'ip' => 'a.ip',
+    ];
+
     /** @return list<array<string, mixed>> */
     public function paginate(array $filters, Paginator $pager): array
     {
@@ -19,7 +30,7 @@ class AuditLogModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT a.* FROM audit_log a $where ORDER BY a.id DESC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "SELECT a.* FROM audit_log a $where ORDER BY " . Sort::orderBy(self::SORTS, 'a.id DESC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

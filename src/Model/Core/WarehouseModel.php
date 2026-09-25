@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class WarehouseModel
 {
@@ -11,6 +12,13 @@ class WarehouseModel
     {
         return DatabaseConnection::get()->query('SELECT * FROM warehouses ORDER BY name ASC')->fetchAll();
     }
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'name' => 'name',
+        'address' => 'address',
+        'status' => 'is_active',
+    ];
 
     /** Filters: q (name/address), status. */
     public function paginate(array $filters, Paginator $pager): array
@@ -40,7 +48,7 @@ class WarehouseModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT * FROM warehouses $whereSql ORDER BY name ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "SELECT * FROM warehouses $whereSql ORDER BY " . Sort::orderBy(self::SORTS, 'name ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

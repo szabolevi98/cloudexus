@@ -4,10 +4,20 @@ namespace Cloudexus\Model\Account;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 /** API kérés-napló: rate limit számításához és biztonsági visszakereséshez. */
 class ApiRequestLogModel
 {
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'created_at' => 'l.created_at',
+        'user' => 'api_user_name',
+        'status' => 'l.status_code',
+        'duration' => 'l.duration_ms',
+        'ip' => 'l.ip_address',
+    ];
+
     /**
      * @param array{api_user_id?: int, outcome?: string, date_from?: string, date_to?: string} $filters
      *   outcome: '' (mind), 'ok' (2xx), 'client_error' (4xx a 429 kivételével),
@@ -28,7 +38,7 @@ class ApiRequestLogModel
              LEFT JOIN api_users u ON u.id = l.api_user_id
              LEFT JOIN users us ON us.id = l.user_id
              $whereSql
-             ORDER BY l.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'l.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

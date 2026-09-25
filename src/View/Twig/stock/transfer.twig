@@ -66,6 +66,7 @@
                 </div>
                 <div class="cx-card__body p-0">
                     <form method="get" class="p-3 border-bottom">
+                        {{ sort_inputs() }}
                         <div class="row g-2 align-items-end">
                             <div class="col-sm-4 col-lg-3">
                                 <label class="form-label small text-muted mb-1">{{ t('common.product') }}</label>
@@ -98,12 +99,12 @@
                         <table class="table table-hover align-middle mb-0 cx-table">
                             <thead>
                             <tr>
-                                <th>{{ t('common.date') }}</th>
-                                <th>{{ t('stock.direction') }}</th>
-                                <th>{{ t('common.warehouse') }}</th>
-                                <th>{{ t('stock.location') }}</th>
-                                <th>{{ t('common.product') }}</th>
-                                <th class="text-end">{{ t('common.quantity') }}</th>
+                                <th {{ sort_aria('date') }}>{{ sort_link('date', t('common.date')) }}</th>
+                                <th {{ sort_aria('direction') }}>{{ sort_link('direction', t('stock.direction')) }}</th>
+                                <th {{ sort_aria('warehouse') }}>{{ sort_link('warehouse', t('common.warehouse')) }}</th>
+                                <th {{ sort_aria('location') }}>{{ sort_link('location', t('stock.location')) }}</th>
+                                <th {{ sort_aria('product') }}>{{ sort_link('product', t('common.product')) }}</th>
+                                <th class="text-end" {{ sort_aria('quantity') }}>{{ sort_link('quantity', t('common.quantity')) }}</th>
                             </tr>
                             </thead>
                             <tbody>

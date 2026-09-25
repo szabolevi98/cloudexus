@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class CustomerGroupModel
 {
@@ -14,6 +15,13 @@ class CustomerGroupModel
              FROM customer_groups g ORDER BY g.name ASC"
         )->fetchAll();
     }
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'name' => 'g.name',
+        'description' => 'g.description',
+        'partners' => 'partner_count',
+    ];
 
     /** Filters: q (name/description). */
     public function paginate(array $filters, Paginator $pager): array
@@ -41,7 +49,7 @@ class CustomerGroupModel
         $stmt = DatabaseConnection::get()->prepare(
             "SELECT g.*, (SELECT COUNT(*) FROM partners p WHERE p.customer_group_id = g.id) AS partner_count
              FROM customer_groups g $whereSql
-             ORDER BY g.name ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'g.name ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

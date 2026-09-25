@@ -17,6 +17,7 @@
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-4 col-lg-3">
                         <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
@@ -50,12 +51,12 @@
                     <thead>
                     <tr>
                         <th style="width:44px;"></th>
-                        <th>{{ t('common.sku') }}</th>
-                        <th>{{ t('products.col_name') }}</th>
-                        <th>{{ t('products.category') }}</th>
-                        <th class="text-end">{{ t('products.col_stock') }}</th>
-                        <th class="text-end">{{ t('products.col_net_price') }}</th>
-                        <th>{{ t('common.status') }}</th>
+                        <th {{ sort_aria('sku') }}>{{ sort_link('sku', t('common.sku')) }}</th>
+                        <th {{ sort_aria('name') }}>{{ sort_link('name', t('products.col_name')) }}</th>
+                        <th {{ sort_aria('category') }}>{{ sort_link('category', t('products.category')) }}</th>
+                        <th class="text-end" {{ sort_aria('stock') }}>{{ sort_link('stock', t('products.col_stock')) }}</th>
+                        <th class="text-end" {{ sort_aria('price') }}>{{ sort_link('price', t('products.col_net_price')) }}</th>
+                        <th {{ sort_aria('status') }}>{{ sort_link('status', t('common.status')) }}</th>
                         <th class="text-end">{{ t('common.actions') }}</th>
                     </tr>
                     </thead>

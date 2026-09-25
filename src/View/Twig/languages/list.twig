@@ -43,6 +43,7 @@
                         <div class="mt-1">{{ t('languages.documents_note') }}</div>
                     </div>
                     <form method="get" class="p-3 border-bottom">
+                        {{ sort_inputs() }}
                         <div class="row g-2 align-items-end">
                             <div class="col-sm-6 col-lg-5">
                                 <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
@@ -58,10 +59,10 @@
                         <table class="table table-hover align-middle mb-0 cx-table">
                             <thead>
                             <tr>
-                                <th style="width:90px;">{{ t('languages.code') }}</th>
-                                <th>{{ t('languages.name') }}</th>
-                                <th style="width:90px;">{{ t('languages.sort_order') }}</th>
-                                <th style="width:110px;">{{ t('languages.status') }}</th>
+                                <th style="width:90px;" {{ sort_aria('code') }}>{{ sort_link('code', t('languages.code')) }}</th>
+                                <th {{ sort_aria('name') }}>{{ sort_link('name', t('languages.name')) }}</th>
+                                <th style="width:90px;" {{ sort_aria('sort_order') }}>{{ sort_link('sort_order', t('languages.sort_order')) }}</th>
+                                <th style="width:110px;" {{ sort_aria('status') }}>{{ sort_link('status', t('languages.status')) }}</th>
                                 <th style="width:130px;">{{ t('languages.default') }}</th>
                                 <th class="text-end">{{ t('common.actions') }}</th>
                             </tr>

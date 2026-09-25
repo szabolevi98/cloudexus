@@ -5,6 +5,7 @@ namespace Cloudexus\Model\Sales;
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\DocumentNumber;
 use Cloudexus\Core\Lang;
+use Cloudexus\Core\Sort;
 
 class OrderModel
 {
@@ -101,6 +102,15 @@ class OrderModel
         return $result;
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'number' => 'o.order_number',
+        'partner' => 'partner_name',
+        'date' => 'o.order_date',
+        'status' => 'o.status',
+        'total' => 'o.total_amount',
+    ];
+
     /** Filters: q (order_number), partner_id, status, date_from, date_to. */
     public function paginate(array $filters, \Cloudexus\Core\Paginator $pager): array
     {
@@ -144,7 +154,7 @@ class OrderModel
              FROM orders o
              JOIN partners p ON p.id = o.partner_id
              $whereSql
-             ORDER BY o.order_date DESC, o.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'o.order_date DESC, o.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

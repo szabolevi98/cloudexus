@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Language;
+use Cloudexus\Core\Sort;
 use Cloudexus\Core\Translation;
 
 class CategoryModel
@@ -20,6 +21,15 @@ class CategoryModel
              ORDER BY name ASC'
         )->fetchAll();
     }
+
+    /**
+     * Sortable columns of the list (see Sort): key => row field. This list is
+     * ordered in PHP (see paginate()), so the values name fields of the row, not SQL.
+     */
+    public const SORTS = [
+        'path' => 'sort_path',
+        'products' => 'product_count',
+    ];
 
     /**
      * Filters: q (name). Includes parent name and product count per category.
@@ -70,11 +80,23 @@ class CategoryModel
         }
         unset($row);
 
-        usort($rows, function ($a, $b) use ($collator) {
+        $byPath = function ($a, $b) use ($collator) {
             return $collator
                 ? $collator->compare($a['sort_path'], $b['sort_path'])
                 : strcmp($a['sort_key'], $b['sort_key']);
-        });
+        };
+        usort($rows, $byPath);
+
+        // A chosen column is applied on top; usort is stable, so equal values keep
+        // the path order as the tie-breaker, like Sort::orderBy() does in SQL.
+        [$sortKey, $sortDir] = Sort::current();
+        if ($sortKey !== null && isset(self::SORTS[$sortKey])) {
+            $field = self::SORTS[$sortKey];
+            $sign = $sortDir === 'desc' ? -1 : 1;
+            usort($rows, fn($a, $b) => $sign * ($field === 'sort_path'
+                ? $byPath($a, $b)
+                : (int) $a[$field] <=> (int) $b[$field]));
+        }
 
         $pager->total = count($rows);
         $pager->clamp();

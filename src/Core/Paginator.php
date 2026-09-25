@@ -38,11 +38,13 @@ class Paginator
     }
 
     /**
-     * @param array $filters Current filter values, so pagination links keep them.
+     * @param array $filters Current filter values, so pagination links keep them
+     *                       (and the column order, see Sort).
      */
     public function toTwig(array $filters = []): array
     {
         unset($filters['page']);
+        $filters += Sort::params();
 
         return [
             'page' => $this->page,

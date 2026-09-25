@@ -9,6 +9,38 @@
     white-space: nowrap;
 }
 
+/* A sortable header (see Sort::link): the header's own look, plus a faint
+   arrow that turns solid on the column the list is sorted by. */
+.cx-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.cx-sort i {
+    font-size: 0.68rem;
+    opacity: 0.35;
+    transition: opacity 0.15s ease;
+}
+
+.cx-sort:hover {
+    color: var(--cx-text);
+}
+
+.cx-sort:hover i {
+    opacity: 0.8;
+}
+
+.cx-sort.is-sorted {
+    color: var(--cx-primary);
+}
+
+.cx-sort.is-sorted i {
+    opacity: 1;
+}
+
 .cx-table td {
     padding: 7px 16px;
     vertical-align: middle;

@@ -24,6 +24,7 @@
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-3 col-lg-3">
                         <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
@@ -55,12 +56,12 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
-                        <th>{{ t('cash.voucher_number') }}</th>
-                        <th>{{ t('cash.type') }}</th>
-                        <th>{{ t('cash.partner') }}</th>
-                        <th>{{ t('cash.related_invoice') }}</th>
-                        <th>{{ t('cash.date') }}</th>
-                        <th class="text-end">{{ t('cash.amount') }}</th>
+                        <th {{ sort_aria('number') }}>{{ sort_link('number', t('cash.voucher_number')) }}</th>
+                        <th {{ sort_aria('type') }}>{{ sort_link('type', t('cash.type')) }}</th>
+                        <th {{ sort_aria('partner') }}>{{ sort_link('partner', t('cash.partner')) }}</th>
+                        <th {{ sort_aria('invoice') }}>{{ sort_link('invoice', t('cash.related_invoice')) }}</th>
+                        <th {{ sort_aria('date') }}>{{ sort_link('date', t('cash.date')) }}</th>
+                        <th class="text-end" {{ sort_aria('amount') }}>{{ sort_link('amount', t('cash.amount')) }}</th>
                         <th></th>
                     </tr>
                     </thead>

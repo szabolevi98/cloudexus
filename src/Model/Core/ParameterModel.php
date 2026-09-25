@@ -5,6 +5,7 @@ namespace Cloudexus\Model\Core;
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Language;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 use Cloudexus\Core\Translation;
 
 class ParameterModel
@@ -31,6 +32,11 @@ class ParameterModel
     }
 
     /** Filters: q (name). */
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'name' => 'name',
+    ];
+
     public function paginate(array $filters, Paginator $pager): array
     {
         $where = [];
@@ -62,7 +68,7 @@ class ParameterModel
              FROM parameters pa
              ' . self::descJoin() . "
              $whereSql
-             ORDER BY name ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'name ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

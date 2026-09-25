@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class CurrencyModel
 {
@@ -13,6 +14,17 @@ class CurrencyModel
             ->query('SELECT * FROM currencies ORDER BY code ASC')
             ->fetchAll();
     }
+
+    /**
+     * Sortable columns of the list (see Sort): key => SQL expression. Which one is
+     * primary lives in settings, not on the row, so that column is not sortable.
+     */
+    public const SORTS = [
+        'code' => 'code',
+        'title' => 'title',
+        'symbol' => 'symbol',
+        'value' => 'value',
+    ];
 
     /** Filters: q (code/title). */
     public function paginate(array $filters, Paginator $pager): array
@@ -38,7 +50,7 @@ class CurrencyModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT * FROM currencies $whereSql ORDER BY code ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "SELECT * FROM currencies $whereSql ORDER BY " . Sort::orderBy(self::SORTS, 'code ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

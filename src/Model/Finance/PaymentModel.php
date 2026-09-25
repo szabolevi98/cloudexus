@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Finance;
 
 use Cloudexus\Core\Currency;
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\Sort;
 
 /**
  * Kifizetések a kimenő és a bejövő számlákon. Egy számlára több is jöhet
@@ -18,6 +19,18 @@ class PaymentModel
     public const INVOICE = 'invoice';
     public const INCOMING = 'incoming_invoice';
     public const METHODS = ['transfer', 'cash', 'card', 'cod'];
+
+    /** Sortable columns of the aging report (see Sort): key => SQL expression (the grouped query's aliases). */
+    public const AGING_SORTS = [
+        'partner' => 'partner_name',
+        'documents' => 'document_count',
+        'current_amount' => 'current_amount',
+        'd1_30' => 'd1_30',
+        'd31_60' => 'd31_60',
+        'd61_90' => 'd61_90',
+        'd90_plus' => 'd90_plus',
+        'total_open' => 'total_open',
+    ];
 
     /** A float-zaj és a kerekítés miatt ennyi eltérés még "kifizetett". */
     private const EPSILON = 0.004;
@@ -177,7 +190,7 @@ class PaymentModel
              JOIN partners p ON p.id = d.partner_id
              WHERE d.open > 0.004
              GROUP BY p.id, p.name
-             ORDER BY total_open DESC"
+             ORDER BY " . Sort::orderBy(self::AGING_SORTS, 'total_open DESC, partner_name ASC')
         );
         $stmt->execute(['as_of1' => $asOf, 'as_of2' => $asOf, 'as_of3' => $asOf, 'as_of4' => $asOf]);
         $rows = $stmt->fetchAll();

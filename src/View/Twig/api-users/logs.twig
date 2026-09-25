@@ -56,6 +56,7 @@
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-4 col-lg-3">
                         <label class="form-label small text-muted mb-1">{{ t('api_logs.api_user') }}</label>
@@ -94,12 +95,12 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
-                        <th>{{ t('api_logs.col_time') }}</th>
-                        <th>{{ t('api_logs.col_user') }}</th>
+                        <th {{ sort_aria('created_at') }}>{{ sort_link('created_at', t('api_logs.col_time')) }}</th>
+                        <th {{ sort_aria('user') }}>{{ sort_link('user', t('api_logs.col_user')) }}</th>
                         <th>{{ t('api_logs.col_method_path') }}</th>
-                        <th>{{ t('api_logs.col_status') }}</th>
-                        <th class="text-end">{{ t('api_logs.col_duration') }}</th>
-                        <th>{{ t('api_logs.col_ip') }}</th>
+                        <th {{ sort_aria('status') }}>{{ sort_link('status', t('api_logs.col_status')) }}</th>
+                        <th class="text-end" {{ sort_aria('duration') }}>{{ sort_link('duration', t('api_logs.col_duration')) }}</th>
+                        <th {{ sort_aria('ip') }}>{{ sort_link('ip', t('api_logs.col_ip')) }}</th>
                     </tr>
                     </thead>
                     <tbody>

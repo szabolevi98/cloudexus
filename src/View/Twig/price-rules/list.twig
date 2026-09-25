@@ -13,6 +13,7 @@
         <div class="cx-card__body p-0">
             <p class="text-muted small px-3 pt-3 mb-0">{{ t('price_rules.intro') }}</p>
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-5 col-lg-3">
                         <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
@@ -37,13 +38,13 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
-                        <th>{{ t('common.name') }}</th>
-                        <th>{{ t('price_rules.who') }}</th>
+                        <th {{ sort_aria('name') }}>{{ sort_link('name', t('common.name')) }}</th>
+                        <th {{ sort_aria('customer_group') }}>{{ sort_link('customer_group', t('price_rules.who')) }}</th>
                         <th>{{ t('price_rules.what') }}</th>
-                        <th class="text-end">{{ t('price_rules.min_quantity') }}</th>
+                        <th class="text-end" {{ sort_aria('min_quantity') }}>{{ sort_link('min_quantity', t('price_rules.min_quantity')) }}</th>
                         <th class="text-end">{{ t('price_rules.effect') }}</th>
                         <th>{{ t('price_rules.validity') }}</th>
-                        <th>{{ t('common.status') }}</th>
+                        <th {{ sort_aria('status') }}>{{ sort_link('status', t('common.status')) }}</th>
                         {% if can('pricing.manage') %}<th class="text-end">{{ t('common.actions') }}</th>{% endif %}
                     </tr>
                     </thead>

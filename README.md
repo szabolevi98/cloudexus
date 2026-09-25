@@ -36,8 +36,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   price wins — rules do not add up. Purchase forms take the plain price.
 - **Partners** — customers, suppliers or both — with tax number, contacts,
   addresses and a history of calls, emails and meetings.
-- Searchable, filterable, paged lists everywhere, and search-as-you-type
-  pickers for the long ones (products, categories, partners).
+- Searchable, filterable, paged lists everywhere, sorted by clicking a column
+  header (ascending, descending, then back to the list's own order), and
+  search-as-you-type pickers for the long ones (products, categories, partners).
 
 ![Price rules: who, on what, from how many, how much, and when](docs/price-rules.png)
 

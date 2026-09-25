@@ -12,6 +12,7 @@
         <div class="cx-card__body p-0">
             <p class="text-muted small px-3 pt-3 mb-0">{{ t('reports.aging_intro') }}</p>
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-auto">
                         <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('reports.aging_title') }}">
@@ -50,12 +51,12 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
-                        <th>{{ t('common.partner') }}</th>
-                        <th class="text-end">{{ t('reports.documents') }}</th>
+                        <th {{ sort_aria('partner') }}>{{ sort_link('partner', t('common.partner')) }}</th>
+                        <th class="text-end" {{ sort_aria('documents') }}>{{ sort_link('documents', t('reports.documents')) }}</th>
                         {% for bucket in buckets %}
-                            <th class="text-end">{{ t('reports.buckets.' ~ bucket) }}</th>
+                            <th class="text-end" {{ sort_aria(bucket) }}>{{ sort_link(bucket, t('reports.buckets.' ~ bucket)) }}</th>
                         {% endfor %}
-                        <th class="text-end">{{ t('reports.total_open') }}</th>
+                        <th class="text-end" {{ sort_aria('total_open') }}>{{ sort_link('total_open', t('reports.total_open')) }}</th>
                     </tr>
                     </thead>
                     <tbody>

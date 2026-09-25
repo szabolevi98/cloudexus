@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class LanguageModel
 {
@@ -21,6 +22,17 @@ class LanguageModel
             ->query('SELECT * FROM languages WHERE is_active = 1 ORDER BY sort_order ASC, name ASC')
             ->fetchAll();
     }
+
+    /**
+     * Sortable columns of the list (see Sort): key => SQL expression. The default
+     * language lives in settings, not on the row, so that column is not sortable.
+     */
+    public const SORTS = [
+        'code' => 'code',
+        'name' => 'name',
+        'sort_order' => 'sort_order',
+        'status' => 'is_active',
+    ];
 
     /** Filters: q (code/name). */
     public function paginate(array $filters, Paginator $pager): array
@@ -46,7 +58,7 @@ class LanguageModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT * FROM languages $whereSql ORDER BY sort_order ASC, name ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "SELECT * FROM languages $whereSql ORDER BY " . Sort::orderBy(self::SORTS, 'sort_order ASC, name ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

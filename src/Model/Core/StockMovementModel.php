@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class StockMovementModel
 {
@@ -22,6 +23,17 @@ class StockMovementModel
     {
         return \Cloudexus\Core\Translation::select('pd', 'name', 'product_name');
     }
+
+    /** Sortable columns of the stock-in and stock-out lists (see Sort): key => SQL expression. */
+    public const MOVEMENT_SORTS = [
+        'date' => 'm.created_at',
+        'warehouse' => 'warehouse_name',
+        'location' => 'location_code',
+        'product' => 'p.sku',
+        'quantity' => 'm.quantity',
+        'created_by' => 'created_by_name',
+    ];
+
     /**
      * Filtered, paginated movement list for one movement type ('in'|'out').
      * Filters: warehouse_id, q (product sku/name), date_from, date_to.
@@ -70,7 +82,7 @@ class StockMovementModel
              LEFT JOIN warehouse_locations l ON l.id = m.location_id
              LEFT JOIN users u ON u.id = m.created_by
              $whereSql
-             ORDER BY m.created_at DESC, m.id DESC
+             ORDER BY " . Sort::orderBy(self::MOVEMENT_SORTS, 'm.created_at DESC, m.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
@@ -196,6 +208,16 @@ class StockMovementModel
         }
     }
 
+    /** Sortable columns of the stock transfer list (see Sort): key => SQL expression. */
+    public const TRANSFER_SORTS = [
+        'date' => 'm.created_at',
+        'direction' => 'm.type',
+        'warehouse' => 'warehouse_name',
+        'location' => 'location_code',
+        'product' => 'p.sku',
+        'quantity' => 'm.quantity',
+    ];
+
     /**
      * Filtered, paginated transfer movement legs (identified by their note prefix).
      * Filters: warehouse_id, q (product sku/name), date_from, date_to.
@@ -244,7 +266,7 @@ class StockMovementModel
              LEFT JOIN warehouse_locations l ON l.id = m.location_id
              LEFT JOIN users u ON u.id = m.created_by
              $whereSql
-             ORDER BY m.created_at DESC, m.id DESC
+             ORDER BY " . Sort::orderBy(self::TRANSFER_SORTS, 'm.created_at DESC, m.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
@@ -283,6 +305,15 @@ class StockMovementModel
 
         return (float) ($stmt->fetchColumn() ?: 0);
     }
+
+    /** Sortable columns of the stock overview list (see Sort): key => SQL expression. */
+    public const OVERVIEW_SORTS = [
+        'warehouse' => 'warehouse_name',
+        'location' => 'location_code',
+        'sku' => 'p.sku',
+        'product' => 'product_name',
+        'quantity' => 'quantity',
+    ];
 
     /**
      * Current stock per warehouse/product, computed as SUM(in) - SUM(out).
@@ -336,7 +367,7 @@ class StockMovementModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "$baseSql ORDER BY warehouse_name ASC, location_code ASC, product_name ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+            "$baseSql ORDER BY " . Sort::orderBy(self::OVERVIEW_SORTS, 'warehouse_name ASC, location_code ASC, product_name ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

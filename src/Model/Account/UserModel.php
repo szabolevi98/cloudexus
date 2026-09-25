@@ -3,6 +3,7 @@
 namespace Cloudexus\Model\Account;
 
 use Cloudexus\Core\DatabaseConnection;
+use Cloudexus\Core\Sort;
 use PDO;
 
 class UserModel
@@ -48,6 +49,16 @@ class UserModel
             ->fetchAll();
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'username' => 'u.username',
+        'name' => 'u.full_name',
+        'email' => 'u.email',
+        'role' => 'role_name',
+        'status' => 'u.is_active',
+        'last_login' => 'u.last_login_at',
+    ];
+
     /** Filters: q (username/full_name/email). */
     public function paginate(array $filters, \Cloudexus\Core\Paginator $pager): array
     {
@@ -68,7 +79,7 @@ class UserModel
 
         $stmt = DatabaseConnection::get()->prepare(
             "SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, r.code AS role_code, u.is_active, u.last_login_at, u.created_at
-             FROM users u LEFT JOIN roles r ON r.id = u.role_id $where ORDER BY u.id ASC LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+             FROM users u LEFT JOIN roles r ON r.id = u.role_id $where ORDER BY " . Sort::orderBy(self::SORTS, 'u.id ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
 

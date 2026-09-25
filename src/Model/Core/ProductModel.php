@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Language;
+use Cloudexus\Core\Sort;
 use Cloudexus\Core\Translation;
 
 class ProductModel
@@ -367,6 +368,16 @@ class ProductModel
         return (float) $stmt->fetchColumn();
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'sku' => 'p.sku',
+        'name' => 'name',
+        'category' => 'category_name',
+        'stock' => 'stock_qty',
+        'price' => 'COALESCE(NULLIF(p.sale_price, 0), p.price)',
+        'status' => 'p.is_active',
+    ];
+
     /**
      * Filtered, paginated product list with the current total stock joined in.
      * Filters: q (sku/name/barcode), category_id, status, webshop.
@@ -423,7 +434,7 @@ class ProductModel
                  FROM stock_movements GROUP BY product_id
              ) s ON s.product_id = p.id
              $whereSql
-             ORDER BY name ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'name ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

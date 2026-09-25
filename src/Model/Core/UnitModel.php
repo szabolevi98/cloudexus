@@ -5,6 +5,7 @@ namespace Cloudexus\Model\Core;
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Language;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 use Cloudexus\Core\Translation;
 
 class UnitModel
@@ -29,6 +30,13 @@ class UnitModel
                      ORDER BY u.sort_order ASC, name ASC')
             ->fetchAll();
     }
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'code' => 'u.code',
+        'name' => 'name',
+        'sort_order' => 'u.sort_order',
+    ];
 
     /** Filters: q (code/name). */
     public function paginate(array $filters, Paginator $pager): array
@@ -63,7 +71,7 @@ class UnitModel
              FROM units u
              ' . self::descJoin() . "
              $whereSql
-             ORDER BY u.sort_order ASC, name ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'u.sort_order ASC, name ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

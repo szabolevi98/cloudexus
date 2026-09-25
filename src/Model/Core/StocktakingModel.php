@@ -5,6 +5,7 @@ namespace Cloudexus\Model\Core;
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\DocumentNumber;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 
 class StocktakingModel
 {
@@ -18,6 +19,16 @@ class StocktakingModel
              ORDER BY s.created_at DESC, s.id DESC'
         )->fetchAll();
     }
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'number' => 's.stocktaking_number',
+        'warehouse' => 'warehouse_name',
+        'date' => 's.created_at',
+        'created_by' => 'created_by_name',
+        'items' => 's.item_count',
+        'variances' => 's.diff_count',
+    ];
 
     /** Filters: q (stocktaking_number), warehouse_id. */
     public function paginate(array $filters, Paginator $pager): array
@@ -47,7 +58,7 @@ class StocktakingModel
              JOIN warehouses w ON w.id = s.warehouse_id
              LEFT JOIN users u ON u.id = s.created_by
              $whereSql
-             ORDER BY s.created_at DESC, s.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 's.created_at DESC, s.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

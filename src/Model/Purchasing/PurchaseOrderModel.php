@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Purchasing;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\DocumentNumber;
+use Cloudexus\Core\Sort;
 
 class PurchaseOrderModel
 {
@@ -55,6 +56,15 @@ class PurchaseOrderModel
         return $stmt->fetchAll();
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'number' => 'po.po_number',
+        'supplier' => 'partner_name',
+        'date' => 'po.order_date',
+        'status' => 'po.status',
+        'total' => 'po.total_amount',
+    ];
+
     /** Filters: q (po_number), partner_id, status, date_from, date_to. */
     public function paginate(array $filters, \Cloudexus\Core\Paginator $pager): array
     {
@@ -94,7 +104,7 @@ class PurchaseOrderModel
              FROM purchase_orders po
              JOIN partners p ON p.id = po.partner_id
              $whereSql
-             ORDER BY po.order_date DESC, po.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'po.order_date DESC, po.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Purchasing;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\DocumentNumber;
+use Cloudexus\Core\Sort;
 
 class IncomingInvoiceModel
 {
@@ -56,6 +57,16 @@ class IncomingInvoiceModel
         return $stmt->fetchAll();
     }
 
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'number' => 'i.invoice_number',
+        'supplier' => 'partner_name',
+        'issue_date' => 'i.issue_date',
+        'due_date' => 'i.due_date',
+        'status' => 'i.status',
+        'amount' => 'i.total_amount',
+    ];
+
     /** Filters: q (invoice_number), partner_id, status, date_from, date_to (issue_date). */
     public function paginate(array $filters, \Cloudexus\Core\Paginator $pager): array
     {
@@ -99,7 +110,7 @@ class IncomingInvoiceModel
              FROM incoming_invoices i
              JOIN partners p ON p.id = i.partner_id
              $whereSql
-             ORDER BY i.issue_date DESC, i.id DESC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'i.issue_date DESC, i.id DESC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

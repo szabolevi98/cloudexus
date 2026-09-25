@@ -17,6 +17,7 @@
         </div>
         <div class="cx-card__body p-0">
             <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-4 col-lg-3">
                         <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
@@ -58,13 +59,13 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
-                        <th>{{ t('common.name') }}</th>
-                        <th>{{ t('partners.type') }}</th>
-                        <th>{{ t('partners.tax_number') }}</th>
-                        <th>{{ t('partners.email') }}</th>
-                        <th>{{ t('partners.phone') }}</th>
-                        <th>{{ t('partners.customer_group') }}</th>
-                        <th>{{ t('common.status') }}</th>
+                        <th {{ sort_aria('name') }}>{{ sort_link('name', t('common.name')) }}</th>
+                        <th {{ sort_aria('type') }}>{{ sort_link('type', t('partners.type')) }}</th>
+                        <th {{ sort_aria('tax_number') }}>{{ sort_link('tax_number', t('partners.tax_number')) }}</th>
+                        <th {{ sort_aria('email') }}>{{ sort_link('email', t('partners.email')) }}</th>
+                        <th {{ sort_aria('phone') }}>{{ sort_link('phone', t('partners.phone')) }}</th>
+                        <th {{ sort_aria('customer_group') }}>{{ sort_link('customer_group', t('partners.customer_group')) }}</th>
+                        <th {{ sort_aria('status') }}>{{ sort_link('status', t('common.status')) }}</th>
                         <th class="text-end">{{ t('common.actions') }}</th>
                     </tr>
                     </thead>

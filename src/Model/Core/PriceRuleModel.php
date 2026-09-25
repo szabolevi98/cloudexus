@@ -4,6 +4,7 @@ namespace Cloudexus\Model\Core;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Sort;
 use Cloudexus\Core\Translation;
 
 /**
@@ -15,6 +16,14 @@ use Cloudexus\Core\Translation;
 class PriceRuleModel
 {
     private const LIST_SELECT = "r.*, g.name AS customer_group_name, pr.sku AS product_sku";
+
+    /** Sortable columns of the list (see Sort): key => SQL expression. */
+    public const SORTS = [
+        'name' => 'r.name',
+        'customer_group' => 'customer_group_name',
+        'min_quantity' => 'r.min_quantity',
+        'status' => 'r.is_active',
+    ];
 
     /** Filters: q (név), status (active / scheduled / expired / inactive). */
     public function paginate(array $filters, Paginator $pager): array
@@ -35,7 +44,7 @@ class PriceRuleModel
              " . Translation::join('product_description', 'product_id', 'r.product_id', 'pd') . '
              ' . Translation::join('category_description', 'category_id', 'r.category_id', 'cd') . "
              $whereSql
-             ORDER BY r.is_active DESC, r.name ASC
+             ORDER BY " . Sort::orderBy(self::SORTS, 'r.is_active DESC, r.name ASC') . "
              LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);
