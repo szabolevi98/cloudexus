@@ -45,6 +45,7 @@ return [
         'price_rule' => 'Árszabály',
         'payment' => 'Befizetés',
         'product' => 'Termék',
+        'webhook' => 'Webhook',
         'partner' => 'Partner',
     ],
     'fields' => [
@@ -54,6 +55,7 @@ return [
         'token_changed' => 'Új token generálva',
         'wrong_code_changed' => 'Rossz kétlépcsős kód',
         'to' => 'Címzett',
+        'url' => 'Cím',
         'created' => 'Új',
         'bulk' => 'Tömeges művelet',
         'updated' => 'Frissítve',

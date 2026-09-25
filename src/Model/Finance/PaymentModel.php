@@ -210,6 +210,9 @@ class PaymentModel
     {
         $table = $type === self::INVOICE ? 'invoices' : 'incoming_invoices';
         $column = self::column($type);
+        $before = DatabaseConnection::get()->prepare("SELECT status FROM $table WHERE id = :id");
+        $before->execute(['id' => $documentId]);
+        $wasPaid = $before->fetchColumn() === 'paid';
         DatabaseConnection::get()->prepare(
             "UPDATE $table d
              SET d.paid_amount = (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE $column = d.id),
@@ -219,6 +222,14 @@ class PaymentModel
                      ELSE 'unpaid' END
              WHERE d.id = :id"
         )->execute(['id' => $documentId]);
+
+        // Egy vevői számla most lett kifizetve: a webshop ebből tudja, hogy mehet a csomag.
+        if ($type === self::INVOICE && !$wasPaid) {
+            $invoice = (new \Cloudexus\Model\Sales\InvoiceModel())->findById($documentId);
+            if ($invoice !== null && $invoice['status'] === 'paid') {
+                \Cloudexus\Core\Webhooks::dispatch('invoice.paid', \Cloudexus\Model\Sales\InvoiceModel::webhookData($invoice));
+            }
+        }
     }
 
     private function lockDocument(string $type, int $documentId): ?array

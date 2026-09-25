@@ -1,0 +1,103 @@
+{% extends 'common/layout.twig' %}
+
+{% set badges = {pending: 'bg-warning-subtle text-warning-emphasis', delivered: 'bg-success-subtle text-success-emphasis', failed: 'bg-danger-subtle text-danger-emphasis'} %}
+
+{% block content %}
+    <p class="mb-3"><a href="{{ base_url }}/webhooks" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ t('webhooks.title') }}</a></p>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="cx-card h-100">
+                <div class="cx-card__header">
+                    <h2>{{ hook.name }}</h2>
+                    {% if hook.is_active %}
+                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('common.active') }}</span>
+                    {% else %}
+                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">{{ t('webhooks.paused') }}</span>
+                    {% endif %}
+                </div>
+                <div class="cx-card__body">
+                    {% include 'webhooks/_form.twig' with {action: base_url ~ '/webhooks/' ~ hook.id, submit: t('common.save')} %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="cx-card h-100">
+                <div class="cx-card__header">
+                    <h2>{{ t('webhooks.signing') }}</h2>
+                </div>
+                <div class="cx-card__body">
+                    <p class="small text-muted">{{ t('webhooks.signing_help') }}</p>
+                    <label class="form-label small mb-1">{{ t('webhooks.secret') }}</label>
+                    <input type="text" class="form-control form-control-sm font-monospace mb-2" value="{{ hook.secret }}" readonly id="webhook-secret">
+                    <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/secret" onsubmit="return confirm('{{ t('webhooks.secret_confirm')|e('js') }}');" class="mb-3">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ t('webhooks.new_secret') }}</button>
+                    </form>
+                    <div class="d-flex flex-wrap gap-2 border-top pt-3">
+                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/ping">
+                            <button type="submit" class="btn btn-sm btn-outline-primary" id="webhook-ping"><i class="bi bi-broadcast me-1"></i>{{ t('webhooks.ping') }}</button>
+                        </form>
+                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/toggle">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">{{ hook.is_active ? t('webhooks.pause') : t('webhooks.resume') }}</button>
+                        </form>
+                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/delete" onsubmit="return confirm('{{ t('webhooks.delete_confirm', {name: hook.name})|e('js') }}');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('common.delete') }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('webhooks.deliveries') }}</h2>
+        </div>
+        <div class="cx-card__body p-0">
+            {% if deliveries is empty %}
+                <p class="text-muted text-center py-4 mb-0">{{ t('webhooks.no_deliveries') }}</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0" id="webhook-deliveries">
+                        <thead>
+                        <tr>
+                            <th>{{ t('webhooks.when') }}</th>
+                            <th>{{ t('webhooks.event') }}</th>
+                            <th>{{ t('common.status') }}</th>
+                            <th>{{ t('webhooks.response') }}</th>
+                            <th class="text-end">{{ t('webhooks.attempts') }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for d in deliveries %}
+                            <tr>
+                                <td class="small text-nowrap">{{ d.created_at|date('Y-m-d H:i:s') }}</td>
+                                <td>
+                                    <details>
+                                        <summary><code>{{ d.event }}</code></summary>
+                                        <pre class="small mb-0 mt-1 text-wrap">{{ d.payload }}</pre>
+                                    </details>
+                                </td>
+                                <td><span class="badge rounded-pill {{ badges[d.state] }}">{{ t('webhooks.state_' ~ d.state) }}</span></td>
+                                <td class="small">
+                                    {% if d.response_status %}HTTP {{ d.response_status }}{% endif %}
+                                    {% if d.duration_ms is not null %}<span class="text-muted">· {{ d.duration_ms }} ms</span>{% endif %}
+                                    {% if d.error %}<div class="text-danger">{{ d.error }}</div>{% endif %}
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    {{ d.attempts }}
+                                    {% if d.state == 'failed' %}
+                                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/deliveries/{{ d.id }}/retry" class="d-inline ms-2">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ t('webhooks.retry') }}</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

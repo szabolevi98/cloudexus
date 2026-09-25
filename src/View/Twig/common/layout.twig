@@ -213,6 +213,9 @@
                     <a class="cx-nav__link {{ active_menu == 'api-logs' ? 'is-active' : '' }}" href="{{ base_url }}/api-logs">
                         <i class="bi bi-list-check"></i><span>{{ t('nav.api_logs') }}</span>
                     </a>
+                    <a class="cx-nav__link {{ active_menu == 'webhooks' ? 'is-active' : '' }}" href="{{ base_url }}/webhooks">
+                        <i class="bi bi-broadcast"></i><span>{{ t('nav.webhooks') }}</span>
+                    </a>
                 {% endif %}
                 {% if can('system.api') %}
                     <a class="cx-nav__link {{ active_menu == 'api-docs' ? 'is-active' : '' }}" href="{{ base_url }}/api-docs">

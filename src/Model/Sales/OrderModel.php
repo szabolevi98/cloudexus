@@ -227,6 +227,7 @@ class OrderModel
             $this->insertItems($orderId, $items);
 
             $pdo->commit();
+            \Cloudexus\Core\Webhooks::dispatch('order.created', ['id' => $orderId, 'number' => $number, 'partner_id' => (int) $data['partner_id'], 'status' => $data['status'] ?? 'confirmed', 'total' => round($total, 2)]);
 
             return $orderId;
         } catch (\Throwable $e) {
@@ -294,7 +295,12 @@ class OrderModel
         );
         $stmt->execute(['id' => $id]);
 
-        return $stmt->rowCount() > 0;
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+        \Cloudexus\Core\Webhooks::dispatch('order.cancelled', ['id' => $id, 'number' => $this->findById($id)['order_number'] ?? null]);
+
+        return true;
     }
 
     /** Kiszámlázott, vagy számlához (akár sztornózotthoz) kötött rendelés nem módosul. */

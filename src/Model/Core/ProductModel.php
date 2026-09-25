@@ -471,6 +471,7 @@ class ProductModel
         $id = (int) DatabaseConnection::get()->lastInsertId();
         $this->saveDescriptions($id, $data);
         $this->syncRelations($id, $data);
+        \Cloudexus\Core\Webhooks::dispatch('product.changed', ['id' => $id, 'sku' => $data['sku'], 'action' => 'created']);
 
         return $id;
     }
@@ -486,6 +487,7 @@ class ProductModel
 
         $this->saveDescriptions($id, $data);
         $this->syncRelations($id, $data);
+        \Cloudexus\Core\Webhooks::dispatch('product.changed', ['id' => $id, 'sku' => $data['sku'], 'action' => 'updated']);
     }
 
     /**
@@ -528,6 +530,7 @@ class ProductModel
     public function delete(int $id): void
     {
         DatabaseConnection::get()->prepare('DELETE FROM products WHERE id = :id')->execute(['id' => $id]);
+        \Cloudexus\Core\Webhooks::dispatch('product.changed', ['id' => $id, 'action' => 'deleted']);
     }
 
     /** Looks up an active product by scanned barcode or SKU (for the vonalkód gyűjtő). */
@@ -821,6 +824,10 @@ class ProductModel
         $pdo = DatabaseConnection::get();
         $in = implode(', ', array_map('intval', $ids));
         $changed = (int) $pdo->exec("UPDATE products SET $column = " . ($value === null ? 'NULL' : (int) $value) . ", updated_at = NOW() WHERE id IN ($in)");
+
+        foreach ($ids as $productId) {
+            \Cloudexus\Core\Webhooks::dispatch('product.changed', ['id' => (int) $productId, 'action' => 'updated']);
+        }
 
         if ($column === 'category_id' && $value !== null) {
             $pdo->exec('INSERT IGNORE INTO product_categories (product_id, category_id) SELECT id, ' . (int) $value . " FROM products WHERE id IN ($in)");

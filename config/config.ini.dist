@@ -66,6 +66,12 @@ user_token_lifetime_days = 90
 ; ennyi sikertelen POST /api/auth/login után 15 percre letiltjuk az IP-t
 login_max_failures = 10
 
+[webhooks]
+; 1: a webhookok magánhálózati címre is küldhetnek (127.0.0.1, 192.168.x.x…) —
+; csak fejlesztői gépen, ami magának küld. Élesben 0: egy beírt cím így nem
+; kopogtathat a szerver belső hálózatán.
+allow_private = 0
+
 [proxy]
 ; Reverse proxy / CDN mögötti telepítéshez, hogy az API-log és a bejelentkezés-korlát a
 ; látogató valódi IP-címét lássa. Cloudflare-hez nem kell beállítás: a CF-Connecting-IP

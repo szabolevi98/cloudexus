@@ -238,6 +238,7 @@ class InvoiceModel
             }
 
             $pdo->commit();
+            \Cloudexus\Core\Webhooks::dispatch('invoice.issued', self::webhookData($this->findById($invoiceId)));
 
             return $invoiceId;
         } catch (\Throwable $e) {
@@ -318,6 +319,7 @@ class InvoiceModel
             }
 
             $pdo->commit();
+            \Cloudexus\Core\Webhooks::dispatch('invoice.stornoed', ['storno' => self::webhookData($this->findById($stornoId)), 'original_id' => $id]);
 
             return $stornoId;
         } catch (\Throwable $e) {
@@ -560,5 +562,32 @@ class InvoiceModel
     {
         DatabaseConnection::get()->prepare('UPDATE invoices SET emailed_at = NOW(), emailed_to = :to WHERE id = :id')
             ->execute(['id' => $id, 'to' => mb_substr($to, 0, 255)]);
+    }
+
+    /**
+     * Egy számla a webhookok üzenetében: amit egy webshop vagy könyvelés
+     * tudni akar róla. A részletek az API-n (GET /api/invoices/{id}).
+     *
+     * @param array<string, mixed>|null $invoice
+     * @return array<string, mixed>
+     */
+    public static function webhookData(?array $invoice): array
+    {
+        if ($invoice === null) {
+            return [];
+        }
+
+        return [
+            'id' => (int) $invoice['id'],
+            'number' => $invoice['invoice_number'],
+            'type' => $invoice['invoice_type'] ?? 'normal',
+            'status' => $invoice['status'],
+            'order_id' => $invoice['order_id'] === null ? null : (int) $invoice['order_id'],
+            'partner' => ['id' => (int) $invoice['partner_id'], 'name' => $invoice['partner_name'] ?? null],
+            'issue_date' => $invoice['issue_date'],
+            'due_date' => $invoice['due_date'],
+            'total' => round((float) $invoice['total_amount'], 2),
+            'paid' => round((float) ($invoice['paid_amount'] ?? 0), 2),
+        ];
     }
 }

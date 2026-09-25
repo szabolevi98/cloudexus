@@ -242,6 +242,7 @@ morning (the bank publishes them in the morning):
 
 ```
 * * * * *   php /path/to/cloudexus/bin/outbox.php
+* * * * *   php /path/to/cloudexus/bin/webhooks.php
 30 7 * * 1-5 php /path/to/cloudexus/bin/digest.php
 10 7 * * 1-5 php /path/to/cloudexus/bin/sync_currency_rates.php --quiet
 ```
@@ -284,6 +285,13 @@ token that acts as them, with their role's permissions.
 - Amounts are in the primary currency (`meta.currency`); the catalog's texts
   come in the language asked for with `?language=` (`meta.language`). Every
   answer and every error is JSON, in English.
+
+- **Webhooks**: a webshop or bookkeeping can be told instead of asking — new
+  and cancelled orders, invoices issued, paid and reversed, stock that moved
+  (from any path, gathered once a minute), products and partners changed. Signed
+  with HMAC-SHA256, retried when the receiver does not answer, with every
+  delivery and its answer on the webhook's page; addresses in private networks
+  are refused.
 
 The endpoints, with their requests, answers and curl examples, are in
 [web/API.md](web/API.md), and inside the application under **API → API

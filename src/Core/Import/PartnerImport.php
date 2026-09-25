@@ -115,6 +115,7 @@ final class PartnerImport extends Import
                     'address' => $data['address'] ?? null,
                     'is_active' => $data['is_active'] ?? 1,
                 ]);
+                \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => (int) $this->db->lastInsertId(), 'action' => 'created']);
                 continue;
             }
 
@@ -122,6 +123,7 @@ final class PartnerImport extends Import
             if ($columns !== []) {
                 $sets = implode(', ', array_map(static fn(string $c): string => "$c = :$c", array_keys($columns)));
                 $this->db->prepare("UPDATE partners SET $sets WHERE id = :id")->execute($columns + ['id' => (int) $row['id']]);
+                \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => (int) $row['id'], 'action' => 'updated']);
             }
         }
     }

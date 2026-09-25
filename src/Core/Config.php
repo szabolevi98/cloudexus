@@ -29,4 +29,14 @@ class Config
 
         return self::$data[$section][$name] ?? $default;
     }
+
+    /** Egy érték felülírása futás közben — a teszteknek ("szakasz.kulcs"). */
+    public static function set(string $key, mixed $value): void
+    {
+        [$section, $name] = array_pad(explode('.', $key, 2), 2, null);
+        if ($name === null) {
+            throw new \InvalidArgumentException('Config::set needs "section.key".');
+        }
+        self::$data[$section][$name] = $value;
+    }
 }

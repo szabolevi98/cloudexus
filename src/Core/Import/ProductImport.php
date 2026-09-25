@@ -189,6 +189,7 @@ final class ProductImport extends Import
             if (isset($data['category_id'])) {
                 $category->execute(['id' => $id, 'category' => $data['category_id']]);
             }
+            \Cloudexus\Core\Webhooks::dispatch('product.changed', ['id' => $id, 'sku' => $data['sku'] ?? $row['label'], 'action' => $row['action'] === 'create' ? 'created' : 'updated']);
         }
     }
 

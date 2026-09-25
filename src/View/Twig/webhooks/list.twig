@@ -1,0 +1,58 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card mb-4">
+        <div class="cx-card__header">
+            <h2>{{ t('webhooks.title') }}</h2>
+        </div>
+        <div class="cx-card__body">
+            <p class="text-muted small mb-0">{{ t('webhooks.intro') }}</p>
+        </div>
+        <div class="cx-card__body p-0">
+            {% if hooks is empty %}
+                <p class="text-muted text-center py-4 mb-0">{{ t('webhooks.none') }}</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>{{ t('webhooks.name') }}</th>
+                            <th>{{ t('webhooks.url') }}</th>
+                            <th>{{ t('webhooks.events') }}</th>
+                            <th>{{ t('webhooks.last_delivered') }}</th>
+                            <th>{{ t('common.status') }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for hook in hooks %}
+                            <tr>
+                                <td class="fw-medium"><a href="{{ base_url }}/webhooks/{{ hook.id }}" class="text-decoration-none">{{ hook.name }}</a></td>
+                                <td class="small text-break"><code>{{ hook.url }}</code></td>
+                                <td class="small">{{ hook.events == '*' ? t('webhooks.all_events') : hook.events|replace({',': ', '}) }}</td>
+                                <td class="small text-nowrap">{{ hook.last_delivered_at ? hook.last_delivered_at|date('Y-m-d H:i') : '—' }}</td>
+                                <td class="text-nowrap">
+                                    {% if hook.is_active %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('common.active') }}</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">{{ t('webhooks.paused') }}</span>
+                                    {% endif %}
+                                    {% if hook.failed > 0 %}<span class="badge rounded-pill bg-danger ms-1">{{ t('webhooks.failed_count', {count: hook.failed}) }}</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="cx-card" style="max-width: 720px;">
+        <div class="cx-card__header">
+            <h2>{{ t('webhooks.new') }}</h2>
+        </div>
+        <div class="cx-card__body">
+            {% include 'webhooks/_form.twig' with {hook: null, chosen: events, action: base_url ~ '/webhooks', submit: t('webhooks.create')} %}
+        </div>
+    </div>
+{% endblock %}

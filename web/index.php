@@ -51,6 +51,7 @@ use Cloudexus\Controller\TwoFactorController;
 use Cloudexus\Controller\UnitController;
 use Cloudexus\Controller\UserController;
 use Cloudexus\Controller\WarehouseController;
+use Cloudexus\Controller\WebhookController;
 use Cloudexus\Core\Config;
 use Cloudexus\Core\Csrf;
 use Cloudexus\Core\Router;
@@ -236,6 +237,15 @@ $router->post('/customer-groups/create', fn() => (new CustomerGroupController())
 $router->post('/customer-groups/{id}', fn($id) => (new CustomerGroupController())->update((int) $id));
 $router->post('/customer-groups/{id}/delete', fn($id) => (new CustomerGroupController())->delete((int) $id));
 
+$router->get('/webhooks', fn() => (new WebhookController())->list());
+$router->post('/webhooks', fn() => (new WebhookController())->create());
+$router->get('/webhooks/{id}', fn($id) => (new WebhookController())->show((int) $id));
+$router->post('/webhooks/{id}', fn($id) => (new WebhookController())->update((int) $id));
+$router->post('/webhooks/{id}/toggle', fn($id) => (new WebhookController())->toggle((int) $id));
+$router->post('/webhooks/{id}/secret', fn($id) => (new WebhookController())->secret((int) $id));
+$router->post('/webhooks/{id}/delete', fn($id) => (new WebhookController())->delete((int) $id));
+$router->post('/webhooks/{id}/ping', fn($id) => (new WebhookController())->ping((int) $id));
+$router->post('/webhooks/{id}/deliveries/{deliveryId}/retry', fn($id, $deliveryId) => (new WebhookController())->retry((int) $id, (int) $deliveryId));
 $router->get('/api-docs', fn() => (new ApiUserController())->docs());
 $router->get('/api-users', fn() => (new ApiUserController())->list());
 $router->get('/api-logs', fn() => (new ApiUserController())->logs());

@@ -889,3 +889,57 @@ curl -X POST -H "Authorization: Bearer <token>" -H "Content-Type: application/js
   -d '{"partner_id":12,"items":[{"product_id":1,"quantity":2,"unit_price":59990}],"shipping_cost":1490}' \
   "https://cloudexus.levente.net/api/orders"
 ```
+
+## Webhooks
+
+Instead of asking the API over and over, a program can be told when something
+happens. Webhooks are set up in the admin UI under **API → Webhooks** (by a
+role with `system.api`): a name, an address, and the events it wants. Each
+event is a `POST` of JSON to that address:
+
+```json
+{
+  "event": "invoice.paid",
+  "sent_at": "2026-09-25T18:40:12+02:00",
+  "data": { "id": 42, "number": "SZLA-2026-0042", "type": "normal", "status": "paid",
+            "order_id": 17, "partner": { "id": 5, "name": "Kovács Kft." },
+            "issue_date": "2026-09-20", "due_date": "2026-09-28", "total": 127000, "paid": 127000 }
+}
+```
+
+| Event | When | `data` |
+|---|---|---|
+| `order.created` | an order is saved, on the web or by the API | `id`, `number`, `partner_id`, `status`, `total` |
+| `order.cancelled` | an order is cancelled | `id`, `number` |
+| `invoice.issued` | an invoice is issued | the invoice, as above |
+| `invoice.paid` | an invoice's payments reach its total | the invoice, as above |
+| `invoice.stornoed` | an invoice is reversed | `storno` (the reversing invoice), `original_id` |
+| `stock.changed` | stock moved — booked on the web, by the app, by an invoice, a supplier invoice or a stocktaking | `product` (`id`, `sku`), `warehouse` (`id`, `name`), `change`, `stock_in_warehouse`, `stock_total` |
+| `product.changed` | a product is made, edited, imported or deleted | `id`, `sku` (not on delete), `action` (`created`, `updated`, `deleted`) |
+| `partner.changed` | a partner is made, edited, imported or deleted | `id`, `action` |
+
+`stock.changed` is gathered once a minute: one message per product and warehouse
+with everything that moved since the last one, and the stock as it is then. The
+rest go out within the minute too. A webhook with every event ticked also gets
+events added later; a "ping" can be sent from its page to test the address.
+
+**Headers:** `X-Cloudexus-Event` (the event), `X-Cloudexus-Delivery` (a number,
+the same on every retry of one message) and `X-Cloudexus-Signature`: `sha256=`
+and the HMAC-SHA256 of the raw body with the webhook's secret key. Check it
+before trusting the message:
+
+```php
+$body = file_get_contents('php://input');
+$expected = 'sha256=' . hash_hmac('sha256', $body, $secret);
+if (!hash_equals($expected, $_SERVER['HTTP_X_CLOUDEXUS_SIGNATURE'] ?? '')) {
+    http_response_code(401);
+    exit;
+}
+```
+
+**Answering:** any `2xx` within 8 seconds counts as delivered. Anything else — no
+answer, a timeout, a `4xx` or `5xx` — is tried again after 1, 5, 15, 60 and 240
+minutes, and then shown as failed on the webhook's page, where it can be sent
+again by hand. The same delivery may arrive twice (a timeout after the receiver
+did its work): use `X-Cloudexus-Delivery` to notice. Addresses in private
+networks (127.0.0.1, 10.x, 192.168.x, 169.254.x, …) are refused.

@@ -43,6 +43,7 @@ return [
     'languages' => 'Nyelvek',
     'api_users' => 'API felhasználók',
     'api_logs' => 'API napló',
+    'webhooks' => 'Webhookok',
     'api_docs' => 'API dokumentáció',
     'profile' => 'Profil',
     'logout' => 'Kilépés',

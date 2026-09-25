@@ -200,8 +200,10 @@ class PartnerModel
             'address' => !empty($data['address']) ? $data['address'] : null,
             'is_active' => $data['is_active'],
         ]);
+        $id = (int) DatabaseConnection::get()->lastInsertId();
+        \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => $id, 'action' => 'created']);
 
-        return (int) DatabaseConnection::get()->lastInsertId();
+        return $id;
     }
 
     public function update(int $id, array $data): void
@@ -222,11 +224,13 @@ class PartnerModel
             'address' => !empty($data['address']) ? $data['address'] : null,
             'is_active' => $data['is_active'],
         ]);
+        \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => $id, 'action' => 'updated']);
     }
 
     public function delete(int $id): void
     {
         DatabaseConnection::get()->prepare('DELETE FROM partners WHERE id = :id')->execute(['id' => $id]);
+        \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => $id, 'action' => 'deleted']);
     }
 
     /**
@@ -242,6 +246,9 @@ class PartnerModel
         }
 
         $in = implode(', ', array_map('intval', $ids));
+        foreach ($ids as $partnerId) {
+            \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => (int) $partnerId, 'action' => 'updated']);
+        }
 
         return (int) DatabaseConnection::get()->exec("UPDATE partners SET $column = " . ($value === null ? 'NULL' : (int) $value) . " WHERE id IN ($in)");
     }

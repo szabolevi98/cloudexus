@@ -1,0 +1,27 @@
+<form method="post" action="{{ action }}" id="webhook-form">
+    <div class="row">
+        <div class="col-md-5 mb-3">
+            <label for="webhook-name" class="form-label">{{ t('webhooks.name') }}</label>
+            <input type="text" id="webhook-name" name="name" class="form-control" maxlength="80" value="{{ hook.name|default('') }}" placeholder="{{ t('webhooks.name_placeholder') }}" required>
+        </div>
+        <div class="col-md-7 mb-3">
+            <label for="webhook-url" class="form-label">{{ t('webhooks.url') }}</label>
+            <input type="url" id="webhook-url" name="url" class="form-control" maxlength="500" value="{{ hook.url|default('') }}" placeholder="https://" required>
+        </div>
+    </div>
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">{{ t('webhooks.events') }}</legend>
+        <div class="row">
+            {% for event in events %}
+                <div class="col-sm-6 col-lg-4">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="event-{{ event }}" name="events[]" value="{{ event }}" {{ event in chosen ? 'checked' : '' }}>
+                        <label class="form-check-label small" for="event-{{ event }}"><code>{{ event }}</code></label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="form-text">{{ t('webhooks.events_help') }}</div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary">{{ submit }}</button>
+</form>

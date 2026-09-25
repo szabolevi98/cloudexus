@@ -45,6 +45,7 @@ return [
         'price_rule' => 'Price rule',
         'payment' => 'Payment',
         'product' => 'Product',
+        'webhook' => 'Webhook',
         'partner' => 'Partner',
     ],
     'fields' => [
@@ -54,6 +55,7 @@ return [
         'token_changed' => 'Token regenerated',
         'wrong_code_changed' => 'Wrong two-step code',
         'to' => 'To',
+        'url' => 'Address',
         'created' => 'New',
         'bulk' => 'Bulk change',
         'updated' => 'Updated',
