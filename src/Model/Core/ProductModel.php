@@ -804,4 +804,28 @@ class ProductModel
 
         return array_values($rows);
     }
+
+    /**
+     * Egy oszlop sok terméken egyszerre — a lista tömeges műveleteihez.
+     * Csak a felsorolt oszlopok írhatók. Kategóriánál a termék a kategória
+     * termékei közé is bekerül. Visszaadja, hány sor változott.
+     *
+     * @param list<int> $ids
+     */
+    public function bulkSet(array $ids, string $column, ?int $value): int
+    {
+        if ($ids === [] || !in_array($column, ['is_active', 'is_webshop', 'category_id'], true)) {
+            return 0;
+        }
+
+        $pdo = DatabaseConnection::get();
+        $in = implode(', ', array_map('intval', $ids));
+        $changed = (int) $pdo->exec("UPDATE products SET $column = " . ($value === null ? 'NULL' : (int) $value) . ", updated_at = NOW() WHERE id IN ($in)");
+
+        if ($column === 'category_id' && $value !== null) {
+            $pdo->exec('INSERT IGNORE INTO product_categories (product_id, category_id) SELECT id, ' . (int) $value . " FROM products WHERE id IN ($in)");
+        }
+
+        return $changed;
+    }
 }

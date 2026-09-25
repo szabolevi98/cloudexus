@@ -580,6 +580,21 @@ a {
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent);
 }
 
+/* A tömeges műveletek sávja csak kijelölt sorral látszik. A Bootstrap d-flex
+   osztálya !important-tal felülírná a hidden attribútumot. */
+.cx-bulk-bar[hidden] {
+    display: none !important;
+}
+
+/* Hosszú listán is kéznél: a képernyő aljához tapad, amíg a lista látszik. */
+.cx-bulk-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: var(--bs-body-bg);
+    box-shadow: 0 -6px 16px rgba(20, 24, 60, 0.08);
+}
+
 .cx-user-pill {
     display: flex;
     align-items: center;

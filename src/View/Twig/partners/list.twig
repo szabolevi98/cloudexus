@@ -4,6 +4,7 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('partners.list_title') }}</h2>
+            <div class="ms-auto me-2">{% include 'common/saved-filters.twig' with {page: 'partners'} %}</div>
             <div class="d-flex gap-2">
                 <a href="{{ base_url }}/partners/export?{{ filters|url_encode }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-download me-1"></i>{{ t('common.csv_export') }}
@@ -64,6 +65,7 @@
                 <table class="table table-hover align-middle mb-0 cx-table">
                     <thead>
                     <tr>
+                        {% if can('partners.manage') %}<th style="width:36px;"><input type="checkbox" class="form-check-input" data-bulk-all aria-label="{{ t('bulk.all') }}"></th>{% endif %}
                         <th {{ sort_aria('name') }}>{{ sort_link('name', t('common.name')) }}</th>
                         <th {{ sort_aria('type') }}>{{ sort_link('type', t('partners.type')) }}</th>
                         <th {{ sort_aria('tax_number') }}>{{ sort_link('tax_number', t('partners.tax_number')) }}</th>
@@ -77,6 +79,7 @@
                     <tbody>
                     {% for partner in partners %}
                         <tr>
+                            {% if can('partners.manage') %}<td><input type="checkbox" class="form-check-input" name="ids[]" value="{{ partner.id }}" form="bulk-form" aria-label="{{ t('bulk.tick', {name: partner.name}) }}"></td>{% endif %}
                             <td class="fw-medium"><a href="{{ base_url }}/partners/{{ partner.id }}" class="text-decoration-none">{{ partner.name }}</a></td>
                             <td>
                                 {% if partner.type == 'customer' %}
@@ -117,11 +120,29 @@
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="8" class="text-center text-muted py-4">{{ t('partners.none_found') }}</td></tr>
+                        <tr><td colspan="{{ can('partners.manage') ? 9 : 8 }}" class="text-center text-muted py-4">{{ t('partners.none_found') }}</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if can('partners.manage') and partners is not empty %}
+                <form method="post" action="{{ base_url }}/partners/bulk" id="bulk-form" class="cx-bulk-bar border-top p-3 d-flex flex-wrap align-items-center gap-2" data-bulk-bar hidden>
+                    <input type="hidden" name="back" value="{{ current_query() }}">
+                    <strong class="small" data-bulk-count data-template="{{ t('bulk.count') }}"></strong>
+                    <select name="action" class="form-select form-select-sm w-auto" aria-label="{{ t('bulk.action') }}" required>
+                        <option value="activate">{{ t('bulk.activate') }}</option>
+                        <option value="deactivate">{{ t('bulk.deactivate') }}</option>
+                        <option value="group">{{ t('bulk.set_group') }}</option>
+                    </select>
+                    <div data-bulk-for="group" hidden>
+                        <select name="customer_group_id" class="form-select form-select-sm w-auto" aria-label="{{ t('partners.customer_group') }}">
+                            <option value="0">{{ t('bulk.no_group') }}</option>
+                            {% for group in customer_groups %}<option value="{{ group.id }}">{{ group.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">{{ t('bulk.apply') }}</button>
+                </form>
+            {% endif %}
             {% include 'common/pagination.twig' %}
         </div>
     </div>

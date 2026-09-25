@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Paginator;
 use Cloudexus\Core\Permissions;
@@ -349,5 +350,33 @@ class ProductController extends BaseController
     private function defaultText(array $localized): string
     {
         return $localized[\Cloudexus\Core\Language::defaultId()] ?? '';
+    }
+
+    /** A kipipált termékek egyszerre: aktiválás, inaktiválás, webshop be/ki, kategória. */
+    public function bulk(): void
+    {
+        $this->requirePermission(Permissions::PRODUCTS_MANAGE);
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+        $action = (string) ($_POST['action'] ?? '');
+        $back = '/products' . (($_POST['back'] ?? '') !== '' ? '?' . $_POST['back'] : '');
+        [$column, $value] = match ($action) {
+            'activate' => ['is_active', 1],
+            'deactivate' => ['is_active', 0],
+            'webshop_on' => ['is_webshop', 1],
+            'webshop_off' => ['is_webshop', 0],
+            'category' => ['category_id', (int) ($_POST['category_id'] ?? 0) ?: null],
+            default => [null, null],
+        };
+
+        if ($ids === [] || $column === null || ($action === 'category' && $value === null)) {
+            $this->flashError($this->t('bulk.nothing'));
+            $this->redirect($back);
+        }
+
+        $this->products->bulkSet($ids, $column, $value);
+        AuditLog::record(AuditLog::UPDATE, 'product', null, $this->t('bulk.audit_label', ['count' => count($ids)]), ['bulk' => $this->t('bulk.' . ($action === 'category' ? 'set_category' : $action))]);
+        $this->flashSuccess($this->t('bulk.done', ['count' => count($ids)]));
+        $this->redirect($back);
     }
 }

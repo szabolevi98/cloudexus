@@ -55,6 +55,7 @@ return [
         'wrong_code_changed' => 'Rossz kétlépcsős kód',
         'to' => 'Címzett',
         'created' => 'Új',
+        'bulk' => 'Tömeges művelet',
         'updated' => 'Frissítve',
         'reset_by_admin_changed' => 'A felhasználók kezelője kapcsolta ki',
         'total' => 'Összeg',

@@ -4,6 +4,7 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('invoices.list_title') }}</h2>
+            <div class="ms-auto me-2">{% include 'common/saved-filters.twig' with {page: 'invoices'} %}</div>
             <div class="d-flex gap-2">
                 <a href="{{ base_url }}/invoices/export?{{ filters|url_encode }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-download me-1"></i>{{ t('common.csv_export') }}

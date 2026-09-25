@@ -228,4 +228,21 @@ class PartnerModel
     {
         DatabaseConnection::get()->prepare('DELETE FROM partners WHERE id = :id')->execute(['id' => $id]);
     }
+
+    /**
+     * Egy oszlop sok partneren egyszerre — a lista tömeges műveleteihez.
+     * Csak a felsorolt oszlopok írhatók. Visszaadja, hány sor változott.
+     *
+     * @param list<int> $ids
+     */
+    public function bulkSet(array $ids, string $column, ?int $value): int
+    {
+        if ($ids === [] || !in_array($column, ['is_active', 'customer_group_id'], true)) {
+            return 0;
+        }
+
+        $in = implode(', ', array_map('intval', $ids));
+
+        return (int) DatabaseConnection::get()->exec("UPDATE partners SET $column = " . ($value === null ? 'NULL' : (int) $value) . " WHERE id IN ($in)");
+    }
 }

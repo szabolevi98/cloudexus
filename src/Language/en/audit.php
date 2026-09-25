@@ -55,6 +55,7 @@ return [
         'wrong_code_changed' => 'Wrong two-step code',
         'to' => 'To',
         'created' => 'New',
+        'bulk' => 'Bulk change',
         'updated' => 'Updated',
         'reset_by_admin_changed' => 'Turned off by a user manager',
         'total' => 'Total',

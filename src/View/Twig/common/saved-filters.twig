@@ -1,0 +1,44 @@
+{#
+    Mentett szűrők egy lista szűrősorában: {% include 'common/saved-filters.twig' with {page: 'products'} %}
+    A lenyíló a lista mentett nézeteit mutatja (a sajátokat és a megosztottakat),
+    alatta a mostani szűrés elmenthető néven. A lekérdezés-részt a szerver a
+    mostani címből veszi, a lapozás nélkül.
+#}
+{% set saved = saved_filters(page) %}
+<div class="dropdown cx-saved-filters">
+    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <i class="bi bi-bookmark me-1"></i>{{ t('saved_filters.button') }}{% if saved is not empty %} <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">{{ saved|length }}</span>{% endif %}
+    </button>
+    <div class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="min-width: 300px;">
+        {% if saved is empty %}
+            <p class="small text-muted px-3 py-2 mb-0">{{ t('saved_filters.none') }}</p>
+        {% else %}
+            <ul class="list-unstyled mb-0 py-1">
+                {% for filter in saved %}
+                    <li class="d-flex align-items-center">
+                        <a class="dropdown-item flex-grow-1" href="{{ base_url }}{{ saved_filter_path(page) }}{{ filter.query ? '?' ~ filter.query : '' }}">
+                            {{ filter.name }}
+                            {% if filter.is_shared %}<i class="bi bi-people text-muted ms-1" title="{{ t('saved_filters.shared_by', {name: filter.owner_name}) }}"></i>{% endif %}
+                        </a>
+                        {% if filter.user_id == auth_user_id or can('system.settings') %}
+                            <form method="post" action="{{ base_url }}/saved-filters/{{ filter.id }}/delete" class="pe-2" onsubmit="return confirm('{{ t('saved_filters.confirm_delete', {name: filter.name})|e('js') }}');">
+                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="{{ t('saved_filters.delete') }}" aria-label="{{ t('saved_filters.delete') }}"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form method="post" action="{{ base_url }}/saved-filters" class="border-top p-3">
+            <input type="hidden" name="page" value="{{ page }}">
+            <input type="hidden" name="query" value="{{ current_query() }}">
+            <label class="form-label small mb-1" for="saved-filter-name-{{ page }}">{{ t('saved_filters.save_current') }}</label>
+            <input type="text" id="saved-filter-name-{{ page }}" name="name" class="form-control form-control-sm mb-2" maxlength="80" placeholder="{{ t('saved_filters.name_placeholder') }}" required>
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" id="saved-filter-shared-{{ page }}" name="is_shared" value="1">
+                <label class="form-check-label small" for="saved-filter-shared-{{ page }}">{{ t('saved_filters.share') }}</label>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">{{ t('common.save') }}</button>
+        </form>
+    </div>
+</div>

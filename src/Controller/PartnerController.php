@@ -2,6 +2,7 @@
 
 namespace Cloudexus\Controller;
 
+use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\CustomerGroupModel;
@@ -300,5 +301,31 @@ class PartnerController extends BaseController
             'address' => trim($_POST['address'] ?? ''),
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
         ];
+    }
+
+    /** A kipipált partnerek egyszerre: aktiválás, inaktiválás, vevőcsoport. */
+    public function bulk(): void
+    {
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
+        $action = (string) ($_POST['action'] ?? '');
+        $back = '/partners' . (($_POST['back'] ?? '') !== '' ? '?' . $_POST['back'] : '');
+        [$column, $value] = match ($action) {
+            'activate' => ['is_active', 1],
+            'deactivate' => ['is_active', 0],
+            'group' => ['customer_group_id', (int) ($_POST['customer_group_id'] ?? 0) ?: null],
+            default => [null, null],
+        };
+
+        if ($ids === [] || $column === null) {
+            $this->flashError($this->t('bulk.nothing'));
+            $this->redirect($back);
+        }
+
+        $this->partners->bulkSet($ids, $column, $value);
+        AuditLog::record(AuditLog::UPDATE, 'partner', null, $this->t('bulk.audit_label', ['count' => count($ids)]), ['bulk' => $this->t('bulk.' . ($action === 'group' ? 'set_group' : $action))]);
+        $this->flashSuccess($this->t('bulk.done', ['count' => count($ids)]));
+        $this->redirect($back);
     }
 }

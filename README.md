@@ -47,6 +47,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - Searchable, filterable, paged lists everywhere, sorted by clicking a column
   header (ascending, descending, then back to the list's own order), and
   search-as-you-type pickers for the long ones (products, categories, partners).
+  A list's filter can be **saved under a name**, for oneself or for everybody;
+  products and partners can be ticked and **changed at once** (active,
+  webshop, category, customer group).
 
 ![Price rules: who, on what, from how many, how much, and when](docs/price-rules.png)
 

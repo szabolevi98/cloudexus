@@ -4,6 +4,7 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('purchase_orders.list_title') }}</h2>
+            <div class="ms-auto me-2">{% include 'common/saved-filters.twig' with {page: 'purchase-orders'} %}</div>
             {% if can('purchasing.manage') %}
                 <a href="{{ base_url }}/purchase-orders/create" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg me-1"></i>{{ t('purchase_orders.new') }}

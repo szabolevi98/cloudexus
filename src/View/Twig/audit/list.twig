@@ -7,6 +7,7 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('audit.title') }}</h2>
+            <div class="ms-auto me-2">{% include 'common/saved-filters.twig' with {page: 'audit'} %}</div>
         </div>
         <div class="cx-card__body p-0">
             <p class="text-muted small px-3 pt-3 mb-0">{{ t('audit.intro') }}</p>

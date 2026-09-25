@@ -41,6 +41,7 @@ use Cloudexus\Controller\ProfileController;
 use Cloudexus\Controller\PurchaseOrderController;
 use Cloudexus\Controller\ReportController;
 use Cloudexus\Controller\RoleController;
+use Cloudexus\Controller\SavedFilterController;
 use Cloudexus\Controller\SettingsController;
 use Cloudexus\Controller\StockController;
 use Cloudexus\Controller\StocktakingController;
@@ -145,6 +146,8 @@ $router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode
 
 $router->get('/dashboard', fn() => (new DashboardController())->show());
 $router->get('/palette', fn() => (new PaletteController())->search());
+$router->post('/saved-filters', fn() => (new SavedFilterController())->create());
+$router->post('/saved-filters/{id}/delete', fn($id) => (new SavedFilterController())->delete((int) $id));
 
 $router->get('/profile', fn() => (new ProfileController())->show());
 $router->post('/profile', fn() => (new ProfileController())->update());
@@ -157,11 +160,13 @@ $router->post('/profile/two-factor/recovery', fn() => (new TwoFactorController()
 $router->post('/profile/two-factor/disable', fn() => (new TwoFactorController())->disable());
 
 $router->get('/products/export', fn() => (new ProductController())->export());
+$router->post('/products/bulk', fn() => (new ProductController())->bulk());
 $router->get('/import/{kind}', fn($kind) => (new ImportController())->form((string) $kind));
 $router->post('/import/{kind}', fn($kind) => (new ImportController())->preview((string) $kind));
 $router->post('/import/{kind}/confirm', fn($kind) => (new ImportController())->confirm((string) $kind));
 $router->get('/products/search', fn() => (new ProductController())->search());
 $router->get('/partners/export', fn() => (new PartnerController())->export());
+$router->post('/partners/bulk', fn() => (new PartnerController())->bulk());
 $router->get('/categories/search', fn() => (new CategoryController())->search());
 $router->get('/parameters/search', fn() => (new ParameterController())->search());
 $router->get('/partners/search', fn() => (new PartnerController())->search());

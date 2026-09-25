@@ -46,6 +46,11 @@ abstract class BaseController
         $this->twig->addFunction(new TwigFunction('sort_link', [Sort::class, 'link'], ['is_safe' => ['html']]));
         $this->twig->addFunction(new TwigFunction('sort_aria', [Sort::class, 'aria'], ['is_safe' => ['html']]));
         $this->twig->addFunction(new TwigFunction('sort_inputs', [Sort::class, 'inputs'], ['is_safe' => ['html']]));
+        // Mentett szűrők egy lista fejlécében (common/saved-filters.twig).
+        $this->twig->addFunction(new TwigFunction('saved_filters', static fn(string $page): array => Auth::id() === null ? [] : (new \Cloudexus\Model\Account\SavedFilterModel())->forPage($page, (int) Auth::id())));
+        $this->twig->addFunction(new TwigFunction('saved_filter_path', static fn(string $page): string => SavedFilterController::PAGES[$page][0] ?? '/dashboard'));
+        // A mostani cím lekérdezés-része, a lapozás nélkül — amit egy mentett szűrő eltesz.
+        $this->twig->addFunction(new TwigFunction('current_query', static fn(): string => http_build_query(array_diff_key($_GET, ['page' => true]))));
         // Az elakadt levelek száma a menüben; csak akkor kérdezi le, ha a menüpont látszik.
         $this->twig->addFunction(new TwigFunction('failed_mail_count', static fn(): int => (new \Cloudexus\Core\Outbox())->counts()['failed']));
     }
