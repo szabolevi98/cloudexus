@@ -59,6 +59,13 @@ abstract class DatabaseTestCase extends TestCase
         foreach (self::TABLES as $table) {
             $pdo->exec("TRUNCATE TABLE $table");
         }
+        // The permission matrix is base data, but some tests change it on purpose. Back to the
+        // defaults before every test: otherwise a right taken away stays gone for every later
+        // test and run, because the seeder never gives back a key it has already seen.
+        $pdo->exec('DELETE FROM role_permissions');
+        $pdo->exec('UPDATE roles SET permissions_seeded_at = NULL');
+        $pdo->exec("DELETE FROM settings WHERE setting_key = 'permissions.known'");
+        PermissionSeeder::run();
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         $_SESSION = [];
