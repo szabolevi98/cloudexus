@@ -31,6 +31,7 @@ use Cloudexus\Controller\LoginController;
 use Cloudexus\Controller\OrderController;
 use Cloudexus\Controller\ParameterController;
 use Cloudexus\Controller\PartnerController;
+use Cloudexus\Controller\PasswordResetController;
 use Cloudexus\Controller\PriceRuleController;
 use Cloudexus\Controller\PricingController;
 use Cloudexus\Controller\ProductController;
@@ -131,6 +132,10 @@ $router->get('/login', fn() => (new LoginController())->show());
 $router->post('/login', fn() => (new LoginController())->submit());
 $router->get('/login/code', fn() => (new LoginController())->showCode());
 $router->post('/login/code', fn() => (new LoginController())->submitCode());
+$router->get('/forgot-password', fn() => (new PasswordResetController())->show());
+$router->post('/forgot-password', fn() => (new PasswordResetController())->submit());
+$router->get('/reset-password/{token}', fn($token) => (new PasswordResetController())->resetForm((string) $token));
+$router->post('/reset-password/{token}', fn($token) => (new PasswordResetController())->reset((string) $token));
 $router->post('/logout', fn() => (new LoginController())->logout());
 
 $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code));

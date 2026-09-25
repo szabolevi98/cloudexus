@@ -1,45 +1,8 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}" data-bs-theme="{{ theme_mode == 'dark' ? 'dark' : 'light' }}" data-theme-mode="{{ theme_mode|default('system') }}">
-<head>
-    <meta charset="UTF-8">
-    {% include 'common/theme-head.twig' %}
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ t('auth.page_title') }} — Cloudexus</title>
-    <link rel="icon" href="{{ base_url }}/assets/favicon.svg" type="image/svg+xml">
-    <link href="{{ base_url }}/assets/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ base_url }}/assets/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ base_url }}/assets/css/app.css?v={{ asset_version }}">
-</head>
-<body class="cx-auth-body">
-<div class="cx-auth-decor"></div>
-<div class="cx-auth-wrap">
-<div class="cx-auth-card">
-    <details class="cx-auth-lang">
-        <summary class="cx-auth-lang__toggle" role="button" aria-label="{{ t('nav.language') }}" title="{{ t('nav.language') }}">
-            <i class="bi bi-translate" aria-hidden="true"></i>
-        </summary>
-        <div class="cx-auth-lang__menu">
-            {% for lang in languages %}
-                <a class="cx-auth-lang__item {{ lang.code == current_locale ? 'is-active' : '' }}" href="{{ base_url }}/lang/{{ lang.code }}" {{ lang.code == current_locale ? 'aria-current="true"' : '' }}>
-                    {{ lang.name }}
-                    {% if lang.code == current_locale %}<i class="bi bi-check2" aria-hidden="true"></i>{% endif %}
-                </a>
-            {% endfor %}
-        </div>
-    </details>
+{% extends 'common/auth-frame.twig' %}
 
-    <div class="cx-auth-card__brand">
-        <span class="cx-auth-card__brand-icon"><i class="bi bi-boxes"></i></span>
-        <span>Cloudexus</span>
-    </div>
-    <p class="cx-auth-card__subtitle">{{ code_step|default(false) ? t('auth.code_lead') : t('auth.subtitle') }}</p>
+{% block subtitle %}{{ code_step|default(false) ? t('auth.code_lead') : t('auth.subtitle') }}{% endblock %}
 
-    {% if error %}
-        <div class="alert alert-danger d-flex align-items-center py-2" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
-        </div>
-    {% endif %}
-
+{% block card %}
     {% if code_step|default(false) %}
     <form method="post" action="{{ base_url }}/login/code" novalidate>
         <input type="hidden" name="_token" value="{{ csrf_token }}">
@@ -56,66 +19,27 @@
     </form>
     <p class="text-center mt-3 mb-0 small"><a href="{{ base_url }}/login">{{ t('auth.start_again') }}</a></p>
     {% else %}
-    <form method="post" action="{{ base_url }}/login" id="login-form">
+    <form method="post" action="{{ base_url }}/login" id="login-form" data-recaptcha="login">
         <input type="hidden" name="_token" value="{{ csrf_token }}">
-        <input type="hidden" name="recaptcha_token" id="recaptcha_token">
+        <input type="hidden" name="recaptcha_token">
         <div class="mb-3">
             <label for="username" class="form-label">{{ t('auth.username') }}</label>
             <div class="input-group">
                 <span class="input-group-text bg-body"><i class="bi bi-person"></i></span>
-                <input type="text" id="username" name="username" class="form-control" required autofocus>
+                <input type="text" id="username" name="username" class="form-control" autocomplete="username" required autofocus>
             </div>
         </div>
         <div class="mb-4">
             <label for="password" class="form-label">{{ t('auth.password') }}</label>
             <div class="input-group">
                 <span class="input-group-text bg-body"><i class="bi bi-lock"></i></span>
-                <input type="password" id="password" name="password" class="form-control" required>
+                <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required>
             </div>
         </div>
         <button type="submit" class="btn btn-primary w-100 py-2" id="login-submit">{{ t('auth.sign_in') }}</button>
     </form>
+    {% if mail_enabled|default(false) %}
+        <p class="text-center mt-3 mb-0 small"><a href="{{ base_url }}/forgot-password">{{ t('auth.forgot_link') }}</a></p>
     {% endif %}
-</div>
-<p class="cx-auth-footer">Copyright &copy; {{ "now"|date("Y") }} <a href="https://github.com/szabolevi98/Cloudexus" target="_blank" rel="noopener">szabolevi98</a></p>
-</div>
-<script>
-    // A <details> alapból nyitva marad külső kattintásra és Escape-re is,
-    // ezért ezt a két lezárást pótoljuk (a topbar dropdownja is így viselkedik).
-    (function () {
-        const lang = document.querySelector('.cx-auth-lang');
-        if (!lang) return;
-
-        document.addEventListener('click', function (e) {
-            if (lang.open && !lang.contains(e.target)) lang.open = false;
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && lang.open) {
-                lang.open = false;
-                lang.querySelector('summary').focus();
-            }
-        });
-    })();
-</script>
-</body>
-{% if recaptcha_enabled|default(false) and not code_step|default(false) %}
-    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-    <script>
-        (function () {
-            const form = document.getElementById('login-form');
-            const submitBtn = document.getElementById('login-submit');
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                submitBtn.disabled = true;
-                grecaptcha.ready(function () {
-                    grecaptcha.execute('{{ recaptcha_site_key }}', {action: 'login'}).then(function (token) {
-                        document.getElementById('recaptcha_token').value = token;
-                        form.submit();
-                    });
-                });
-            });
-        })();
-    </script>
-{% endif %}
-</html>
+    {% endif %}
+{% endblock %}

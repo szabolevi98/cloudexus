@@ -25,6 +25,8 @@ return [
         'book' => 'Booking',
         'two_factor_on' => 'Two-step sign-in on',
         'two_factor_off' => 'Two-step sign-in off',
+        'password_reset_requested' => 'New password asked for',
+        'password_reset' => 'New password set',
     ],
     'entities' => [
         'user' => 'User',

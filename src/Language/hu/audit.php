@@ -25,6 +25,8 @@ return [
         'book' => 'Könyvelés',
         'two_factor_on' => 'Kétlépcsős belépés be',
         'two_factor_off' => 'Kétlépcsős belépés ki',
+        'password_reset_requested' => 'Új jelszó kérése',
+        'password_reset' => 'Új jelszó beállítva',
     ],
     'entities' => [
         'user' => 'Felhasználó',

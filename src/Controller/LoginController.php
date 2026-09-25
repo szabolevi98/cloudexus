@@ -25,6 +25,8 @@ class LoginController extends BaseController
 
         $this->render('login.twig', [
             'error' => Session::flash('login_error'),
+            'notice' => Session::flash('login_notice'),
+            'mail_enabled' => \Cloudexus\Core\Mailer::isConfigured(),
             'recaptcha_site_key' => Recaptcha::siteKey(),
             'recaptcha_enabled' => Recaptcha::enabled(),
         ]);

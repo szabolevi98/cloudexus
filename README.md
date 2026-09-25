@@ -168,6 +168,10 @@ page.
   wrong codes count towards the lock-out, and turning it off or making new
   recovery codes asks for the password again. Whoever manages the users can turn
   it off for somebody who has lost their phone.
+- **A forgotten password** is a link by email, good for an hour and once; the
+  answer never says whether the user exists, five requests per address per
+  quarter of an hour, and the new password signs the warehouse app out
+  everywhere. Without email the page says to ask an administrator.
 - Every page and every API call checks its permission on the server; the
   interface hiding a button is a convenience, never the gate.
 - Nosniff, same-origin framing, a strict referrer policy, a Content-Security-Policy
@@ -205,10 +209,15 @@ after an update, `php bin/clear_cache.php` empties it (`--logs`, `--sessions`
 or `--all` for more). The built stylesheet is committed: after changing its
 sources under `src/View/Css`, `php bin/build_css.php` builds it again.
 
-The exchange rates, every weekday morning (the bank publishes them in the
-morning):
+Email — invoices to customers, forgotten passwords — goes through a queue that
+a job sends every minute; `[mail] transport` in config.ini chooses PHP's
+`mail()`, an SMTP server, `.eml` files in `var/mail` (for development) or none.
+What the mail server refuses is tried again, and in the end shows up on
+**Settings → Email** with the reason. And the exchange rates, every weekday
+morning (the bank publishes them in the morning):
 
 ```
+* * * * *   php /path/to/cloudexus/bin/outbox.php
 10 7 * * 1-5 php /path/to/cloudexus/bin/sync_currency_rates.php --quiet
 ```
 

@@ -43,6 +43,7 @@ jobs:
           sed -e 's/^password =$/password = root/' \
               -e 's/^name = cloudexus$/name = cloudexus_ci/' \
               -e 's|^base_url = .*|base_url = "http://127.0.0.1:8080"|' \
+              -e 's/^transport = none$/transport = file/' \
               config/config.ini.dist > config/config.ini
           sed 's/^name = cloudexus_ci$/name = cloudexus_test/' config/config.ini > config/test.ini
           mysql -h 127.0.0.1 -u root -proot -e "CREATE DATABASE cloudexus_ci CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE cloudexus_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
