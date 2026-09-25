@@ -54,6 +54,8 @@ class PaletteController extends BaseController
         ['nav.incoming_invoices', '/incoming-invoices', Permissions::PURCHASING_VIEW],
         ['nav.cash', '/cash', Permissions::CASH_VIEW],
         ['nav.aging', '/reports/aging', Permissions::CASH_VIEW],
+        ['palette.new_deal', '/deals/create', Permissions::CRM_MANAGE],
+        ['nav.deals', '/deals', Permissions::CRM_VIEW],
         ['nav.todos', '/todos', Permissions::CRM_VIEW],
         ['nav.users', '/users', Permissions::USERS_MANAGE],
         ['nav.audit', '/audit', Permissions::AUDIT_VIEW],
@@ -153,6 +155,14 @@ class PaletteController extends BaseController
                 'SELECT q.id, q.quote_number, p.name AS partner FROM quotes q JOIN partners p ON p.id = q.partner_id
                  WHERE q.quote_number LIKE :q1 OR p.name LIKE :q2 OR p.tax_number LIKE :q3 ORDER BY q.id DESC' . $limit,
                 fn(array $r): array => ['label' => (string) $r['quote_number'], 'hint' => (string) $r['partner'], 'url' => '/quotes/' . $r['id']]
+            );
+        }
+        if (Acl::can(Permissions::CRM_VIEW)) {
+            $add(
+                $this->t('palette.deals'),
+                "SELECT d.id, d.title, p.name AS partner FROM deals d JOIN partners p ON p.id = d.partner_id
+                 WHERE d.title LIKE :q1 OR p.name LIKE :q2 OR p.tax_number LIKE :q3 ORDER BY d.stage IN ('won', 'lost'), d.id DESC" . $limit,
+                fn(array $r): array => ['label' => (string) $r['title'], 'hint' => (string) $r['partner'], 'url' => '/deals/' . $r['id']]
             );
         }
         if (Acl::can(Permissions::PURCHASING_VIEW)) {

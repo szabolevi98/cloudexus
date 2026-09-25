@@ -16,6 +16,8 @@ return [
     'incoming_invoices' => 'Supplier invoices',
     'new_invoice' => 'New invoice',
     'new_order' => 'New sales order',
+    'deals' => 'Deals',
+    'new_deal' => 'New deal',
     'new_quote' => 'New quote',
     'new_product' => 'New product',
     'new_partner' => 'New partner',

@@ -21,6 +21,7 @@ use Cloudexus\Controller\CategoryController;
 use Cloudexus\Controller\CurrencyController;
 use Cloudexus\Controller\CustomerGroupController;
 use Cloudexus\Controller\DashboardController;
+use Cloudexus\Controller\DealController;
 use Cloudexus\Controller\EmailController;
 use Cloudexus\Controller\ImportController;
 use Cloudexus\Controller\IncomingInvoiceController;
@@ -276,6 +277,14 @@ $router->get('/stocktaking/create', fn() => (new StocktakingController())->creat
 $router->post('/stocktaking/create', fn() => (new StocktakingController())->create());
 $router->get('/stocktaking/{id}', fn($id) => (new StocktakingController())->show((int) $id));
 
+$router->get('/deals', fn() => (new DealController())->list());
+$router->get('/deals/create', fn() => (new DealController())->createForm());
+$router->post('/deals/create', fn() => (new DealController())->create());
+$router->get('/deals/{id}', fn($id) => (new DealController())->show((int) $id));
+$router->get('/deals/{id}/edit', fn($id) => (new DealController())->editForm((int) $id));
+$router->post('/deals/{id}', fn($id) => (new DealController())->update((int) $id));
+$router->post('/deals/{id}/move', fn($id) => (new DealController())->move((int) $id));
+$router->post('/deals/{id}/delete', fn($id) => (new DealController())->delete((int) $id));
 $router->get('/todos', fn() => (new TodoController())->list());
 $router->post('/todos/create', fn() => (new TodoController())->create());
 $router->post('/todos/{id}/toggle', fn($id) => (new TodoController())->toggle((int) $id));

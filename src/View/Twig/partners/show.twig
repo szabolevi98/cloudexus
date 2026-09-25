@@ -177,6 +177,34 @@
             {% for a in activities %}{% set activityById = activityById|merge({('a' ~ a.id): a}) %}{% endfor %}
             {% set kindIcons = {order: 'bi-cart-check', quote: 'bi-file-earmark-text', invoice: 'bi-receipt', payment: 'bi-cash-coin', todo: 'bi-check2-square'} %}
             {% set kindUrls = {order: '/orders/', quote: '/quotes/', invoice: '/invoices/'} %}
+            {% if deals is not null %}
+                <div class="cx-card mb-3" id="partner-deals">
+                    <div class="cx-card__header">
+                        <h2>{{ t('deals.partner_deals') }}</h2>
+                        {% if can('crm.manage') %}
+                            <a href="{{ base_url }}/deals/create?partner_id={{ partner.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>{{ t('deals.new') }}</a>
+                        {% endif %}
+                    </div>
+                    {% if deals is empty %}
+                        <div class="cx-card__body text-muted small">{{ t('deals.partner_none') }}</div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table cx-table align-middle mb-0">
+                                <tbody>
+                                {% for d in deals %}
+                                    <tr>
+                                        <td><a href="{{ base_url }}/deals/{{ d.id }}">{{ d.title }}</a>{% if d.owner_name %}<div class="small text-muted">{{ d.owner_name }}</div>{% endif %}</td>
+                                        <td class="text-nowrap"><span class="badge rounded-pill {{ d.stage == 'won' ? 'text-bg-success' : (d.stage == 'lost' ? 'bg-danger-subtle text-danger-emphasis' : 'bg-primary-subtle text-primary-emphasis') }}">{{ t('deals.stage.' ~ d.stage) }}</span></td>
+                                        <td class="text-end text-nowrap">{{ d.amount|money }}{% if d.is_open %}<div class="small text-muted">{{ d.chance }}%</div>{% endif %}</td>
+                                        <td class="text-end text-nowrap small {{ d.is_late ? 'text-danger' : 'text-muted' }}">{{ d.is_open ? d.expected_close : '' }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             <div class="cx-card mb-3">
                 <div class="cx-card__header">
                     <h2>{{ t('partners.timeline') }}</h2>

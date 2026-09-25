@@ -311,4 +311,127 @@
         fill();
     })();
 
+    // Értékesítési tábla: az üzletek húzása szakaszok között és oszlopon belül.
+    // Az elvesztett oszlopba ejtve előbb az okot kéri; mégsével visszaugrik.
+    (function () {
+        var board = document.getElementById('deal-board');
+        if (!board || board.dataset.draggable !== '1') return;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var modalEl = document.getElementById('deal-lost-modal');
+        var modal = modalEl && window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+        var drag = null;
+        var pending = null;
+
+        var cardBelow = function (list, y) {
+            var cards = Array.prototype.filter.call(list.querySelectorAll('.cx-deal'), function (c) { return !drag || c !== drag.card; });
+            for (var i = 0; i < cards.length; i++) {
+                var box = cards[i].getBoundingClientRect();
+                if (y < box.top + box.height / 2) return cards[i];
+            }
+            return null;
+        };
+        var putBack = function (move) {
+            move.from.insertBefore(move.card, move.next && move.next.parentNode === move.from ? move.next : null);
+        };
+        var send = function (move, reason) {
+            var column = move.card.closest('[data-stage]');
+            var body = new FormData();
+            body.append('_token', meta ? meta.content : '');
+            body.append('stage', column.dataset.stage);
+            body.append('q', board.dataset.q || '');
+            body.append('owner', board.dataset.owner || '');
+            column.querySelectorAll('.cx-deal').forEach(function (c) { body.append('order[]', c.dataset.id); });
+            if (reason) body.append('reason', reason);
+            fetch(board.dataset.url + move.card.dataset.id + '/move', {method: 'POST', body: body, credentials: 'same-origin', headers: {Accept: 'application/json'}})
+                .then(function (r) { return r.json().then(function (data) { if (!r.ok || !data.ok) throw new Error('move'); return data; }); })
+                .then(function (data) {
+                    Object.keys(data.board).forEach(function (stage) {
+                        var col = board.querySelector('[data-stage="' + stage + '"]');
+                        if (!col) return;
+                        ['count', 'amount', 'weighted'].forEach(function (key) {
+                            var el = col.querySelector('[data-col="' + key + '"]');
+                            if (el) el.textContent = data.board[stage][key];
+                        });
+                    });
+                    var totals = document.getElementById('deal-totals');
+                    if (totals) totals.textContent = data.summary;
+                    var chance = move.card.querySelector('[data-chance]');
+                    if (chance) {
+                        chance.textContent = data.deal.chance + '%';
+                        chance.hidden = !data.deal.is_open;
+                    }
+                    if (!data.deal.is_open) move.card.classList.remove('is-late');
+                })
+                .catch(function () {
+                    window.alert(board.dataset.tFailed);
+                    window.location.reload();
+                });
+        };
+
+        board.addEventListener('dragstart', function (e) {
+            var card = e.target.closest ? e.target.closest('.cx-deal') : null;
+            if (!card) return;
+            drag = {card: card, from: card.parentNode, next: card.nextElementSibling, stage: card.closest('[data-stage]').dataset.stage};
+            card.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', card.dataset.id);
+        });
+        board.addEventListener('dragend', function () {
+            // Táblán kívül elengedve nincs drop: vissza a helyére.
+            if (drag) {
+                drag.card.classList.remove('is-dragging');
+                putBack(drag);
+                drag = null;
+            }
+            board.querySelectorAll('.is-over').forEach(function (l) { l.classList.remove('is-over'); });
+        });
+        board.addEventListener('dragover', function (e) {
+            if (!drag) return;
+            var column = e.target.closest ? e.target.closest('[data-stage]') : null;
+            if (!column) return;
+            e.preventDefault();
+            // Keskeny képernyőn a tábla görög, ha a széléhez viszik a kártyát.
+            var edge = board.getBoundingClientRect();
+            if (e.clientX > edge.right - 60) board.scrollLeft += 18;
+            else if (e.clientX < edge.left + 60) board.scrollLeft -= 18;
+            var list = column.querySelector('[data-list]');
+            board.querySelectorAll('.is-over').forEach(function (l) { if (l !== list) l.classList.remove('is-over'); });
+            list.classList.add('is-over');
+            var below = cardBelow(list, e.clientY);
+            if (below !== drag.card) list.insertBefore(drag.card, below);
+        });
+        board.addEventListener('drop', function (e) {
+            if (!drag) return;
+            e.preventDefault();
+            var move = drag;
+            drag = null;
+            move.card.classList.remove('is-dragging');
+            board.querySelectorAll('.is-over').forEach(function (l) { l.classList.remove('is-over'); });
+            var stage = move.card.closest('[data-stage]').dataset.stage;
+            if (stage === 'lost' && move.stage !== 'lost') {
+                if (!modal) { putBack(move); return; }
+                pending = move;
+                document.getElementById('deal-lost-reason').value = '';
+                modal.show();
+                return;
+            }
+            send(move, null);
+        });
+
+        if (modalEl) {
+            modalEl.addEventListener('shown.bs.modal', function () { document.getElementById('deal-lost-reason').focus(); });
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (pending) { putBack(pending); pending = null; }
+            });
+            document.getElementById('deal-lost-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var reason = document.getElementById('deal-lost-reason').value.trim();
+                if (!reason || !pending) return;
+                var move = pending;
+                pending = null;
+                modal.hide();
+                send(move, reason);
+            });
+        }
+    })();
 })();

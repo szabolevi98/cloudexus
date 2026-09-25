@@ -1253,3 +1253,108 @@ a {
     font-size: 1rem;
     color: var(--bs-body-color);
 }
+
+/* Értékesítési tábla: szakaszonként egy oszlop, vízszintesen görgethető. */
+.cx-board {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(165px, 1fr);
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    align-items: start;
+}
+
+.cx-board__column {
+    background: var(--cx-surface);
+    border: 1px solid var(--cx-border);
+    border-top: 3px solid var(--cx-muted);
+    border-radius: var(--cx-radius);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+.cx-board__column--qualified { border-top-color: #3aa0d8; }
+.cx-board__column--proposal { border-top-color: var(--cx-primary); }
+.cx-board__column--negotiation { border-top-color: var(--cx-warning); }
+.cx-board__column--won { border-top-color: var(--cx-success); }
+.cx-board__column--lost { border-top-color: var(--cx-danger); }
+
+.cx-board__head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--cx-border);
+}
+
+.cx-board__head h3 {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cx-board__list {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 80px;
+}
+
+.cx-board__list:not(:has(.cx-deal))::after {
+    content: attr(data-empty);
+    color: var(--cx-muted);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 18px 6px;
+    border: 1px dashed var(--cx-border);
+    border-radius: var(--cx-radius-sm);
+}
+
+.cx-board__list.is-over {
+    background: var(--cx-primary-soft);
+    border-radius: var(--cx-radius-sm);
+}
+
+.cx-board__add {
+    display: block;
+    padding: 8px 14px 12px;
+    font-size: 0.82rem;
+    color: var(--cx-muted);
+    text-decoration: none;
+}
+
+.cx-board__add:hover {
+    color: var(--cx-primary);
+}
+
+.cx-deal {
+    background: var(--cx-bg);
+    border: 1px solid var(--cx-border);
+    border-radius: var(--cx-radius-sm);
+    padding: 10px 12px;
+}
+
+.cx-deal[draggable="true"] {
+    cursor: grab;
+}
+
+.cx-deal.is-dragging {
+    opacity: 0.45;
+}
+
+.cx-deal.is-late {
+    border-left: 3px solid var(--cx-danger);
+}
+
+.cx-deal__title {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--cx-text);
+    text-decoration: none;
+}
+
+.cx-deal__title:hover {
+    color: var(--cx-primary);
+}

@@ -150,6 +150,11 @@
             {% if can_any('crm.view') %}
                 <div class="cx-nav__group-label">{{ t('nav.groups.crm') }}</div>
                 {% if can('crm.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'deals' ? 'is-active' : '' }}" href="{{ base_url }}/deals">
+                        <i class="bi bi-kanban"></i><span>{{ t('nav.deals') }}</span>
+                    </a>
+                {% endif %}
+                {% if can('crm.view') %}
                     <a class="cx-nav__link {{ active_menu == 'todos' ? 'is-active' : '' }}" href="{{ base_url }}/todos">
                         <i class="bi bi-check2-square"></i><span>{{ t('nav.todos') }}</span>
                     </a>

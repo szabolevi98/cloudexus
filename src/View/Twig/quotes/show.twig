@@ -13,8 +13,9 @@
             </div>
             {% include 'quotes/_status.twig' with {status: quote.effective_status} %}
         </div>
-        {% if quote.order_id or quote.rejection_reason or quote.sent_at %}
+        {% if quote.order_id or quote.rejection_reason or quote.sent_at or deal %}
             <div class="cx-card__body border-bottom small">
+                {% if deal %}<div><i class="bi bi-kanban me-1"></i>{{ t('deals.for_deal') }} <a href="{{ base_url }}/deals/{{ deal.id }}">{{ deal.title }}</a></div>{% endif %}
                 {% if quote.order_id %}<div><i class="bi bi-cart-check me-1"></i>{{ t('quotes.became_order') }} <a href="{{ base_url }}/orders/{{ quote.order_id }}">{{ quote.order_number }}</a></div>{% endif %}
                 {% if quote.rejection_reason %}<div class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ t('quotes.rejection_reason') }}: {{ quote.rejection_reason }}</div>{% endif %}
                 {% if quote.sent_at %}<div class="text-muted"><i class="bi bi-envelope-check me-1"></i>{{ t('quotes.sent_at', {date: quote.sent_at|date('Y-m-d H:i')}) }}{% if quote.emailed_to %} · {{ quote.emailed_to }}{% endif %}</div>{% endif %}

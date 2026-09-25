@@ -32,6 +32,7 @@ return [
     'incoming_invoices' => 'Incoming invoices',
     'cash' => 'Cash voucher',
     'aging' => 'Open items',
+    'deals' => 'Pipeline',
     'todos' => 'To-dos',
     'users' => 'Users',
     'roles' => 'Permissions',

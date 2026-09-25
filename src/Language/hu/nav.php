@@ -32,6 +32,7 @@ return [
     'incoming_invoices' => 'Bejövő számlák',
     'cash' => 'Pénztárbizonylat',
     'aging' => 'Nyitott tételek',
+    'deals' => 'Értékesítés',
     'todos' => 'Teendők',
     'users' => 'Felhasználók',
     'roles' => 'Jogosultságok',

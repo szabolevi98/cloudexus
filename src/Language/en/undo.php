@@ -8,5 +8,6 @@ return [
     'product' => 'the product {name}',
     'partner' => '{name}',
     'price_rule' => 'the price rule “{name}”',
+    'deal' => 'the deal “{title}”',
     'todo' => 'the to-do',
 ];

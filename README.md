@@ -89,6 +89,12 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ### Sales
 
+- **A sales pipeline** of deals on a board, one column per stage (lead,
+  qualified, proposal, negotiation, won, lost), moved by dragging. Each deal
+  has a value, a probability (the stage's by default), an expected close date
+  and an owner; each column shows its total and its weighted total. A deal is
+  only marked lost with the reason. A quote made from a deal moves it to the
+  proposal stage, and the order made from that quote wins it.
 - **Quotes** before the orders: the same line items and pricing (group
   prices, price rules, VAT per line), a validity date and a note for the
   customer, a PDF and sending by email, accepted or rejected (with the

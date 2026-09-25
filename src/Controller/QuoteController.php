@@ -64,6 +64,7 @@ class QuoteController extends BaseController
             'valid_until' => date('Y-m-d', strtotime('+' . QuoteModel::VALID_DAYS . ' days')),
             'partner_option' => $partnerId ? (new PartnerModel())->labelsForIds([$partnerId]) : [],
             'prefill' => [],
+            'deal_id' => (int) ($_GET['deal_id'] ?? 0),
         ]);
     }
 
@@ -73,6 +74,11 @@ class QuoteController extends BaseController
 
         [$data, $items] = $this->input('/quotes/create');
         $id = $this->quotes->create($data + ['created_by' => Auth::id()], $items);
+        // Egy üzletből indított ajánlat az üzlethez kötődik.
+        $dealId = (int) ($_POST['deal_id'] ?? 0);
+        if ($dealId > 0 && \Cloudexus\Core\Acl::can(Permissions::CRM_MANAGE)) {
+            (new \Cloudexus\Model\Crm\DealModel())->attachQuote($dealId, $id);
+        }
         $quote = $this->quotes->findById($id);
         AuditLog::record(AuditLog::CREATE, 'quote', $id, $quote['quote_number'] ?? null, ['total' => \Cloudexus\Core\Currency::format((float) ($quote['total_amount'] ?? 0))]);
 
@@ -89,6 +95,7 @@ class QuoteController extends BaseController
         $this->pageTitle = $this->t('quotes.title_prefix') . ': ' . $quote['quote_number'];
         $this->render('quotes/show.twig', [
             'quote' => $quote,
+            'deal' => \Cloudexus\Core\Acl::can(Permissions::CRM_VIEW) ? (new \Cloudexus\Model\Crm\DealModel())->findByQuote($id) : null,
             'mail_enabled' => Mailer::isConfigured(),
             'email_to' => $quote['emailed_to'] ?: (new \Cloudexus\Model\Core\PartnerContactModel())->recipientFor((int) $quote['partner_id'], false, $quote['partner_email']),
             'recipients' => array_values(array_filter((new \Cloudexus\Model\Core\PartnerContactModel())->forPartner((int) $quote['partner_id']), static fn(array $c): bool => (string) $c['email'] !== '')),

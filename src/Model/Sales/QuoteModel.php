@@ -250,6 +250,8 @@ class QuoteModel
         $pdo = DatabaseConnection::get();
         $pdo->prepare('UPDATE orders SET quote_id = :quote WHERE id = :order')->execute(['quote' => $id, 'order' => $orderId]);
         $pdo->prepare("UPDATE quotes SET status = 'ordered', order_id = :order WHERE id = :id")->execute(['order' => $orderId, 'id' => $id]);
+        // Az ajánlathoz kötött üzlet ezzel megnyerve.
+        \Cloudexus\Model\Crm\DealModel::winFromQuote($id, $orderId);
 
         return $orderId;
     }

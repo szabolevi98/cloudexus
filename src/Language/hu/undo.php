@@ -8,5 +8,6 @@ return [
     'product' => 'a(z) {name} termék',
     'partner' => '{name}',
     'price_rule' => 'a(z) „{name}” árszabály',
+    'deal' => 'a(z) „{title}” üzlet',
     'todo' => 'a teendő',
 ];

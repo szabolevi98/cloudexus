@@ -1,0 +1,103 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card mb-3">
+        <div class="cx-card__header flex-wrap gap-2">
+            <div>
+                <h2>{{ t('deals.title') }}</h2>
+                <div class="text-muted small" id="deal-totals">
+                    {{ t('deals.open_totals', {count: totals.count, amount: totals.amount|money, weighted: totals.weighted|money}) }}
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <form method="get" class="d-flex flex-wrap gap-2">
+                    <input type="search" name="q" class="form-control form-control-sm" style="width: 200px;" value="{{ filters.q }}" placeholder="{{ t('deals.search') }}" aria-label="{{ t('deals.search') }}">
+                    <select name="owner" class="form-select form-select-sm" style="width: auto;" data-autosubmit aria-label="{{ t('deals.owner') }}">
+                        <option value="">{{ t('deals.everyone') }}</option>
+                        <option value="me" {{ filters.owner == 'me' ? 'selected' : '' }}>{{ t('deals.mine') }}</option>
+                        {% for u in users %}
+                            <option value="{{ u.id }}" {{ filters.owner == u.id ~ '' ? 'selected' : '' }}>{{ u.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i><span class="visually-hidden">{{ t('common.filter') }}</span></button>
+                </form>
+                {% if can('crm.manage') %}
+                    <a href="{{ base_url }}/deals/create" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>{{ t('deals.new') }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="cx-board" id="deal-board"
+         data-url="{{ base_url }}/deals/"
+         data-q="{{ filters.q }}" data-owner="{{ filters.owner }}"
+         data-draggable="{{ can('crm.manage') ? '1' : '0' }}" data-t-failed="{{ t('deals.move_failed') }}">
+        {% for stage, column in board %}
+            <section class="cx-board__column cx-board__column--{{ stage }}" data-stage="{{ stage }}" aria-labelledby="stage-{{ stage }}">
+                <header class="cx-board__head">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 id="stage-{{ stage }}">{{ t('deals.stage.' ~ stage) }}</h3>
+                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis" data-col="count">{{ column.count }}</span>
+                    </div>
+                    <div class="small">
+                        <span class="fw-semibold" data-col="amount">{{ column.amount|money }}</span>
+                        {% if stage in ['lead', 'qualified', 'proposal', 'negotiation'] %}
+                            <span class="text-muted">· {{ t('deals.weighted') }} <span data-col="weighted">{{ column.weighted|money }}</span></span>
+                        {% else %}
+                            <span class="text-muted">· {{ t('deals.last_days', {days: closed_days}) }}</span>
+                        {% endif %}
+                    </div>
+                </header>
+                <div class="cx-board__list" data-list data-empty="{{ t('deals.empty_column') }}">
+                    {% for deal in column.deals %}
+                        <article class="cx-deal{{ deal.is_late ? ' is-late' : '' }}" data-id="{{ deal.id }}" {% if can('crm.manage') %}draggable="true"{% endif %}>
+                            <a href="{{ base_url }}/deals/{{ deal.id }}" class="cx-deal__title">{{ deal.title }}</a>
+                            <div class="small text-muted text-truncate">{{ deal.partner_name }}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-2 small">
+                                <span class="fw-semibold">{{ deal.amount|money }}</span>
+                                <span class="text-muted" title="{{ t('deals.probability') }}" data-chance {{ deal.is_open ? '' : 'hidden' }}>{{ deal.chance }}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1 small text-muted gap-2">
+                                <span class="text-truncate">{% if deal.owner_name %}<i class="bi bi-person me-1"></i>{{ deal.owner_name }}{% endif %}</span>
+                                {% if stage == 'lost' and deal.lost_reason %}
+                                    <span class="text-danger text-truncate" title="{{ deal.lost_reason }}">{{ deal.lost_reason }}</span>
+                                {% elseif deal.expected_close and deal.is_open %}
+                                    <span class="text-nowrap {{ deal.is_late ? 'text-danger fw-medium' : '' }}" title="{{ t('deals.expected_close') }}"><i class="bi bi-calendar-event me-1"></i>{{ deal.expected_close }}</span>
+                                {% endif %}
+                            </div>
+                            {% if deal.quote_number or deal.order_number %}
+                                <div class="mt-1 small">
+                                    {% if deal.order_number %}<span class="badge text-bg-success">{{ deal.order_number }}</span>{% elseif deal.quote_number %}<span class="badge bg-primary-subtle text-primary-emphasis">{{ deal.quote_number }}</span>{% endif %}
+                                </div>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+                {% if can('crm.manage') and stage in ['lead', 'qualified', 'proposal', 'negotiation'] %}
+                    <a href="{{ base_url }}/deals/create?stage={{ stage }}" class="cx-board__add"><i class="bi bi-plus-lg me-1"></i>{{ t('deals.add_here') }}</a>
+                {% endif %}
+            </section>
+        {% endfor %}
+    </div>
+
+    {% if can('crm.manage') %}
+        <div class="modal fade" id="deal-lost-modal" tabindex="-1" aria-labelledby="deal-lost-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <form class="modal-content" id="deal-lost-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deal-lost-title">{{ t('deals.lose_title') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('common.cancel') }}"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="deal-lost-reason" class="form-label">{{ t('deals.lost_reason') }}</label>
+                        <input type="text" id="deal-lost-reason" class="form-control" maxlength="255" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ t('common.cancel') }}</button>
+                        <button type="submit" class="btn btn-danger">{{ t('deals.lose') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

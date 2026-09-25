@@ -16,6 +16,8 @@ return [
     'incoming_invoices' => 'Bejövő számlák',
     'new_invoice' => 'Új számla',
     'new_order' => 'Új vevői rendelés',
+    'deals' => 'Üzletek',
+    'new_deal' => 'Új üzlet',
     'new_quote' => 'Új árajánlat',
     'new_product' => 'Új termék',
     'new_partner' => 'Új partner',

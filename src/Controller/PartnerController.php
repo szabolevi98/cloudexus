@@ -58,6 +58,7 @@ class PartnerController extends BaseController
             'kpis' => $overview->kpis($id),
             'timeline' => $overview->timeline($id),
             'top_products' => $overview->topProducts($id),
+            'deals' => \Cloudexus\Core\Acl::can(Permissions::CRM_VIEW) ? (new \Cloudexus\Model\Crm\DealModel())->forPartner($id) : null,
         ]);
     }
 

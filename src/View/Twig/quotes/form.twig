@@ -7,6 +7,7 @@
         </div>
         <div class="cx-card__body">
             <form method="post" action="{{ base_url }}/quotes/{{ quote ? quote.id : 'create' }}" id="quote-form">
+                {% if deal_id|default(0) %}<input type="hidden" name="deal_id" value="{{ deal_id }}">{% endif %}
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">{{ t('quotes.number') }}</label>
