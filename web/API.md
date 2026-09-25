@@ -72,6 +72,18 @@ A missing or invalid token returns `401`:
 - A wrong username or password returns `401` (the message does not say which was wrong).
   After 10 failed attempts from one IP address within 15 minutes, further attempts return
   `429` until the window passes.
+- When the user has turned on two-step sign-in (on their profile in the web UI), the
+  password alone gets no token. Send the six-digit code from their authenticator app, or
+  one of their recovery codes, as `code` in the same body:
+
+  ```json
+  { "username": "kovacs.anna", "password": "••••••••", "code": "492 817" }
+  ```
+
+  Without `code` the answer is `403` with `"details": { "two_factor_required": true }`,
+  so an app can ask for the code and send the request again; this does not count as a
+  failed attempt. A wrong code is `401` with the same flag, and counts like a wrong
+  password. A code works once.
 - A user token stops working as soon as its user is deactivated, and changing the user's
   password signs them out on every device.
 - `GET /api/auth/me` and `POST /api/auth/logout` return `403` when called with an

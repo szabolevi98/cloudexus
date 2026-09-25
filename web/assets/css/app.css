@@ -1106,3 +1106,47 @@ a {
 .cx-audit-details code {
     font-size: 0.72rem;
 }
+
+/* Kétlépcsős belépés: a QR-kód, a kézzel beírható kulcs és a helyreállító kódok. */
+
+/* Fehér alapon a sötét témában is, mert a telefon kamerája a sötét modulokat keresi világos alapon. */
+.cx-qr {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 12px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    background: #fff;
+    line-height: 0;
+}
+
+.cx-qr svg {
+    width: 200px;
+    height: 200px;
+}
+
+.cx-secret-key {
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    word-break: break-all;
+}
+
+.cx-code-input {
+    font-family: var(--bs-font-monospace);
+    font-size: 1.15rem;
+    letter-spacing: 0.15em;
+}
+
+.cx-recovery-codes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cx-recovery-codes code {
+    font-size: 1rem;
+    color: var(--bs-body-color);
+}

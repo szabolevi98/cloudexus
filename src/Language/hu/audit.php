@@ -23,6 +23,8 @@ return [
         'storno' => 'Sztornó',
         'paid' => 'Kifizetve',
         'book' => 'Könyvelés',
+        'two_factor_on' => 'Kétlépcsős belépés be',
+        'two_factor_off' => 'Kétlépcsős belépés ki',
     ],
     'entities' => [
         'user' => 'Felhasználó',
@@ -44,6 +46,8 @@ return [
         'active' => 'Aktív',
         'password_changed' => 'Jelszó módosítva',
         'token_changed' => 'Új token generálva',
+        'wrong_code_changed' => 'Rossz kétlépcsős kód',
+        'reset_by_admin_changed' => 'A felhasználók kezelője kapcsolta ki',
         'total' => 'Összeg',
         'number' => 'Szám',
         'storno_of' => 'Eredeti számla',

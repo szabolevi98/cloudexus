@@ -1,8 +1,9 @@
 {
     "require": {
         "php": ">=8.4",
-        "twig/twig": "^3.21",
-        "phpmailer/phpmailer": "^6.10"
+        "bacon/bacon-qr-code": "^3.0",
+        "phpmailer/phpmailer": "^6.10",
+        "twig/twig": "^3.21"
     },
     "autoload": {
         "psr-4": {

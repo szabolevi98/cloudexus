@@ -24,11 +24,14 @@ final class AuditLog
     public const STORNO = 'storno';
     public const PAID = 'paid';
     public const BOOK = 'book';
+    public const TWO_FACTOR_ON = 'two_factor_on';
+    public const TWO_FACTOR_OFF = 'two_factor_off';
 
     /** A napló szűrőjében választható műveletek. */
     public const ACTIONS = [
         self::LOGIN, self::LOGIN_FAILED, self::LOGOUT, self::DENIED, self::CREATE, self::UPDATE,
         self::DELETE, self::PERMISSIONS, self::ISSUE, self::STORNO, self::PAID, self::BOOK,
+        self::TWO_FACTOR_ON, self::TWO_FACTOR_OFF,
     ];
 
     /**

@@ -42,4 +42,24 @@
             </form>
         </div>
     </div>
+
+    {% if user %}
+        <div class="cx-card mt-4" style="max-width: 560px;">
+            <div class="cx-card__header">
+                <h2><i class="bi bi-shield-lock me-1"></i>{{ t('two_factor.admin_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                {% if user.totp_enabled_at %}
+                    <p class="small">{{ t('two_factor.admin_on', {date: user.totp_enabled_at|date('Y-m-d')}) }}</p>
+                    <form method="post" action="{{ base_url }}/users/{{ user.id }}/two-factor/reset"
+                          onsubmit="return confirm('{{ t('two_factor.admin_reset_confirm', {name: user.full_name})|e('js') }}');">
+                        <input type="hidden" name="_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('two_factor.admin_reset') }}</button>
+                    </form>
+                {% else %}
+                    <p class="small text-muted mb-0">{{ t('two_factor.admin_off') }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

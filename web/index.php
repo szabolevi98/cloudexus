@@ -26,6 +26,7 @@ use Cloudexus\Controller\InvoiceController;
 use Cloudexus\Controller\LanguageController;
 use Cloudexus\Controller\LocaleController;
 use Cloudexus\Controller\ThemeController;
+use Cloudexus\Controller\TwoFactorController;
 use Cloudexus\Controller\LocationController;
 use Cloudexus\Controller\LoginController;
 use Cloudexus\Controller\OrderController;
@@ -127,6 +128,8 @@ function registerCrud(Router $router, string $basePath, string $controllerClass)
 $router->get('/', fn() => header('Location: ' . Config::get('app.base_url') . '/login'));
 $router->get('/login', fn() => (new LoginController())->show());
 $router->post('/login', fn() => (new LoginController())->submit());
+$router->get('/login/code', fn() => (new LoginController())->showCode());
+$router->post('/login/code', fn() => (new LoginController())->submitCode());
 $router->post('/logout', fn() => (new LoginController())->logout());
 
 $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code));
@@ -136,6 +139,12 @@ $router->get('/dashboard', fn() => (new DashboardController())->show());
 
 $router->get('/profile', fn() => (new ProfileController())->show());
 $router->post('/profile', fn() => (new ProfileController())->update());
+$router->get('/profile/two-factor', fn() => (new TwoFactorController())->show());
+$router->post('/profile/two-factor/start', fn() => (new TwoFactorController())->start());
+$router->post('/profile/two-factor/confirm', fn() => (new TwoFactorController())->confirm());
+$router->post('/profile/two-factor/cancel', fn() => (new TwoFactorController())->cancel());
+$router->post('/profile/two-factor/recovery', fn() => (new TwoFactorController())->recoveryCodes());
+$router->post('/profile/two-factor/disable', fn() => (new TwoFactorController())->disable());
 
 $router->get('/products/export', fn() => (new ProductController())->export());
 $router->get('/products/search', fn() => (new ProductController())->search());
@@ -149,6 +158,7 @@ registerCrud($router, '/price-rules', PriceRuleController::class);
 $router->post('/products/{id}/images/{imageId}/delete', fn($id, $imageId) => (new ProductController())->deleteImage((int) $id, (int) $imageId));
 $router->post('/products/{id}/images/{imageId}/primary', fn($id, $imageId) => (new ProductController())->setPrimaryImage((int) $id, (int) $imageId));
 
+$router->post('/users/{id}/two-factor/reset', fn($id) => (new TwoFactorController())->reset((int) $id));
 registerCrud($router, '/users', UserController::class);
 $router->get('/roles', fn() => (new RoleController())->matrix());
 $router->post('/roles/matrix', fn() => (new RoleController())->updateMatrix());

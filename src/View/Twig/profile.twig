@@ -40,4 +40,16 @@
             </form>
         </div>
     </div>
+
+    <div class="cx-card mt-4" style="max-width: 560px;">
+        <div class="cx-card__body d-flex align-items-center justify-content-between gap-3">
+            <div>
+                <div class="fw-semibold"><i class="bi bi-shield-lock me-1"></i>{{ t('two_factor.title') }}</div>
+                <div class="small text-muted">{{ user.totp_enabled_at ? t('two_factor.on_title') : t('two_factor.off_title') }}</div>
+            </div>
+            <a href="{{ base_url }}/profile/two-factor" class="btn btn-sm {{ user.totp_enabled_at ? 'btn-outline-secondary' : 'btn-outline-primary' }}">
+                {{ user.totp_enabled_at ? t('two_factor.on') : t('two_factor.set_up') }}
+            </a>
+        </div>
+    </div>
 {% endblock %}

@@ -39,7 +39,10 @@
                     {% for user in users %}
                         <tr>
                             <td class="fw-medium">{{ user.username }}</td>
-                            <td>{{ user.full_name }}</td>
+                            <td>
+                                {{ user.full_name }}
+                                {% if user.totp_enabled_at %}<span class="badge rounded-pill bg-success-subtle text-success-emphasis ms-1" title="{{ t('two_factor.badge_title') }}">{{ t('two_factor.badge') }}</span>{% endif %}
+                            </td>
                             <td class="text-muted">{{ user.email }}</td>
                             <td>
                                 <span class="badge rounded-pill {{ user.role_code == 'super_admin' ? 'text-bg-primary' : 'text-bg-secondary' }}">{{ user.role_name ?: '—' }}</span>

@@ -119,7 +119,7 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - The super admin can do everything, from code rather than from the matrix, and
   the last active super admin cannot be demoted, deactivated or deleted — a
   broken setting cannot lock everybody out.
-- **An audit log** of sign-ins and failed ones, refused access, changes to users
+- **An audit log** of sign-ins and failed ones, two-step sign-in turned on and off, refused access, changes to users
   and to the matrix (what was added and what was taken away), invoices issued,
   reversed and paid, payments, cash vouchers, stocktakings, price rules and the
   company details — with who, when and from where, filtered by user, action,
@@ -162,6 +162,12 @@ page.
 - Passwords with bcrypt; ten failed sign-ins from one address lock it out for
   fifteen minutes, on the web and on the API alike; an optional score-based
   reCAPTCHA v3 on the sign-in form.
+- **Two-step sign-in**, turned on by each user on their profile: a code from any
+  authenticator app (TOTP) after the password, on the web and on the warehouse
+  app's sign-in alike, with ten single-use recovery codes. A code works once,
+  wrong codes count towards the lock-out, and turning it off or making new
+  recovery codes asks for the password again. Whoever manages the users can turn
+  it off for somebody who has lost their phone.
 - Every page and every API call checks its permission on the server; the
   interface hiding a button is a convenience, never the gate.
 - Nosniff, same-origin framing, a strict referrer policy, a Content-Security-Policy

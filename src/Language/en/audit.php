@@ -23,6 +23,8 @@ return [
         'storno' => 'Storno',
         'paid' => 'Paid',
         'book' => 'Booking',
+        'two_factor_on' => 'Two-step sign-in on',
+        'two_factor_off' => 'Two-step sign-in off',
     ],
     'entities' => [
         'user' => 'User',
@@ -44,6 +46,8 @@ return [
         'active' => 'Active',
         'password_changed' => 'Password changed',
         'token_changed' => 'Token regenerated',
+        'wrong_code_changed' => 'Wrong two-step code',
+        'reset_by_admin_changed' => 'Turned off by a user manager',
         'total' => 'Total',
         'number' => 'Number',
         'storno_of' => 'Original invoice',

@@ -16,17 +16,42 @@ class Auth
     private static ?array $user = null;
     private static bool $loaded = false;
 
-    public static function attempt(string $username, string $password): bool
+    /**
+     * Az aktív felhasználó, akinek ez a jelszava — vagy null, és egy
+     * sikertelen belépés az audit naplóban (abból számol a zárolás). Még nem
+     * léptet be: ha a kétlépcsős belépés be van kapcsolva, előbb a kód jön.
+     *
+     * @return array<string, mixed>|null a users tábla sora
+     */
+    public static function verifyPassword(string $username, string $password): ?array
     {
         $user = (new UserModel())->findByUsernameOrEmail($username);
 
         if (!$user || !$user['is_active'] || !password_verify($password, $user['password_hash'])) {
-            AuditLog::record(AuditLog::LOGIN_FAILED, 'user', $user ? (int) $user['id'] : null, $username, null,
-                ['id' => $user ? (int) $user['id'] : null, 'name' => $user['full_name'] ?? null]);
+            self::recordFailure($username, $user ?: null);
 
-            return false;
+            return null;
         }
 
+        return $user;
+    }
+
+    /**
+     * Egy sikertelen belépés az audit naplóban — rossz jelszó vagy rossz
+     * kód —, a zárolás ezeket számolja IP-címenként.
+     *
+     * @param array<string, mixed>|null $user
+     * @param array<string, mixed>|null $details
+     */
+    public static function recordFailure(string $username, ?array $user, ?array $details = null): void
+    {
+        AuditLog::record(AuditLog::LOGIN_FAILED, 'user', $user ? (int) $user['id'] : null, $username, $details,
+            ['id' => $user ? (int) $user['id'] : null, 'name' => $user['full_name'] ?? null]);
+    }
+
+    /** @param array<string, mixed> $user a users tábla sora, már ellenőrizve */
+    public static function signIn(array $user): void
+    {
         // Session fixation ellen: új session id a sikeres belépéskor.
         Session::regenerate();
 
@@ -37,8 +62,6 @@ class Auth
         self::forget();
         (new UserModel())->touchLastLogin((int) $user['id']);
         AuditLog::record(AuditLog::LOGIN, 'user', (int) $user['id'], (string) $user['username']);
-
-        return true;
     }
 
     public static function logout(): void

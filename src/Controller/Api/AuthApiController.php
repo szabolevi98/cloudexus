@@ -5,6 +5,7 @@ namespace Cloudexus\Controller\Api;
 use Cloudexus\Core\Config;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Core\RoleCode;
+use Cloudexus\Core\TwoFactor;
 use Cloudexus\Model\Account\RoleModel;
 use Cloudexus\Model\Account\UserModel;
 use Cloudexus\Model\Account\UserTokenModel;
@@ -45,6 +46,20 @@ class AuthApiController extends ApiController
         $passwordOk = password_verify($password, $user['password_hash'] ?? self::DUMMY_HASH);
         if (!$user || !$passwordOk || !$user['is_active']) {
             $this->error('Invalid username or password.', 401);
+        }
+
+        // With two-step sign-in on, the password alone does not get a token.
+        // No code yet is 403 with a flag, so the app knows to ask for one (and
+        // it does not count towards the lock-out); a wrong code is a 401 and
+        // does, like a wrong password.
+        if (TwoFactor::isOn($user)) {
+            $code = trim((string) ($body['code'] ?? ''));
+            if ($code === '') {
+                $this->error('A two-step sign-in code is required.', 403, ['two_factor_required' => true]);
+            }
+            if (!(new TwoFactor())->check($user, $code)) {
+                $this->error('That two-step sign-in code is not right.', 401, ['two_factor_required' => true]);
+            }
         }
 
         $deviceName = trim((string) ($body['device_name'] ?? ''));

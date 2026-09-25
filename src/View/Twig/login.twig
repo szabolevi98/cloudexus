@@ -32,7 +32,7 @@
         <span class="cx-auth-card__brand-icon"><i class="bi bi-boxes"></i></span>
         <span>Cloudexus</span>
     </div>
-    <p class="cx-auth-card__subtitle">{{ t('auth.subtitle') }}</p>
+    <p class="cx-auth-card__subtitle">{{ code_step|default(false) ? t('auth.code_lead') : t('auth.subtitle') }}</p>
 
     {% if error %}
         <div class="alert alert-danger d-flex align-items-center py-2" role="alert">
@@ -40,6 +40,22 @@
         </div>
     {% endif %}
 
+    {% if code_step|default(false) %}
+    <form method="post" action="{{ base_url }}/login/code" novalidate>
+        <input type="hidden" name="_token" value="{{ csrf_token }}">
+        <div class="mb-4">
+            <label for="code" class="form-label">{{ t('auth.code') }}</label>
+            <div class="input-group">
+                <span class="input-group-text bg-body"><i class="bi bi-shield-lock"></i></span>
+                <input type="text" id="code" name="code" class="form-control cx-code-input" inputmode="numeric"
+                       autocomplete="one-time-code" maxlength="16" required autofocus>
+            </div>
+            <div class="form-text">{{ t('auth.code_hint') }}</div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2">{{ t('auth.sign_in') }}</button>
+    </form>
+    <p class="text-center mt-3 mb-0 small"><a href="{{ base_url }}/login">{{ t('auth.start_again') }}</a></p>
+    {% else %}
     <form method="post" action="{{ base_url }}/login" id="login-form">
         <input type="hidden" name="_token" value="{{ csrf_token }}">
         <input type="hidden" name="recaptcha_token" id="recaptcha_token">
@@ -59,6 +75,7 @@
         </div>
         <button type="submit" class="btn btn-primary w-100 py-2" id="login-submit">{{ t('auth.sign_in') }}</button>
     </form>
+    {% endif %}
 </div>
 <p class="cx-auth-footer">Copyright &copy; {{ "now"|date("Y") }} <a href="https://github.com/szabolevi98/Cloudexus" target="_blank" rel="noopener">szabolevi98</a></p>
 </div>
@@ -82,7 +99,7 @@
     })();
 </script>
 </body>
-{% if recaptcha_enabled %}
+{% if recaptcha_enabled|default(false) and not code_step|default(false) %}
     <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
     <script>
         (function () {

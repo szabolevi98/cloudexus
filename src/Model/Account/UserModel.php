@@ -33,6 +33,20 @@ class UserModel
         return $user ?: null;
     }
 
+    /** Egy felhasználó a szerepköre kódjával, akkor is, ha le van tiltva. */
+    public function findWithRole(int $id): ?array
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            'SELECT u.*, r.code AS role_code, r.name AS role_name
+             FROM users u LEFT JOIN roles r ON r.id = u.role_id
+             WHERE u.id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $user = $stmt->fetch();
+
+        return $user ?: null;
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = DatabaseConnection::get()->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
@@ -78,7 +92,7 @@ class UserModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, r.code AS role_code, u.is_active, u.last_login_at, u.created_at
+            "SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, r.code AS role_code, u.is_active, u.last_login_at, u.totp_enabled_at, u.created_at
              FROM users u LEFT JOIN roles r ON r.id = u.role_id $where ORDER BY " . Sort::orderBy(self::SORTS, 'u.id ASC') . " LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
         );
         $stmt->execute($params);

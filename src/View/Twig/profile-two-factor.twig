@@ -1,0 +1,92 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <p class="mb-3"><a href="{{ base_url }}/profile" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ t('two_factor.back_to_profile') }}</a></p>
+
+    {% if new_codes %}
+        <div class="cx-card mb-4" style="max-width: 560px;" role="status">
+            <div class="cx-card__header">
+                <h2>{{ t('two_factor.codes_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                <p class="text-muted small">{{ t('two_factor.codes_text') }}</p>
+                <ul class="cx-recovery-codes">
+                    {% for code in new_codes %}<li><code>{{ code }}</code></li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if setup %}
+        <div class="cx-card" style="max-width: 560px;">
+            <div class="cx-card__header">
+                <h2>{{ t('two_factor.scan_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                <p class="text-muted small">{{ t('two_factor.scan_text') }}</p>
+                <div class="cx-qr">{{ qr|raw }}</div>
+                <p class="small">{{ t('two_factor.manual_key') }} <code class="cx-secret-key">{{ setup|split('')|batch(4)|map(group => group|join)|join(' ') }}</code></p>
+                <form method="post" action="{{ base_url }}/profile/two-factor/confirm" class="mb-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <div class="mb-3">
+                        <label for="code" class="form-label">{{ t('two_factor.code_now') }}</label>
+                        <input type="text" id="code" name="code" class="form-control cx-code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ t('two_factor.turn_on') }}</button>
+                </form>
+                <form method="post" action="{{ base_url }}/profile/two-factor/cancel">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-link px-0">{{ t('two_factor.not_now') }}</button>
+                </form>
+            </div>
+        </div>
+    {% elseif on %}
+        <div class="cx-card mb-4" style="max-width: 560px;">
+            <div class="cx-card__header">
+                <h2><span class="badge rounded-pill bg-success-subtle text-success-emphasis me-2">{{ t('two_factor.on') }}</span>{{ t('two_factor.on_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                <p>{{ t('two_factor.codes_left', {count: codes_left}) }}</p>
+                <form method="post" action="{{ base_url }}/profile/two-factor/recovery">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <input type="text" name="username" value="{{ user.username }}" autocomplete="username" hidden>
+                    <div class="mb-3">
+                        <label for="password_codes" class="form-label">{{ t('two_factor.password_for_codes') }}</label>
+                        <input type="password" id="password_codes" name="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary">{{ t('two_factor.make_new_codes') }}</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="cx-card" style="max-width: 560px;">
+            <div class="cx-card__header">
+                <h2>{{ t('two_factor.turn_off_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                <form method="post" action="{{ base_url }}/profile/two-factor/disable">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <input type="text" name="username" value="{{ user.username }}" autocomplete="username" hidden>
+                    <div class="mb-3">
+                        <label for="password_off" class="form-label">{{ t('two_factor.password') }}</label>
+                        <input type="password" id="password_off" name="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-outline-danger">{{ t('two_factor.turn_off') }}</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="cx-card" style="max-width: 560px;">
+            <div class="cx-card__header">
+                <h2><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis me-2">{{ t('two_factor.off') }}</span>{{ t('two_factor.off_title') }}</h2>
+            </div>
+            <div class="cx-card__body">
+                <p class="text-muted">{{ t('two_factor.off_text') }}</p>
+                <form method="post" action="{{ base_url }}/profile/two-factor/start">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-shield-lock me-1"></i>{{ t('two_factor.set_up') }}</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
