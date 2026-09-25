@@ -263,6 +263,8 @@ vendor/bin/phpstan analyse --memory-limit=1G         # static analysis
 php bin/check_templates.php                          # every Twig template compiles
 vendor/bin/phpunit                                   # unit tests, and integration tests against a *_test database
 php tests/smoke.php --url=http://127.0.0.1:8080 --user=admin --password=…
+npm ci && npx playwright install chromium              # once, for the browser tests
+CX_URL=http://127.0.0.1:8080/ CX_USER=admin CX_PASSWORD=… npx playwright test
 ```
 
 The unit tests need nothing but PHP: the permission catalog and the default
@@ -272,6 +274,12 @@ own, named in `config/test.ini`, whose name must end in `_test` — they empty i
 before every test: document numbering, VAT per line, stock-outs and shortages,
 storno, partial payments and cash vouchers, the open-items buckets, price rule
 resolution, the permission matrix, stock locks and stocktaking.
+
+The browser tests (Playwright, `tests/e2e`) check what only a browser can: an
+order typed in with the search-as-you-type pickers, its lines priced as they
+are picked and the totals following; the barcode collector; setting up and
+turning off two-step sign-in; the column headers, the sidebar and the theme.
+They clean up after themselves.
 
 The smoke test walks a running installation over real HTTP: it signs in
 through the form, opens every page, downloads a CSV, checks that the API wants

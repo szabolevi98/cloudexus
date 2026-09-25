@@ -1,0 +1,11 @@
+{
+  "name": "cloudexus-e2e",
+  "private": true,
+  "description": "The browser tests: what only a real browser can check — the pickers, the line items that price themselves, the barcode collector, two-step sign-in.",
+  "scripts": {
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

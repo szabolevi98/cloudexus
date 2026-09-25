@@ -2,7 +2,7 @@
 # static analysis pass, every Twig template compiles, the unit and integration
 # tests pass against a real MariaDB, the built stylesheet matches its sources,
 # and a fresh installation — migrated, seeded, signed into — is walked through
-# over HTTP.
+# over HTTP, and then in a real browser.
 name: CI
 
 on:
@@ -76,6 +76,33 @@ jobs:
           PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t web bin/dev-router.php > server.log 2>&1 &
           sleep 1
           php tests/smoke.php --url=http://127.0.0.1:8080 --user=admin --password=ci-password
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install the browser tests
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        env:
+          CX_URL: http://127.0.0.1:8080/
+          CX_USER: admin
+          CX_PASSWORD: ci-password
+        run: npx playwright test
+
+      - name: What the browser tests saw
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
       - name: Server log
         if: failure()

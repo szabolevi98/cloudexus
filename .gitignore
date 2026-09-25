@@ -13,3 +13,6 @@ Thumbs.db
 !/web/assets/uploads/.gitkeep
 /config/test.ini
 /var/cache/phpunit/
+/node_modules/
+/test-results/
+/playwright-report/
