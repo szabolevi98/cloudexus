@@ -1,0 +1,21 @@
+<?php
+
+return [
+    'open' => 'Keresés és ugrás (Ctrl+K)',
+    'placeholder' => 'Termék, partner, számla, rendelés vagy oldal…',
+    'nothing' => 'Nincs találat.',
+    'keys' => '↑ ↓ választ · Enter megnyit · Ctrl+Enter új lapon · Esc bezár',
+    'recent' => 'Legutóbb megnyitott',
+    'go_to' => 'Oldalak és teendők',
+    'products' => 'Termékek',
+    'partners' => 'Partnerek',
+    'invoices' => 'Számlák',
+    'orders' => 'Vevői rendelések',
+    'purchase_orders' => 'Szállítói rendelések',
+    'incoming_invoices' => 'Bejövő számlák',
+    'new_invoice' => 'Új számla',
+    'new_order' => 'Új vevői rendelés',
+    'new_product' => 'Új termék',
+    'new_partner' => 'Új partner',
+    'new_purchase_order' => 'Új szállítói rendelés',
+];

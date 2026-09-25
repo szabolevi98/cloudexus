@@ -118,6 +118,14 @@ abstract class BaseController
         Session::flash('error', $message);
     }
 
+    /** Megnyitotta — a Ctrl+K kereső "legutóbb" listájához. */
+    protected function remember(string $kind, int $id): void
+    {
+        if (Auth::id() !== null) {
+            (new \Cloudexus\Model\Account\RecentViewModel())->viewed((int) Auth::id(), $kind, $id);
+        }
+    }
+
     protected function requireAuth(): void
     {
         if (!Auth::check()) {

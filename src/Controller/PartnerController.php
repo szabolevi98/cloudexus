@@ -47,6 +47,7 @@ class PartnerController extends BaseController
         }
 
         $this->pageTitle = $partner['name'];
+        $this->remember('partner', $id);
         $this->render('partners/show.twig', [
             'partner' => $partner,
             'activities' => $this->activities->forPartner($id),

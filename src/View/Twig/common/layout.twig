@@ -235,6 +235,9 @@
             <h1 class="cx-topbar__title">{{ page_title|default('') }}</h1>
 
             <div class="ms-auto d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary cx-palette-btn" data-palette-open title="{{ t('palette.open') }}" aria-label="{{ t('palette.open') }}">
+                    <i class="bi bi-search" aria-hidden="true"></i><span class="d-none d-md-inline ms-1"><kbd>Ctrl</kbd> <kbd>K</kbd></span>
+                </button>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle cx-lang-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ t('nav.language') }}" aria-label="{{ t('nav.language') }}">
                         <i class="bi bi-translate" aria-hidden="true"></i><span class="cx-lang-btn__code ms-1">{{ current_locale|upper }}</span>
@@ -425,5 +428,12 @@
         });
     })();
 </script>
+<dialog class="cx-palette" id="cx-palette" aria-label="{{ t('palette.open') }}"
+        data-url="{{ base_url }}/palette" data-nothing="{{ t('palette.nothing') }}">
+    <input type="search" class="cx-palette__input" data-palette-input placeholder="{{ t('palette.placeholder') }}" aria-label="{{ t('palette.placeholder') }}" autocomplete="off">
+    <ul class="cx-palette__list" data-palette-list role="listbox"></ul>
+    <div class="cx-palette__foot">{{ t('palette.keys') }}</div>
+</dialog>
+<script src="{{ base_url }}/assets/js/palette.js?v={{ asset_version }}"></script>
 </body>
 </html>

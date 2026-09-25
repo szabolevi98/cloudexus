@@ -126,6 +126,7 @@ class ProductController extends BaseController
         }
 
         $this->pageTitle = $this->t('products.edit_title');
+        $this->remember('product', $id);
         $this->render('products/form.twig', $this->formData($product));
     }
 

@@ -86,6 +86,7 @@ class PurchaseOrderController extends BaseController
         }
 
         $this->pageTitle = $this->t('purchase_orders.title_prefix') . ': ' . $order['po_number'];
+        $this->remember('purchase_order', $id);
         $this->render('purchase-orders/show.twig', ['order' => $order]);
     }
 

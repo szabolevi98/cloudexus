@@ -92,6 +92,7 @@ class OrderController extends BaseController
             $this->redirect('/orders');
         }
 
+        $this->remember('order', $id);
         $this->pageTitle = $this->t('orders.title_prefix') . ': ' . $order['order_number'];
         $this->render('orders/show.twig', ['order' => $order]);
     }

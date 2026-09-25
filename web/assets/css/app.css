@@ -750,6 +750,94 @@ a {
     line-height: 1;
 }
 
+/* A Ctrl+K kereső: egy <dialog> a lap közepe fölött, a Bootstrap színeivel, így a sötét témában is. */
+.cx-palette {
+    width: min(640px, calc(100vw - 32px));
+    margin: 12vh auto auto;
+    padding: 0;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 14px;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    box-shadow: 0 20px 45px rgba(20, 24, 60, 0.25);
+}
+
+.cx-palette::backdrop {
+    background: rgba(12, 16, 40, 0.45);
+}
+
+.cx-palette__input {
+    width: 100%;
+    padding: 16px 18px;
+    border: 0;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 1.05rem;
+    outline: none;
+}
+
+.cx-palette__list {
+    max-height: min(60vh, 460px);
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.cx-palette__group {
+    padding: 10px 12px 4px;
+    color: var(--bs-secondary-color);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.cx-palette__item {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.cx-palette__item.is-active {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+}
+
+.cx-palette__hint {
+    flex: none;
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+}
+
+.cx-palette__empty {
+    padding: 18px 12px;
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+.cx-palette__foot {
+    padding: 8px 14px;
+    border-top: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: 0.75rem;
+}
+
+.cx-palette-btn kbd {
+    padding: 1px 5px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: 0.7rem;
+}
+
 .cx-auth-body {
     min-height: 100vh;
     margin: 0;

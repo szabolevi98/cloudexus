@@ -183,6 +183,7 @@ class InvoiceController extends BaseController
             $this->redirect('/invoices');
         }
 
+        $this->remember('invoice', $id);
         $this->pageTitle = $this->t('invoices.title_prefix') . ': ' . $invoice['invoice_number'];
         $this->render('invoices/show.twig', [
             'invoice' => $invoice,

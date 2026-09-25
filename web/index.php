@@ -30,6 +30,7 @@ use Cloudexus\Controller\LocaleController;
 use Cloudexus\Controller\LocationController;
 use Cloudexus\Controller\LoginController;
 use Cloudexus\Controller\OrderController;
+use Cloudexus\Controller\PaletteController;
 use Cloudexus\Controller\ParameterController;
 use Cloudexus\Controller\PartnerController;
 use Cloudexus\Controller\PasswordResetController;
@@ -143,6 +144,7 @@ $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code
 $router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode));
 
 $router->get('/dashboard', fn() => (new DashboardController())->show());
+$router->get('/palette', fn() => (new PaletteController())->search());
 
 $router->get('/profile', fn() => (new ProfileController())->show());
 $router->post('/profile', fn() => (new ProfileController())->update());

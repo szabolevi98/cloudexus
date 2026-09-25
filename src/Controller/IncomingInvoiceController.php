@@ -106,6 +106,7 @@ class IncomingInvoiceController extends BaseController
         }
 
         $this->pageTitle = $this->t('incoming_invoices.title_prefix') . ': ' . $invoice['invoice_number'];
+        $this->remember('incoming_invoice', $id);
         $this->render('incoming-invoices/show.twig', [
             'invoice' => $invoice,
             'payments' => (new PaymentModel())->forDocument(PaymentModel::INCOMING, $id),

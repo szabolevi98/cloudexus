@@ -142,6 +142,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ### The rest
 
+- **Ctrl+K** jumps anywhere: a product, partner, invoice, order or page by a
+  few letters of it, or — with nothing typed — what one opened lately; only
+  what one's role can see.
 - **Hungarian and English**, chosen per visitor. The catalog's own texts —
   product names and descriptions, categories, units, parameters — are stored
   per language too, and a missing translation falls back to the default

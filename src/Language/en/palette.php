@@ -1,0 +1,21 @@
+<?php
+
+return [
+    'open' => 'Search and jump (Ctrl+K)',
+    'placeholder' => 'A product, partner, invoice, order or page…',
+    'nothing' => 'Nothing found.',
+    'keys' => '↑ ↓ to choose · Enter opens · Ctrl+Enter in a new tab · Esc closes',
+    'recent' => 'Recently opened',
+    'go_to' => 'Pages and actions',
+    'products' => 'Products',
+    'partners' => 'Partners',
+    'invoices' => 'Invoices',
+    'orders' => 'Sales orders',
+    'purchase_orders' => 'Purchase orders',
+    'incoming_invoices' => 'Supplier invoices',
+    'new_invoice' => 'New invoice',
+    'new_order' => 'New sales order',
+    'new_product' => 'New product',
+    'new_partner' => 'New partner',
+    'new_purchase_order' => 'New purchase order',
+];
