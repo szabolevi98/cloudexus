@@ -82,10 +82,15 @@ abstract class BaseController
     }
 
     /** Cache-busting token for static assets: the built CSS file's mtime. */
+    /** The newest change among our own CSS and JS files, so a changed script is fetched again too. */
     private function assetVersion(): string
     {
-        $cssFile = dirname(__DIR__, 2) . '/web/assets/css/app.css';
-        return is_file($cssFile) ? (string) filemtime($cssFile) : '1';
+        $assets = dirname(__DIR__, 2) . '/web/assets';
+        $files = array_merge([$assets . '/css/app.css'], glob($assets . '/js/*.js') ?: []);
+        $times = array_map(static fn(string $file): int => (int) @filemtime($file), $files);
+        $newest = max($times);
+
+        return $newest > 0 ? (string) $newest : '1';
     }
 
     protected function json(array $data): void
