@@ -40,6 +40,14 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - **Contacts** at each partner: name, position, email, phone, and which of
   them is the primary one and which gets the invoices — invoices and quotes are
   emailed to that person by default, with the others one click away.
+- **The partner's page** has it all in one place: this year's revenue against
+  last year's, what they owe and how much of it is overdue, how late they pay
+  on average, their quote win rate, their most bought products, and one
+  timeline of orders, quotes, invoices, payments, calls and to-dos that can be
+  filtered to documents, money or activity.
+- **Credit limit and payment terms** per partner. The order, quote and invoice
+  forms warn when the unpaid invoices reach the limit or some are overdue, and
+  an invoice is due as many days after issue as the partner's terms say.
 - **CSV import** of products (by SKU) and partners (by tax number, or name),
   in the same columns the exports write, so an export can be edited and loaded
   back: headers recognised in Hungarian or English, semicolons or commas, a

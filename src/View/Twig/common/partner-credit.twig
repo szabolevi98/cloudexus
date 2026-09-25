@@ -1,0 +1,14 @@
+{#
+    A választott partner hitelkerete és tartozása, a partnerválasztó alatt
+    (pages.js: /partners/{id}/credit). Figyelmeztet, ha lejárt tartozása van,
+    vagy ha a nyitott számlái elérték a keretét; a számla űrlapján a fizetési
+    határidőt is a partner feltételeiből tölti ki (due_target).
+#}
+<div class="cx-partner-credit small mt-1" hidden
+     data-url="{{ base_url }}/partners/"
+     data-currency="{{ currency_symbol() }}"
+     {% if due_target|default(false) %}data-due-target="{{ due_target }}" data-date-source="{{ date_source }}"{% endif %}
+     data-t-overdue="{{ t('partners.credit_overdue') }}"
+     data-t-limit="{{ t('partners.credit_status') }}"
+     data-t-over="{{ t('partners.credit_over') }}"
+     data-t-terms="{{ t('partners.credit_terms') }}"></div>

@@ -170,6 +170,7 @@ $router->post('/import/{kind}/confirm', fn($kind) => (new ImportController())->c
 $router->get('/products/search', fn() => (new ProductController())->search());
 $router->get('/partners/export', fn() => (new PartnerController())->export());
 $router->post('/partners/bulk', fn() => (new PartnerController())->bulk());
+$router->get('/partners/{id}/credit', fn($id) => (new PartnerController())->credit((int) $id));
 $router->post('/partners/{id}/contacts', fn($id) => (new PartnerController())->saveContact((int) $id));
 $router->post('/partners/{id}/contacts/{contactId}', fn($id, $contactId) => (new PartnerController())->updateContact((int) $id, (int) $contactId));
 $router->post('/partners/{id}/contacts/{contactId}/delete', fn($id, $contactId) => (new PartnerController())->deleteContact((int) $id, (int) $contactId));

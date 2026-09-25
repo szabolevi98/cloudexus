@@ -35,6 +35,18 @@
                         <input type="text" id="phone" name="phone" class="form-control" value="{{ partner.phone|default('') }}">
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="credit_limit" class="form-label">{{ t('partners.credit_limit', {currency: currency_symbol()}) }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
+                        <input type="number" step="1" min="0" id="credit_limit" name="credit_limit" class="form-control" value="{{ partner.credit_limit is defined and partner.credit_limit is not null ? partner.credit_limit|round : '' }}">
+                        <div class="form-text">{{ t('partners.credit_limit_help') }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_terms_days" class="form-label">{{ t('partners.payment_terms') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
+                        <input type="number" step="1" min="0" max="365" id="payment_terms_days" name="payment_terms_days" class="form-control" value="{{ partner.payment_terms_days|default('') }}" placeholder="8">
+                        <div class="form-text">{{ t('partners.payment_terms_help') }}</div>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label for="customer_group_id" class="form-label">{{ t('partners.customer_group') }}</label>
                     <select id="customer_group_id" name="customer_group_id" class="form-select cx-select2">

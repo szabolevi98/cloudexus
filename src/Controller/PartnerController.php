@@ -49,11 +49,15 @@ class PartnerController extends BaseController
 
         $this->pageTitle = $partner['name'];
         $this->remember('partner', $id);
+        $overview = new \Cloudexus\Model\Crm\PartnerOverviewModel();
         $this->render('partners/show.twig', [
             'partner' => $partner,
             'activities' => $this->activities->forPartner($id),
             'addresses' => $this->addresses->forPartner($id),
             'contacts' => (new \Cloudexus\Model\Core\PartnerContactModel())->forPartner($id),
+            'kpis' => $overview->kpis($id),
+            'timeline' => $overview->timeline($id),
+            'top_products' => $overview->topProducts($id),
         ]);
     }
 
@@ -320,6 +324,8 @@ class PartnerController extends BaseController
             'email' => trim($_POST['email'] ?? ''),
             'phone' => trim($_POST['phone'] ?? ''),
             'address' => trim($_POST['address'] ?? ''),
+            'credit_limit' => trim((string) ($_POST['credit_limit'] ?? '')) === '' ? null : max(0, (float) str_replace([' ', ','], ['', '.'], (string) $_POST['credit_limit'])),
+            'payment_terms_days' => trim((string) ($_POST['payment_terms_days'] ?? '')) === '' ? null : max(0, min(365, (int) $_POST['payment_terms_days'])),
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
         ];
     }
@@ -417,5 +423,17 @@ class PartnerController extends BaseController
         $contact = (new \Cloudexus\Model\Core\PartnerContactModel())->find($contactId);
 
         return $contact !== null && (int) $contact['partner_id'] === $partnerId ? $contactId : null;
+    }
+
+    /**
+     * A partner hitelkerete és tartozása JSON-ben — a rendelés, az ajánlat és
+     * a számla űrlapja ebből figyelmeztet, és ebből veszi a fizetési
+     * határidőt.
+     */
+    public function credit(int $id): void
+    {
+        $this->requireAnyPermission(Permissions::PARTNERS_VIEW, Permissions::ORDERS_VIEW, Permissions::INVOICES_VIEW);
+
+        $this->json((new \Cloudexus\Model\Crm\PartnerOverviewModel())->credit($id));
     }
 }

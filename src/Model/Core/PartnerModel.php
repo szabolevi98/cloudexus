@@ -187,8 +187,8 @@ class PartnerModel
     public function create(array $data): int
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'INSERT INTO partners (type, customer_group_id, name, tax_number, email, phone, address, is_active, created_at)
-             VALUES (:type, :customer_group_id, :name, :tax_number, :email, :phone, :address, :is_active, NOW())'
+            'INSERT INTO partners (type, customer_group_id, name, tax_number, email, phone, address, credit_limit, payment_terms_days, is_active, created_at)
+             VALUES (:type, :customer_group_id, :name, :tax_number, :email, :phone, :address, :credit_limit, :payment_terms_days, :is_active, NOW())'
         );
         $stmt->execute([
             'type' => $data['type'],
@@ -198,6 +198,8 @@ class PartnerModel
             'email' => $data['email'] ?: null,
             'phone' => $data['phone'] ?: null,
             'address' => !empty($data['address']) ? $data['address'] : null,
+            'credit_limit' => isset($data['credit_limit']) && $data['credit_limit'] !== '' ? (float) $data['credit_limit'] : null,
+            'payment_terms_days' => isset($data['payment_terms_days']) && $data['payment_terms_days'] !== '' ? (int) $data['payment_terms_days'] : null,
             'is_active' => $data['is_active'],
         ]);
         $id = (int) DatabaseConnection::get()->lastInsertId();
@@ -210,7 +212,7 @@ class PartnerModel
     {
         $stmt = DatabaseConnection::get()->prepare(
             'UPDATE partners SET type = :type, customer_group_id = :customer_group_id, name = :name, tax_number = :tax_number, email = :email,
-                phone = :phone, address = :address, is_active = :is_active, updated_at = NOW()
+                phone = :phone, address = :address, credit_limit = :credit_limit, payment_terms_days = :payment_terms_days, is_active = :is_active, updated_at = NOW()
              WHERE id = :id'
         );
         $stmt->execute([
@@ -222,6 +224,8 @@ class PartnerModel
             'email' => $data['email'] ?: null,
             'phone' => $data['phone'] ?: null,
             'address' => !empty($data['address']) ? $data['address'] : null,
+            'credit_limit' => isset($data['credit_limit']) && $data['credit_limit'] !== '' ? (float) $data['credit_limit'] : null,
+            'payment_terms_days' => isset($data['payment_terms_days']) && $data['payment_terms_days'] !== '' ? (int) $data['payment_terms_days'] : null,
             'is_active' => $data['is_active'],
         ]);
         \Cloudexus\Core\Webhooks::dispatch('partner.changed', ['id' => $id, 'action' => 'updated']);

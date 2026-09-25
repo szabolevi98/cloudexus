@@ -30,6 +30,7 @@
                                 <option value="{{ opt.id }}" selected>{{ opt.text }}</option>
                             {% endfor %}
                         </select>
+                        {% include 'common/partner-credit.twig' with {due_target: '[name="due_date"]', date_source: '[name="issue_date"]'} %}
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">{{ t('invoices.issue_date_label') }}</label>

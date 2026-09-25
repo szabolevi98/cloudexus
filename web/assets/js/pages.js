@@ -211,6 +211,72 @@
         document.addEventListener('cx:theme', draw);
     })();
 
+    // Partner adatlap: az idővonal szűrése (minden, bizonylatok, pénz, tevékenység).
+    (function () {
+        var filter = $('#timeline-filter');
+        if (!filter) return;
+        filter.addEventListener('click', function (e) {
+            var button = e.target.closest('[data-timeline-filter]');
+            if (!button) return;
+            var group = button.dataset.timelineFilter;
+            filter.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b === button); });
+            document.querySelectorAll('#partner-timeline [data-timeline-group]').forEach(function (item) {
+                item.classList.toggle('d-none', group !== 'all' && item.dataset.timelineGroup !== group); // a hidden attribútum a d-flex !important mellett nem rejt
+            });
+        });
+    })();
+
+    // A választott partner hitelkerete, tartozása és fizetési határideje (common/partner-credit.twig).
+    (function () {
+        var box = $('.cx-partner-credit');
+        var partner = $('#partner_id');
+        if (!box || !partner || !window.jQuery) return;
+        var money = function (n) { return new Intl.NumberFormat('hu-HU').format(Math.round(n)) + ' ' + box.dataset.currency; };
+        var line = function (text, cls, icon) {
+            var div = document.createElement('div');
+            div.className = cls;
+            var i = document.createElement('i');
+            i.className = 'bi ' + icon + ' me-1';
+            div.appendChild(i);
+            div.appendChild(document.createTextNode(text));
+            return div;
+        };
+        var show = function () {
+            var id = parseInt(partner.value, 10);
+            box.replaceChildren();
+            box.hidden = true;
+            if (!id) return;
+            fetch(box.dataset.url + id + '/credit', {credentials: 'same-origin', headers: {Accept: 'application/json'}})
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (c) {
+                    if (!c) return;
+                    if (c.overdue > 0) {
+                        box.appendChild(line(box.dataset.tOverdue.replace('{amount}', money(c.overdue)), 'text-danger fw-medium', 'bi-exclamation-triangle'));
+                    }
+                    if (c.credit_limit !== null) {
+                        var over = c.credit_left <= 0;
+                        box.appendChild(line(
+                            box.dataset.tLimit.replace('{limit}', money(c.credit_limit)).replace('{open}', money(c.open_balance)).replace('{left}', money(Math.max(0, c.credit_left))),
+                            over ? 'text-danger' : 'text-muted', 'bi-wallet2'
+                        ));
+                        if (over) box.appendChild(line(box.dataset.tOver, 'text-danger fw-medium', 'bi-x-octagon'));
+                    }
+                    if (box.dataset.dueTarget) {
+                        var due = document.querySelector(box.dataset.dueTarget);
+                        var from = document.querySelector(box.dataset.dateSource);
+                        var start = from && from.value ? new Date(from.value + 'T00:00:00') : new Date();
+                        start.setDate(start.getDate() + c.payment_terms_days);
+                        var pad = function (n) { return String(n).padStart(2, '0'); };
+                        if (due) due.value = start.getFullYear() + '-' + pad(start.getMonth() + 1) + '-' + pad(start.getDate());
+                        box.appendChild(line(box.dataset.tTerms.replace('{days}', c.payment_terms_days), 'text-muted', 'bi-calendar-check'));
+                    }
+                    box.hidden = box.children.length === 0;
+                });
+        };
+        window.jQuery(partner).on('change', show);
+        show();
+    })();
+
     // Vevői rendelés: a szállítási és számlázási cím a választott partneréi.
     (function () {
         var addresses = json('partner-addresses');
@@ -244,4 +310,5 @@
         window.jQuery(partner).on('change', fill);
         fill();
     })();
+
 })();

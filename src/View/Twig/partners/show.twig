@@ -4,14 +4,80 @@
     {% set typeLabels = {'call': t('partners.activity_types.call'), 'email': t('partners.activity_types.email'), 'meeting': t('partners.activity_types.meeting'), 'note': t('partners.activity_types.note'), 'offer': t('partners.activity_types.offer')} %}
     {% set typeIcons = {'call': 'bi-telephone', 'email': 'bi-envelope', 'meeting': 'bi-people', 'note': 'bi-sticky', 'offer': 'bi-file-earmark-text'} %}
 
+
+    {# A számok egy sorban: forgalom, tartozás, hitelkeret, utolsó rendelés, fizetési késés, ajánlatok. #}
+    <div class="row g-3 mb-3" id="partner-kpis">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.revenue_year') }}</div>
+                <div class="fs-5 fw-semibold">{{ kpis.revenue_year|money }}</div>
+                <div class="small text-muted">{{ t('partners.kpi.prev_year', {amount: kpis.revenue_prev_year|money}) }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.open_balance') }}</div>
+                <div class="fs-5 fw-semibold">{{ kpis.open_balance|money }}</div>
+                {% if kpis.overdue > 0 %}<div class="small text-danger fw-medium">{{ t('partners.kpi.overdue', {amount: kpis.overdue|money}) }}</div>{% else %}<div class="small text-muted">{{ t('partners.kpi.nothing_overdue') }}</div>{% endif %}
+            </div></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.credit') }}</div>
+                {% if kpis.credit_limit is not null %}
+                    {% set used = kpis.credit_limit > 0 ? min(100, (kpis.open_balance / kpis.credit_limit * 100)|round) : 100 %}
+                    <div class="fs-5 fw-semibold {{ kpis.credit_left <= 0 ? 'text-danger' : '' }}">{{ max(0, kpis.credit_left)|money }}</div>
+                    <div class="progress mt-1" style="height: 5px;" role="progressbar" aria-valuenow="{{ used }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar {{ used >= 100 ? 'bg-danger' : (used >= 80 ? 'bg-warning' : '') }}" style="width: {{ used }}%"></div>
+                    </div>
+                    <div class="small text-muted">{{ t('partners.kpi.of_limit', {limit: kpis.credit_limit|money}) }}</div>
+                {% else %}
+                    <div class="fs-5 fw-semibold">—</div><div class="small text-muted">{{ t('partners.kpi.no_limit') }}</div>
+                {% endif %}
+            </div></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.last_order') }}</div>
+                <div class="fs-5 fw-semibold">{{ kpis.last_order_date ?: '—' }}</div>
+                <div class="small text-muted">{{ t('partners.kpi.invoices', {count: kpis.invoice_count}) }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.pays') }}</div>
+                {% if kpis.avg_delay_days is null %}
+                    <div class="fs-5 fw-semibold">—</div>
+                {% elseif kpis.avg_delay_days <= 0 %}
+                    <div class="fs-5 fw-semibold text-success">{{ t('partners.kpi.on_time') }}</div>
+                {% else %}
+                    <div class="fs-5 fw-semibold {{ kpis.avg_delay_days > 15 ? 'text-danger' : 'text-warning' }}">{{ t('partners.kpi.days_late', {days: kpis.avg_delay_days}) }}</div>
+                {% endif %}
+                <div class="small text-muted">{{ t('partners.kpi.terms', {days: kpis.payment_terms_days}) }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="cx-card h-100"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('partners.kpi.quotes') }}</div>
+                <div class="fs-5 fw-semibold">{{ kpis.quote_win_rate is null ? '—' : kpis.quote_win_rate ~ '%' }}</div>
+                <div class="small text-muted">{{ t('partners.kpi.open_quotes', {count: kpis.quotes_open}) }}</div>
+            </div></div>
+        </div>
+    </div>
+
     <div class="row g-3">
         <div class="col-lg-4">
             <div class="cx-card mb-3">
                 <div class="cx-card__header">
                     <h2>{{ partner.name }}</h2>
-                    {% if can('partners.manage') %}
-                        <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                    {% endif %}
+                    <div class="d-flex gap-1">
+                        {% if can('orders.manage') %}
+                            <a href="{{ base_url }}/quotes/create?partner_id={{ partner.id }}" class="btn btn-sm btn-outline-primary" title="{{ t('quotes.new') }}"><i class="bi bi-file-earmark-plus"></i></a>
+                        {% endif %}
+                        {% if can('partners.manage') %}
+                            <a href="{{ base_url }}/partners/{{ partner.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="cx-card__body">
                     <div class="mb-2">
@@ -107,33 +173,52 @@
         </div>
 
         <div class="col-lg-8">
+            {% set activityById = {} %}
+            {% for a in activities %}{% set activityById = activityById|merge({('a' ~ a.id): a}) %}{% endfor %}
+            {% set kindIcons = {order: 'bi-cart-check', quote: 'bi-file-earmark-text', invoice: 'bi-receipt', payment: 'bi-cash-coin', todo: 'bi-check2-square'} %}
+            {% set kindUrls = {order: '/orders/', quote: '/quotes/', invoice: '/invoices/'} %}
             <div class="cx-card mb-3">
                 <div class="cx-card__header">
-                    <h2>{{ t('partners.history_title') }}</h2>
-                    <span class="text-muted small">{{ activities|length }} {{ t('partners.entries_suffix') }}</span>
+                    <h2>{{ t('partners.timeline') }}</h2>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('partners.timeline') }}" id="timeline-filter">
+                        {% for f in ['all', 'documents', 'money', 'activity'] %}
+                            <button type="button" class="btn btn-outline-secondary {{ f == 'all' ? 'active' : '' }}" data-timeline-filter="{{ f }}">{{ t('partners.timeline_filter.' ~ f) }}</button>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="cx-card__body">
-                    {% for a in activities %}
-                        <div class="d-flex gap-3 pb-3 mb-3 {{ not loop.last ? 'border-bottom' : '' }}">
-                            <div class="cx-timeline-icon"><i class="bi {{ typeIcons[a.type] }}"></i></div>
+                <div class="cx-card__body" id="partner-timeline">
+                    {% for e in timeline %}
+                        {% set group = e.kind in ['order', 'quote', 'invoice'] ? 'documents' : (e.kind == 'payment' ? 'money' : 'activity') %}
+                        {% set a = e.kind == 'activity' ? activityById['a' ~ e.id]|default(null) : null %}
+                        <div class="d-flex gap-3 pb-3 mb-3 border-bottom" data-timeline-group="{{ group }}">
+                            <div class="cx-timeline-icon"><i class="bi {{ e.kind == 'activity' ? typeIcons[e.detail]|default('bi-sticky') : kindIcons[e.kind] }}"></i></div>
                             <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
                                     <div>
-                                        <span class="badge rounded-pill bg-body-tertiary text-body border me-1">{{ typeLabels[a.type] }}</span>
-                                        <span class="fw-medium">{{ a.subject }}</span>
-                                        {% if a.contact_name %}<span class="text-muted small ms-1"><i class="bi bi-person"></i> {{ a.contact_name }}</span>{% endif %}
+                                        <span class="badge rounded-pill bg-body-tertiary text-body border me-1">{{ e.kind == 'activity' ? typeLabels[e.detail]|default(e.detail) : t('partners.timeline_kind.' ~ e.kind) }}</span>
+                                        {% if kindUrls[e.kind] is defined %}
+                                            <a href="{{ base_url }}{{ kindUrls[e.kind] }}{{ e.id }}" class="fw-medium text-decoration-none">{{ e.title }}</a>
+                                        {% elseif e.kind == 'payment' %}
+                                            <span class="fw-medium">{{ e.title }}</span> <span class="text-muted small">· {{ t('invoices.payment_methods.' ~ e.detail)|default(e.detail) }}</span>
+                                        {% else %}
+                                            <span class="fw-medium {{ e.kind == 'todo' and e.detail == 'done' ? 'text-decoration-line-through text-muted' : '' }}">{{ e.title }}</span>
+                                        {% endif %}
+                                        {% if a and a.contact_name %}<span class="text-muted small ms-1"><i class="bi bi-person"></i> {{ a.contact_name }}</span>{% endif %}
+                                        {% if e.kind == 'invoice' and e.detail == 'storno' %}<span class="badge rounded-pill bg-danger-subtle text-danger-emphasis ms-1">{{ t('invoices.storno_title') }}</span>{% endif %}
                                     </div>
-                                    <div class="text-nowrap">
-                                        <span class="text-muted small me-2">{{ a.activity_date }}</span>
-                                        {% if can('crm.manage') %}
-                                            <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities/{{ a.id }}/delete" class="d-inline" data-confirm="{{ t('partners.confirm_delete_activity') }}">
+                                    <div class="text-nowrap text-end">
+                                        {% if e.amount is not null %}<div class="fw-medium">{{ e.amount|money }}</div>{% endif %}
+                                        <span class="text-muted small">{{ e.at|date('Y-m-d H:i') }}</span>
+                                        {% if a and can('crm.manage') %}
+                                            <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/activities/{{ a.id }}/delete" class="d-inline ms-1" data-confirm="{{ t('partners.confirm_delete_activity') }}">
                                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
                                             </form>
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if a.note %}<div class="text-muted small mt-1">{{ a.note|nl2br }}</div>{% endif %}
-                                {% if a.created_by_name %}<div class="text-muted mt-1" style="font-size:.75rem;">{{ t('partners.recorded_by') }}: {{ a.created_by_name }}</div>{% endif %}
+                                {% if a and a.note %}<div class="text-muted small mt-1">{{ a.note|nl2br }}</div>{% endif %}
+                                {% if a and a.created_by_name %}<div class="text-muted mt-1" style="font-size:.75rem;">{{ t('partners.recorded_by') }}: {{ a.created_by_name }}</div>{% endif %}
+                                {% if e.kind == 'todo' and e.status %}<div class="text-muted small">{{ t('partners.timeline_due', {date: e.status}) }}</div>{% endif %}
                             </div>
                         </div>
                     {% else %}
@@ -144,6 +229,26 @@
                     {% endfor %}
                 </div>
             </div>
+
+            {% if top_products is not empty %}
+                <div class="cx-card mb-3">
+                    <div class="cx-card__header"><h2>{{ t('partners.top_products') }}</h2><span class="text-muted small">{{ t('partners.last_12_months') }}</span></div>
+                    <div class="cx-card__body p-0">
+                        <table class="table cx-table align-middle mb-0">
+                            <tbody>
+                            {% for p in top_products %}
+                                <tr>
+                                    <td class="text-nowrap small text-muted">{{ p.sku }}</td>
+                                    <td>{{ p.name }}</td>
+                                    <td class="text-end text-nowrap">{{ p.quantity|qty }}</td>
+                                    <td class="text-end text-nowrap fw-medium">{{ p.net|money }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

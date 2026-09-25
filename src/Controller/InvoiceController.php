@@ -150,7 +150,7 @@ class InvoiceController extends BaseController
             'status' => 'unpaid',
             'issue_date' => ($_POST['issue_date'] ?? '') ?: date('Y-m-d'),
             'fulfilment_date' => ($_POST['fulfilment_date'] ?? '') ?: null,
-            'due_date' => ($_POST['due_date'] ?? '') ?: date('Y-m-d', strtotime('+8 days')),
+            'due_date' => ($_POST['due_date'] ?? '') ?: date('Y-m-d', strtotime('+' . (new \Cloudexus\Model\Crm\PartnerOverviewModel())->credit((int) $_POST['partner_id'])['payment_terms_days'] . ' days')),
             'payment_method' => (string) ($_POST['payment_method'] ?? 'transfer'),
             'shipping_cost' => (float) str_replace(',', '.', $_POST['shipping_cost'] ?? '0'),
             'payment_cost' => (float) str_replace(',', '.', $_POST['payment_cost'] ?? '0'),

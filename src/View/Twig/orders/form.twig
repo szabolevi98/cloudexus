@@ -16,6 +16,7 @@
                         <label for="partner_id" class="form-label">{{ t('orders.partner_customer') }}</label>
                         <select id="partner_id" name="partner_id" class="form-select cx-ajax-select"
                                 data-url="{{ base_url }}/partners/search?role=customer" data-placeholder="{{ t('orders.choose_partner') }}" required></select>
+                        {% include 'common/partner-credit.twig' %}
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="form-label">{{ t('orders.order_date') }}</label>

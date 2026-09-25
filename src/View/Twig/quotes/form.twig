@@ -18,6 +18,7 @@
                                 data-url="{{ base_url }}/partners/search?role=customer" data-placeholder="{{ t('orders.choose_partner') }}" required>
                             {% for opt in partner_option|default([]) %}<option value="{{ opt.id }}" selected>{{ opt.text }}</option>{% endfor %}
                         </select>
+                        {% include 'common/partner-credit.twig' %}
                     </div>
                     <div class="col-md-2 mb-3">
                         <label for="quote_date" class="form-label">{{ t('common.date') }}</label>
