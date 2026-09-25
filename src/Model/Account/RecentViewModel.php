@@ -47,6 +47,7 @@ class RecentViewModel
                         WHEN 'partner' THEN pa.name
                         WHEN 'invoice' THEN i.invoice_number
                         WHEN 'order' THEN o.order_number
+                        WHEN 'quote' THEN qu.quote_number
                         WHEN 'purchase_order' THEN po.po_number
                         WHEN 'incoming_invoice' THEN ii.invoice_number
                     END AS label,
@@ -55,6 +56,7 @@ class RecentViewModel
                         WHEN 'partner' THEN COALESCE(pa.tax_number, '')
                         WHEN 'invoice' THEN ip.name
                         WHEN 'order' THEN op.name
+                        WHEN 'quote' THEN qup.name
                         WHEN 'purchase_order' THEN pop.name
                         WHEN 'incoming_invoice' THEN iip.name
                     END AS hint
@@ -66,12 +68,14 @@ class RecentViewModel
              LEFT JOIN partners ip ON ip.id = i.partner_id
              LEFT JOIN orders o ON rv.kind = 'order' AND o.id = rv.item_id
              LEFT JOIN partners op ON op.id = o.partner_id
+             LEFT JOIN quotes qu ON rv.kind = 'quote' AND qu.id = rv.item_id
+             LEFT JOIN partners qup ON qup.id = qu.partner_id
              LEFT JOIN purchase_orders po ON rv.kind = 'purchase_order' AND po.id = rv.item_id
              LEFT JOIN partners pop ON pop.id = po.partner_id
              LEFT JOIN incoming_invoices ii ON rv.kind = 'incoming_invoice' AND ii.id = rv.item_id
              LEFT JOIN partners iip ON iip.id = ii.partner_id
              WHERE rv.user_id = :user AND rv.kind IN ($placeholders)
-               AND COALESCE(pr.id, pa.id, i.id, o.id, po.id, ii.id) IS NOT NULL
+               AND COALESCE(pr.id, pa.id, i.id, o.id, qu.id, po.id, ii.id) IS NOT NULL
              ORDER BY rv.viewed_at DESC LIMIT " . max(1, $limit)
         );
         $params = ['user' => $userId];

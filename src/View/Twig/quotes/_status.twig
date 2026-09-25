@@ -1,0 +1,9 @@
+{% set badge = {
+    draft: 'bg-secondary-subtle text-secondary-emphasis',
+    sent: 'text-bg-primary',
+    expired: 'bg-warning-subtle text-warning-emphasis',
+    accepted: 'bg-success-subtle text-success-emphasis',
+    rejected: 'bg-danger-subtle text-danger-emphasis',
+    ordered: 'text-bg-success'
+} %}
+<span class="badge rounded-pill {{ badge[status] }}">{{ t('quotes.status.' ~ status) }}</span>

@@ -34,6 +34,7 @@ return [
     'kind_mail' => 'Email',
     'kind_test' => 'Test',
     'kind_invoice' => 'Invoice',
+    'kind_quote' => 'Quote',
     'kind_password_reset' => 'New password',
     'kind_digest' => 'Morning digest',
 ];

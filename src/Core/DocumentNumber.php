@@ -27,6 +27,7 @@ final class DocumentNumber
         'incoming_invoice' => ['BSZLA', 'incoming_invoices', 'invoice_number'],
         'cash_voucher' => ['PB', 'cash_vouchers', 'voucher_number'],
         'stocktaking' => ['LELT', 'stocktakings', 'stocktaking_number'],
+        'quote' => ['AJ', 'quotes', 'quote_number'],
     ];
 
     /**

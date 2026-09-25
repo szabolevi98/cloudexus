@@ -23,6 +23,7 @@ class PaletteController extends BaseController
         'partner' => Permissions::PARTNERS_VIEW,
         'invoice' => Permissions::INVOICES_VIEW,
         'order' => Permissions::ORDERS_VIEW,
+        'quote' => Permissions::ORDERS_VIEW,
         'purchase_order' => Permissions::PURCHASING_VIEW,
         'incoming_invoice' => Permissions::PURCHASING_VIEW,
     ];
@@ -31,6 +32,8 @@ class PaletteController extends BaseController
     private const COMMANDS = [
         ['palette.new_invoice', '/invoices/create', Permissions::INVOICES_ISSUE],
         ['palette.new_order', '/orders/create', Permissions::ORDERS_MANAGE],
+        ['palette.new_quote', '/quotes/create', Permissions::ORDERS_MANAGE],
+        ['nav.quotes', '/quotes', Permissions::ORDERS_VIEW],
         ['palette.new_product', '/products/create', Permissions::PRODUCTS_MANAGE],
         ['palette.new_partner', '/partners/create', Permissions::PARTNERS_MANAGE],
         ['palette.new_purchase_order', '/purchase-orders/create', Permissions::PURCHASING_MANAGE],
@@ -145,6 +148,12 @@ class PaletteController extends BaseController
                  WHERE o.order_number LIKE :q1 OR p.name LIKE :q2 OR p.tax_number LIKE :q3 ORDER BY o.id DESC' . $limit,
                 fn(array $r): array => ['label' => (string) $r['order_number'], 'hint' => (string) $r['partner'], 'url' => '/orders/' . $r['id']]
             );
+            $add(
+                $this->t('palette.quotes'),
+                'SELECT q.id, q.quote_number, p.name AS partner FROM quotes q JOIN partners p ON p.id = q.partner_id
+                 WHERE q.quote_number LIKE :q1 OR p.name LIKE :q2 OR p.tax_number LIKE :q3 ORDER BY q.id DESC' . $limit,
+                fn(array $r): array => ['label' => (string) $r['quote_number'], 'hint' => (string) $r['partner'], 'url' => '/quotes/' . $r['id']]
+            );
         }
         if (Acl::can(Permissions::PURCHASING_VIEW)) {
             $add(
@@ -172,6 +181,7 @@ class PaletteController extends BaseController
             'partner' => '/partners/' . $id,
             'invoice' => '/invoices/' . $id,
             'order' => '/orders/' . $id,
+            'quote' => '/quotes/' . $id,
             'purchase_order' => '/purchase-orders/' . $id,
             'incoming_invoice' => '/incoming-invoices/' . $id,
             default => '/dashboard',

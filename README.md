@@ -77,6 +77,11 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ### Sales
 
+- **Quotes** before the orders: the same line items and pricing (group
+  prices, price rules, VAT per line), a validity date and a note for the
+  customer, a PDF and sending by email, accepted or rejected (with the
+  reason), shown as expired once the date passes, and made an order of in one
+  click — the order says which quote it came from.
 - **Customer orders** with line items priced as they are picked and a total that
   follows as they are typed; an order becomes an invoice in one click.
 - **Invoices with VAT per line**, at each product's own rate, a VAT summary by

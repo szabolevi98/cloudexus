@@ -1,0 +1,133 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    {% set open = quote.status in ['draft', 'sent'] %}
+    <div class="cx-card mb-4">
+        <div class="cx-card__header">
+            <div>
+                <h2>{{ quote.quote_number }}</h2>
+                <div class="text-muted small">
+                    <a href="{{ base_url }}/partners/{{ quote.partner_id }}" class="text-decoration-none">{{ quote.partner_name }}</a>
+                    · {{ quote.quote_date }} · {{ t('quotes.valid_until') }}: {{ quote.valid_until }}
+                </div>
+            </div>
+            {% include 'quotes/_status.twig' with {status: quote.effective_status} %}
+        </div>
+        {% if quote.order_id or quote.rejection_reason or quote.sent_at %}
+            <div class="cx-card__body border-bottom small">
+                {% if quote.order_id %}<div><i class="bi bi-cart-check me-1"></i>{{ t('quotes.became_order') }} <a href="{{ base_url }}/orders/{{ quote.order_id }}">{{ quote.order_number }}</a></div>{% endif %}
+                {% if quote.rejection_reason %}<div class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ t('quotes.rejection_reason') }}: {{ quote.rejection_reason }}</div>{% endif %}
+                {% if quote.sent_at %}<div class="text-muted"><i class="bi bi-envelope-check me-1"></i>{{ t('quotes.sent_at', {date: quote.sent_at|date('Y-m-d H:i')}) }}{% if quote.emailed_to %} · {{ quote.emailed_to }}{% endif %}</div>{% endif %}
+            </div>
+        {% endif %}
+        <div class="cx-card__body p-0">
+            <div class="table-responsive">
+                <table class="table cx-table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>{{ t('common.sku') }}</th>
+                        <th>{{ t('orders.product_name') }}</th>
+                        <th class="text-end">{{ t('common.quantity') }}</th>
+                        <th class="text-end">{{ t('invoices.unit_price_net') }}</th>
+                        <th class="text-end">{{ t('invoices.vat_rate') }}</th>
+                        <th class="text-end">{{ t('invoices.net') }}</th>
+                        <th class="text-end">{{ t('invoices.gross') }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in quote.items %}
+                        <tr>
+                            <td class="text-nowrap">{{ item.sku }}</td>
+                            <td>{{ item.product_name }}</td>
+                            <td class="text-end text-nowrap">{{ item.quantity|qty }} {{ item.unit }}</td>
+                            <td class="text-end text-nowrap">{{ item.unit_price|money }}</td>
+                            <td class="text-end">{{ item.vat_rate|qty }}%</td>
+                            <td class="text-end text-nowrap">{{ item.net_amount|money }}</td>
+                            <td class="text-end text-nowrap">{{ item.gross_amount|money }}</td>
+                        </tr>
+                    {% endfor %}
+                    {% if quote.shipping_cost != 0 %}<tr><td></td><td>{{ t('invoices.shipping_cost_row') }}</td><td colspan="3"></td><td class="text-end">{{ quote.shipping_cost|money }}</td><td></td></tr>{% endif %}
+                    {% if quote.payment_cost != 0 %}<tr><td></td><td>{{ t('invoices.payment_cost_row') }}</td><td colspan="3"></td><td class="text-end">{{ quote.payment_cost|money }}</td><td></td></tr>{% endif %}
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-end text-muted">{{ t('invoices.net_total') }} · {{ t('invoices.vat_total') }}</td>
+                        <td class="text-end">{{ quote.net_total|money }}</td>
+                        <td class="text-end text-muted">{{ quote.vat_total|money }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" class="text-end fw-medium">{{ t('quotes.gross_total') }}</td>
+                        <td class="text-end fw-bold" id="quote-total">{{ quote.total_amount|money }}</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% if quote.note %}<div class="cx-card__body border-top small">{{ quote.note|nl2br }}</div>{% endif %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3" id="quote-actions">
+        <a href="{{ base_url }}/quotes" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}</a>
+        <a href="{{ base_url }}/quotes/{{ quote.id }}/pdf" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-pdf me-1"></i>{{ t('invoices.pdf_download') }}</a>
+        {% if can('orders.manage') %}
+            {% if open %}
+                <a href="{{ base_url }}/quotes/{{ quote.id }}/edit" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>{{ t('common.edit') }}</a>
+                {% if mail_enabled %}
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#quote-email" aria-expanded="false" aria-controls="quote-email"><i class="bi bi-envelope me-1"></i>{{ t('invoices.email_send') }}</button>
+                {% endif %}
+                {% if quote.status == 'draft' %}
+                    <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/sent"><button type="submit" class="btn btn-outline-secondary">{{ t('quotes.mark_sent') }}</button></form>
+                {% endif %}
+                <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/accept"><button type="submit" class="btn btn-outline-success" id="quote-accept"><i class="bi bi-check2 me-1"></i>{{ t('quotes.accept') }}</button></form>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#quote-reject" aria-expanded="false">{{ t('quotes.reject') }}</button>
+            {% endif %}
+            {% if quote.status in ['draft', 'sent', 'accepted'] and not quote.order_id %}
+                <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/order" data-confirm="{{ t('quotes.order_confirm') }}">
+                    <button type="submit" class="btn btn-primary" id="quote-to-order"><i class="bi bi-cart-plus me-1"></i>{{ t('quotes.to_order') }}</button>
+                </form>
+            {% endif %}
+            {% if not quote.order_id %}
+                <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/delete" data-confirm="{{ t('common.confirm_delete') }}" class="ms-auto">
+                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if can('orders.manage') and open %}
+        <div class="collapse" id="quote-reject">
+            <div class="cx-card mb-3" style="max-width: 640px;">
+                <div class="cx-card__body">
+                    <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/reject" class="d-flex flex-wrap gap-2 align-items-end">
+                        <div class="flex-grow-1">
+                            <label for="reject-reason" class="form-label small">{{ t('quotes.rejection_reason') }} <span class="text-muted">{{ t('common.optional') }}</span></label>
+                            <input type="text" id="reject-reason" name="reason" class="form-control form-control-sm" maxlength="255" placeholder="{{ t('quotes.reason_placeholder') }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-danger">{{ t('quotes.reject') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% if mail_enabled %}
+            <div class="collapse" id="quote-email">
+                <div class="cx-card" style="max-width: 640px;">
+                    <div class="cx-card__header"><h2>{{ t('quotes.email_title') }}</h2></div>
+                    <div class="cx-card__body">
+                        <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/email">
+                            <div class="mb-3">
+                                <label for="email-to" class="form-label">{{ t('invoices.email_to') }}</label>
+                                <input type="email" id="email-to" name="to" class="form-control" value="{{ quote.emailed_to ?: quote.partner_email }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label for="email-message" class="form-label">{{ t('invoices.email_message') }}</label>
+                                <textarea id="email-message" name="message" class="form-control" rows="7">{{ email_message }}</textarea>
+                            </div>
+                            <p class="small text-muted"><i class="bi bi-paperclip"></i>{{ t('invoices.email_attachment', {name: quote.quote_number ~ '.pdf'}) }}</p>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>{{ t('invoices.email_submit') }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

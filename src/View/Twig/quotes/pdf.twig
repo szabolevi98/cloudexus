@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+{#
+    Az árajánlat PDF-ként (Pdf::render): A4, DejaVu Sans, CSS 2 — a számla
+    PDF-jének (invoices/pdf.twig) mintájára, az ajánlat adataival.
+#}
+{% set seller = company %}
+{% set invoice = quote %}
+<html lang="{{ current_locale }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ quote.quote_number }}</title>
+    <style>
+        @page { margin: 20mm 16mm 20mm; }
+        body { font-family: "DejaVu Sans", sans-serif; font-size: 8.5pt; color: #1c2333; line-height: 1.4; }
+        table { width: 100%; border-collapse: collapse; }
+        .head td { vertical-align: top; }
+        h1 { margin: 0 0 3px; font-size: 17pt; color: #4f5bd5; }
+        .number { font-size: 11pt; font-weight: bold; }
+        .ref { color: #7c8494; font-size: 8pt; margin-top: 2px; }
+        .stamp { font-size: 12pt; font-weight: bold; text-align: right; }
+        .stamp-paid { color: #1fa971; }
+        .stamp-cancelled { color: #e0526a; }
+        .parties { margin: 18px 0 14px; }
+        .parties td { width: 50%; vertical-align: top; padding-right: 16px; }
+        .label { color: #7c8494; font-size: 6.5pt; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 3px; }
+        .name { font-weight: bold; }
+        .meta { margin-bottom: 14px; }
+        .meta td { padding: 6px 8px; background: #f2f4fb; }
+        .lines { table-layout: fixed; }
+        .lines th { padding: 5px 6px; border-bottom: 1.5px solid #d9dcea; color: #7c8494; font-size: 6.5pt; text-align: left; text-transform: uppercase; letter-spacing: 0.4px; }
+        .lines td { padding: 5px 4px; border-bottom: 1px solid #e7e9f2; vertical-align: top; font-size: 7.5pt; }
+        .lines th { padding-left: 4px; padding-right: 4px; }
+        .num { text-align: right; white-space: nowrap; }
+        /* A fejléc tördelhet: a "Nettó egységár" hosszabb, mint az oszlopa. */
+        .lines th.num, .summary th.num { text-align: right; white-space: normal; }
+        .sku { color: #7c8494; font-size: 7pt; }
+        .summary { width: 60%; margin: 12px 0 0 40%; }
+        .summary th { padding: 4px 6px; border-bottom: 1.5px solid #d9dcea; color: #7c8494; font-size: 6.5pt; text-align: left; text-transform: uppercase; }
+        .summary td { padding: 4px 6px; border-bottom: 1px solid #e7e9f2; }
+        .totals { width: 60%; margin: 10px 0 0 40%; }
+        .totals td { padding: 3px 6px; }
+        .grand td { font-weight: bold; font-size: 10.5pt; border-top: 2px solid #1c2333; padding-top: 6px; }
+        .foot { margin-top: 26px; padding-top: 8px; border-top: 1px solid #d9dcea; color: #7c8494; font-size: 7pt; text-align: center; }
+    </style>
+</head>
+<body>
+    <table class="head">
+        <tr>
+            <td>
+                <h1>{{ t('quotes.pdf_title') }}</h1>
+                <div class="number">{{ quote.quote_number }}</div>
+            </td>
+            <td class="stamp">
+
+            </td>
+        </tr>
+    </table>
+
+    <table class="parties">
+        <tr>
+            <td>
+                <div class="label">{{ t('quotes.pdf_from') }}</div>
+                <div class="name">{{ seller.name|default('—') }}</div>
+                <div>{{ seller.address|default('') }}</div>
+                <div>{{ t('invoices.tax_number') }}: {{ seller.tax_number|default('—') }}</div>
+                {% if seller.bank_account %}<div>{{ t('invoices.bank_account') }}: {{ seller.bank_account }}</div>{% endif %}
+            </td>
+            <td>
+                <div class="label">{{ t('quotes.pdf_to') }}</div>
+                <div class="name">{{ invoice.partner_name }}</div>
+                <div>{{ invoice.address|default('') }}</div>
+                {% if invoice.tax_number %}<div>{{ t('invoices.tax_number') }}: {{ invoice.tax_number }}</div>{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <table class="meta">
+        <tr>
+            <td><div class="label">{{ t('common.date') }}</div>{{ quote.quote_date }}</td>
+            <td><div class="label">{{ t('quotes.valid_until') }}</div>{{ quote.valid_until }}</td>
+        </tr>
+    </table>
+
+    <table class="lines">
+        <colgroup>
+            <col style="width: 29%"><col style="width: 11%"><col style="width: 13%"><col style="width: 7%">
+            <col style="width: 13%"><col style="width: 13%"><col style="width: 14%">
+        </colgroup>
+        <thead>
+        <tr>
+            <th>{{ t('invoices.product_name') }}</th>
+            <th class="num">{{ t('common.quantity') }}</th>
+            <th class="num">{{ t('invoices.unit_price_net') }}</th>
+            <th class="num">{{ t('invoices.vat_rate') }}</th>
+            <th class="num">{{ t('invoices.net') }}</th>
+            <th class="num">{{ t('invoices.vat') }}</th>
+            <th class="num">{{ t('invoices.gross') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.product_name }}<br><span class="sku">{{ item.sku }}</span></td>
+                <td class="num">{{ item.quantity|qty }} {{ item.unit }}</td>
+                <td class="num">{{ item.unit_price|money }}</td>
+                <td class="num">{{ item.vat_rate|qty }}%</td>
+                <td class="num">{{ (item.net_amount ?? item.line_total)|money }}</td>
+                <td class="num">{{ (item.vat_amount ?? 0)|money }}</td>
+                <td class="num">{{ (item.gross_amount ?? item.line_total)|money }}</td>
+            </tr>
+        {% endfor %}
+        {% if invoice.shipping_cost != 0 %}
+            <tr>
+                <td>{{ t('invoices.shipping_cost_row') }}</td><td></td><td></td>
+                <td class="num">{{ invoice.extra_vat_rate|qty }}%</td>
+                <td class="num">{{ invoice.shipping_cost|money }}</td><td></td><td></td>
+            </tr>
+        {% endif %}
+        {% if invoice.payment_cost != 0 %}
+            <tr>
+                <td>{{ t('invoices.payment_cost_row') }}</td><td></td><td></td>
+                <td class="num">{{ invoice.extra_vat_rate|qty }}%</td>
+                <td class="num">{{ invoice.payment_cost|money }}</td><td></td><td></td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <table class="summary">
+        <thead>
+        <tr>
+            <th>{{ t('invoices.vat_summary') }}</th>
+            <th class="num">{{ t('invoices.net') }}</th>
+            <th class="num">{{ t('invoices.vat') }}</th>
+            <th class="num">{{ t('invoices.gross') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in invoice.vat_summary %}
+            <tr>
+                <td>{{ row.rate|qty }}%</td>
+                <td class="num">{{ row.net|money }}</td>
+                <td class="num">{{ row.vat|money }}</td>
+                <td class="num">{{ row.gross|money }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr><td>{{ t('invoices.net_total') }}</td><td class="num">{{ (invoice.net_total ?? invoice.total_amount)|money }}</td></tr>
+        <tr><td>{{ t('invoices.vat_total') }}</td><td class="num">{{ (invoice.vat_total ?? 0)|money }}</td></tr>
+        <tr class="grand"><td>{{ t('quotes.gross_total') }}</td><td class="num">{{ invoice.total_amount|money }}</td></tr>
+    </table>
+
+    {% if quote.note %}<p style="margin-top: 18px;">{{ quote.note|nl2br }}</p>{% endif %}
+    <div class="foot">{{ t('quotes.pdf_footer', {date: quote.valid_until}) }}</div>
+</body>
+</html>

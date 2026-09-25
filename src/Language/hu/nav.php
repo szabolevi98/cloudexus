@@ -25,6 +25,7 @@ return [
     'barcode' => 'Vonalkód gyűjtő',
     'stocktaking' => 'Leltározás',
     'stock_overview' => 'Raktárkészlet',
+    'quotes' => 'Árajánlatok',
     'orders' => 'Vevői rendelések',
     'invoices' => 'Számlázás',
     'purchase_orders' => 'Szállítói rendelések',

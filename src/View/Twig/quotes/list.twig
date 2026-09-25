@@ -1,0 +1,80 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <h2>{{ t('quotes.list_title') }}</h2>
+            <div class="ms-auto me-2">{% include 'common/saved-filters.twig' with {page: 'quotes'} %}</div>
+            {% if can('orders.manage') %}
+                <a href="{{ base_url }}/quotes/create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>{{ t('quotes.new') }}</a>
+            {% endif %}
+        </div>
+        <div class="cx-card__body p-0">
+            <form method="get" class="p-3 border-bottom">
+                {{ sort_inputs() }}
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
+                        <input type="text" name="q" class="form-control form-control-sm" placeholder="AJ-…" value="{{ filters.q }}">
+                    </div>
+                    <div class="col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.partner') }}</label>
+                        <select name="partner_id" class="form-select form-select-sm cx-ajax-select" data-url="{{ base_url }}/partners/search?role=customer" data-placeholder="{{ t('common.all') }}">
+                            {% for opt in partner_option|default([]) %}<option value="{{ opt.id }}" selected>{{ opt.text }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.status') }}</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">{{ t('common.all') }}</option>
+                            {% for s in ['draft', 'sent', 'expired', 'accepted', 'rejected', 'ordered'] %}
+                                <option value="{{ s }}" {{ filters.status == s ? 'selected' : '' }}>{{ t('quotes.status.' ~ s) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.date_from') }}</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+                    </div>
+                    <div class="col-sm-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">{{ t('common.date_to') }}</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>{{ t('common.filter') }}</button>
+                        <a href="{{ base_url }}/quotes" class="btn btn-sm btn-outline-secondary">{{ t('common.clear') }}</a>
+                    </div>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 cx-table">
+                    <thead>
+                    <tr>
+                        <th {{ sort_aria('number') }}>{{ sort_link('number', t('quotes.number')) }}</th>
+                        <th {{ sort_aria('partner') }}>{{ sort_link('partner', t('common.partner')) }}</th>
+                        <th {{ sort_aria('date') }}>{{ sort_link('date', t('common.date')) }}</th>
+                        <th {{ sort_aria('valid_until') }}>{{ sort_link('valid_until', t('quotes.valid_until')) }}</th>
+                        <th class="text-end" {{ sort_aria('total') }}>{{ sort_link('total', t('quotes.gross_total')) }}</th>
+                        <th {{ sort_aria('status') }}>{{ sort_link('status', t('common.status')) }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for quote in quotes %}
+                        <tr>
+                            <td class="fw-medium text-nowrap"><a href="{{ base_url }}/quotes/{{ quote.id }}" class="text-decoration-none">{{ quote.quote_number }}</a></td>
+                            <td>{{ quote.partner_name }}</td>
+                            <td class="text-nowrap">{{ quote.quote_date }}</td>
+                            <td class="text-nowrap">{{ quote.valid_until }}</td>
+                            <td class="text-end text-nowrap">{{ quote.total_amount|money }}</td>
+                            <td>{% include 'quotes/_status.twig' with {status: quote.effective_status} %}</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">{{ t('quotes.none_found') }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include 'common/pagination.twig' %}
+        </div>
+    </div>
+{% endblock %}

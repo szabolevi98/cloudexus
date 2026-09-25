@@ -25,6 +25,7 @@ return [
     'barcode' => 'Barcode collector',
     'stocktaking' => 'Stocktaking',
     'stock_overview' => 'Stock overview',
+    'quotes' => 'Quotes',
     'orders' => 'Sales orders',
     'invoices' => 'Invoicing',
     'purchase_orders' => 'Purchase orders',

@@ -34,6 +34,7 @@ return [
     'kind_mail' => 'Levél',
     'kind_test' => 'Próbalevél',
     'kind_invoice' => 'Számla',
+    'kind_quote' => 'Árajánlat',
     'kind_password_reset' => 'Új jelszó',
     'kind_digest' => 'Reggeli összefoglaló',
 ];

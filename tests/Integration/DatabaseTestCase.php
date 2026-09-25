@@ -29,7 +29,7 @@ abstract class DatabaseTestCase extends TestCase
         'invoice_items', 'invoices', 'order_items', 'orders', 'stock_movements', 'warehouse_locations', 'warehouses',
         'product_group_prices', 'product_parameters', 'product_categories', 'product_images', 'product_links',
         'product_description', 'products', 'category_description', 'categories',
-        'partners', 'customer_groups', 'api_users', 'user_recovery_codes', 'password_resets', 'outbox', 'recent_views', 'saved_filters', 'webhook_deliveries', 'webhooks', 'users',
+        'partners', 'customer_groups', 'api_users', 'user_recovery_codes', 'password_resets', 'outbox', 'recent_views', 'saved_filters', 'webhook_deliveries', 'webhooks', 'quote_items', 'quotes', 'users',
     ];
 
     public static function setUpBeforeClass(): void

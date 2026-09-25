@@ -41,6 +41,7 @@ return [
         'settings' => 'Settings',
         'api_user' => 'API user',
         'order' => 'Customer order',
+        'quote' => 'Quote',
         'purchase_order' => 'Purchase order',
         'price_rule' => 'Price rule',
         'payment' => 'Payment',

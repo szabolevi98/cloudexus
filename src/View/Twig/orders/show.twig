@@ -5,7 +5,7 @@
         <div class="cx-card__header">
             <div>
                 <h2>{{ order.order_number }}</h2>
-                <div class="text-muted small">{{ order.partner_name }} · {{ order.order_date }}</div>
+                <div class="text-muted small">{{ order.partner_name }} · {{ order.order_date }}{% if order.quote_id %} · <a href="{{ base_url }}/quotes/{{ order.quote_id }}">{{ t('quotes.from_quote', {number: order.from_quote_number}) }}</a>{% endif %}</div>
             </div>
             <div>
                 {% if order.status == 'draft' %}

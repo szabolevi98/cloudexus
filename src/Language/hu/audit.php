@@ -41,6 +41,7 @@ return [
         'settings' => 'Beállítások',
         'api_user' => 'API felhasználó',
         'order' => 'Vevői rendelés',
+        'quote' => 'Árajánlat',
         'purchase_order' => 'Szállítói rendelés',
         'price_rule' => 'Árszabály',
         'payment' => 'Befizetés',

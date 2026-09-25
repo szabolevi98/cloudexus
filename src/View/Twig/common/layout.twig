@@ -105,6 +105,9 @@
             {% if can_any('orders.view', 'invoices.view') %}
                 <div class="cx-nav__group-label">{{ t('nav.groups.sales') }}</div>
                 {% if can('orders.view') %}
+                    <a class="cx-nav__link {{ active_menu == 'quotes' ? 'is-active' : '' }}" href="{{ base_url }}/quotes">
+                        <i class="bi bi-file-earmark-text"></i><span>{{ t('nav.quotes') }}</span>
+                    </a>
                     <a class="cx-nav__link {{ active_menu == 'orders' ? 'is-active' : '' }}" href="{{ base_url }}/orders">
                         <i class="bi bi-cart-check"></i><span>{{ t('nav.orders') }}</span>
                     </a>

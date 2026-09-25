@@ -18,6 +18,7 @@ class SavedFilterController extends BaseController
     public const PAGES = [
         'products' => ['/products', Permissions::PRODUCTS_VIEW],
         'partners' => ['/partners', Permissions::PARTNERS_VIEW],
+        'quotes' => ['/quotes', Permissions::ORDERS_VIEW],
         'orders' => ['/orders', Permissions::ORDERS_VIEW],
         'invoices' => ['/invoices', Permissions::INVOICES_VIEW],
         'purchase-orders' => ['/purchase-orders', Permissions::PURCHASING_VIEW],
