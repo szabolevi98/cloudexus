@@ -103,22 +103,4 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            function sync(radioClass, fieldClass, attr) {
-                const value = document.querySelector('.' + radioClass + ':checked')?.value;
-                document.querySelectorAll('.' + fieldClass).forEach((el) => {
-                    const on = el.dataset[attr] === value;
-                    el.classList.toggle('d-none', !on);
-                    el.querySelectorAll('input, select').forEach((input) => { input.disabled = !on; });
-                });
-            }
-            const scope = () => sync('cx-rule-scope', 'cx-rule-scope-field', 'scope');
-            const effect = () => sync('cx-rule-effect', 'cx-rule-effect-field', 'effect');
-            document.querySelectorAll('.cx-rule-scope').forEach((r) => r.addEventListener('change', scope));
-            document.querySelectorAll('.cx-rule-effect').forEach((r) => r.addEventListener('change', effect));
-            scope();
-            effect();
-        });
-    </script>
 {% endblock %}

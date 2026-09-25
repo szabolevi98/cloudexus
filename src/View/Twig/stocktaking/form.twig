@@ -10,7 +10,7 @@
             <form method="get" action="{{ base_url }}/stocktaking/create" class="row g-2 align-items-end mb-2">
                 <div class="col-sm-5 col-lg-4">
                     <label for="warehouse_id" class="form-label">{{ t('common.warehouse') }}</label>
-                    <select id="warehouse_id" name="warehouse_id" class="form-select" onchange="this.form.submit()">
+                    <select id="warehouse_id" name="warehouse_id" class="form-select" data-autosubmit>
                         <option value="">{{ t('stocktaking.choose_warehouse') }}</option>
                         {% for w in warehouses %}
                             <option value="{{ w.id }}" {{ warehouse_id == w.id ? 'selected' : '' }}>{{ w.name }}</option>
@@ -72,21 +72,4 @@
         {% endif %}
     </div>
 
-    <script>
-        document.querySelectorAll('.cx-counted').forEach((input) => {
-            input.addEventListener('input', () => {
-                const row = input.closest('tr');
-                const book = parseFloat(row.querySelector('.cx-book').dataset.book) || 0;
-                const diffCell = row.querySelector('.cx-diff');
-                if (input.value === '') {
-                    diffCell.textContent = '—';
-                    diffCell.className = 'text-end cx-diff text-muted';
-                    return;
-                }
-                const diff = (parseFloat(input.value) || 0) - book;
-                diffCell.textContent = (diff > 0 ? '+' : '') + new Intl.NumberFormat('{{ current_locale == 'hu' ? 'hu-HU' : 'en-US' }}').format(diff);
-                diffCell.className = 'text-end cx-diff fw-medium ' + (diff === 0 ? 'text-muted' : (diff > 0 ? 'text-success' : 'text-danger'));
-            });
-        });
-    </script>
 {% endblock %}

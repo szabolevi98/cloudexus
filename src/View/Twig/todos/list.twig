@@ -102,7 +102,7 @@
                                     </td>
                                     <td class="text-end" style="width:56px;">
                                         {% if can('crm.manage') %}
-                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" onsubmit="return confirm('{{ t('todos.confirm_delete')|e('js') }}');">
+                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" data-confirm="{{ t('todos.confirm_delete') }}">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                             </form>
                                         {% endif %}

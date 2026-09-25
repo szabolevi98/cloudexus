@@ -10,22 +10,11 @@
         </div>
         <div class="cx-card__body">
             <p class="text-muted">{{ t('api_users.docs_english_only') }}</p>
-            <div id="markdown-content" class="markdown-body">
+            <div id="markdown-content" class="markdown-body" data-src="{{ base_url }}/API.md" data-error="{{ t('api_users.docs_load_failed') }}">
                 <p class="text-muted">{{ t('api_users.docs_loading') }}</p>
             </div>
         </div>
     </div>
 
     <script src="{{ base_url }}/assets/vendor/marked/marked.min.js"></script>
-    <script>
-        (function () {
-            const target = document.getElementById('markdown-content');
-            fetch('{{ base_url }}/API.md')
-                .then((r) => r.text())
-                .then((md) => { target.innerHTML = marked.parse(md); })
-                .catch(() => {
-                    target.innerHTML = '<p class="text-danger">{{ t('api_users.docs_load_failed')|e('js') }}</p>';
-                });
-        })();
-    </script>
 {% endblock %}

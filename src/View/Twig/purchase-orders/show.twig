@@ -62,7 +62,7 @@
                 </a>
             {% endif %}
             {% if can('purchasing.manage') %}
-                <form method="post" action="{{ base_url }}/purchase-orders/{{ order.id }}/cancel" onsubmit="return confirm('{{ t('purchase_orders.confirm_void')|e('js') }}');">
+                <form method="post" action="{{ base_url }}/purchase-orders/{{ order.id }}/cancel" data-confirm="{{ t('purchase_orders.confirm_void') }}">
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>{{ t('purchase_orders.void') }}
                     </button>

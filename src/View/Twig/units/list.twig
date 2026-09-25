@@ -68,7 +68,7 @@
                                     <td><input type="number" name="sort_order" form="unit-{{ u.id }}" class="form-control form-control-sm" value="{{ u.sort_order }}"></td>
                                     <td class="text-end text-nowrap">
                                         <button type="submit" form="unit-{{ u.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
-                                        <button type="submit" form="unit-del-{{ u.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" form="unit-del-{{ u.id }}" class="btn btn-sm btn-outline-danger" data-confirm="{{ t('common.confirm_delete') }}"><i class="bi bi-trash"></i></button>
                                     </td>
                                 </tr>
                             {% else %}

@@ -67,7 +67,7 @@
                         <span class="text-muted small">{{ t('dashboard.last_10_days') }}</span>
                     </div>
                     <div class="cx-card__body flex-grow-1" style="position: relative; min-height: 280px;">
-                        <canvas id="orders-chart"></canvas>
+                        <canvas id="orders-chart" data-label="{{ t('dashboard.orders_value_label', {'currency': currency_symbol()}) }}"></canvas>
                     </div>
                 </div>
             </div>
@@ -245,44 +245,5 @@
     </div>
 
     <script src="{{ base_url }}/assets/vendor/chartjs/chart.umd.min.js"></script>
-    <script>
-        const dailyOrders = {{ daily_orders|default([])|json_encode|raw }};
-        const ctx = document.getElementById('orders-chart');
-
-        // A téma színeiből, és újrarajzolva, ha a rendszer témája közben vált.
-        const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        let ordersChart = null;
-        const drawOrdersChart = () => {
-            if (ordersChart) ordersChart.destroy();
-            const primary = cssVar('--cx-primary');
-            const grid = cssVar('--cx-border');
-            const muted = cssVar('--cx-muted');
-            ordersChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dailyOrders.map(d => d.date.slice(5).replace('-', '.')),
-                    datasets: [{
-                        label: '{{ t('dashboard.orders_value_label', {'currency': currency_symbol()})|e('js') }}',
-                        data: dailyOrders.map(d => d.total_value),
-                        borderColor: primary,
-                        backgroundColor: window.cxDark() ? 'rgba(117, 128, 240, 0.16)' : 'rgba(79, 91, 213, 0.12)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 3,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { color: grid }, ticks: { color: muted } },
-                        y: { beginAtZero: true, grid: { color: grid }, ticks: { color: muted, callback: (v) => new Intl.NumberFormat('hu-HU').format(v) } }
-                    }
-                }
-            });
-        };
-        drawOrdersChart();
-        document.addEventListener('cx:theme', drawOrdersChart);
-    </script>
+    <script type="application/json" id="orders-chart-data">{{ js_data(daily_orders|default([])) }}</script>
 {% endblock %}

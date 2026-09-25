@@ -30,7 +30,7 @@
                     <p class="small text-muted">{{ t('webhooks.signing_help') }}</p>
                     <label class="form-label small mb-1">{{ t('webhooks.secret') }}</label>
                     <input type="text" class="form-control form-control-sm font-monospace mb-2" value="{{ hook.secret }}" readonly id="webhook-secret">
-                    <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/secret" onsubmit="return confirm('{{ t('webhooks.secret_confirm')|e('js') }}');" class="mb-3">
+                    <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/secret" data-confirm="{{ t('webhooks.secret_confirm') }}" class="mb-3">
                         <button type="submit" class="btn btn-sm btn-outline-secondary">{{ t('webhooks.new_secret') }}</button>
                     </form>
                     <div class="d-flex flex-wrap gap-2 border-top pt-3">
@@ -40,7 +40,7 @@
                         <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/toggle">
                             <button type="submit" class="btn btn-sm btn-outline-secondary">{{ hook.is_active ? t('webhooks.pause') : t('webhooks.resume') }}</button>
                         </form>
-                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/delete" onsubmit="return confirm('{{ t('webhooks.delete_confirm', {name: hook.name})|e('js') }}');">
+                        <form method="post" action="{{ base_url }}/webhooks/{{ hook.id }}/delete" data-confirm="{{ t('webhooks.delete_confirm', {name: hook.name}) }}">
                             <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('common.delete') }}</button>
                         </form>
                     </div>

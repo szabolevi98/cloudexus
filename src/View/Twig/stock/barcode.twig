@@ -67,97 +67,13 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const locs = {{ locations|json_encode|raw }};
-            const wh = document.getElementById('warehouse_id');
-            const loc = document.getElementById('location_id');
-            function fill() {
-                const w = parseInt(wh.value, 10);
-                loc.innerHTML = '<option value="">{{ t('stock.no_location')|e('js') }}</option>';
-                locs.filter(l => l.warehouse_id == w).forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = l.id; o.textContent = l.code;
-                    loc.appendChild(o);
-                });
-            }
-            wh.addEventListener('change', fill);
-            fill();
-        })();
-
-        (function () {
-            const input = document.getElementById('scan-input');
-            const body = document.getElementById('scan-body');
-            const emptyRow = document.getElementById('scan-empty');
-            const feedback = document.getElementById('scan-feedback');
-            const submitBtn = document.getElementById('scan-submit');
-            const rows = new Map();
-
-            function syncState() {
-                emptyRow.style.display = rows.size ? 'none' : '';
-                submitBtn.disabled = rows.size === 0;
-            }
-
-            function addProduct(product) {
-                if (rows.has(product.id)) {
-                    const qtyInput = rows.get(product.id).querySelector('input[name="quantity[]"]');
-                    qtyInput.value = (parseFloat(qtyInput.value) || 0) + 1;
-                    return;
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="fw-medium">${product.sku}<input type="hidden" name="product_id[]" value="${product.id}"></td>
-                    <td>${product.name}</td>
-                    <td><input type="number" step="0.001" min="0.001" name="quantity[]" class="form-control form-control-sm" value="1"></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger scan-remove"><i class="bi bi-x-lg"></i></button></td>
-                `;
-                tr.querySelector('.scan-remove').addEventListener('click', () => {
-                    rows.delete(product.id);
-                    tr.remove();
-                    syncState();
-                    input.focus();
-                });
-                rows.set(product.id, tr);
-                body.appendChild(tr);
-                syncState();
-            }
-
-            input.addEventListener('keydown', async (e) => {
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-
-                const code = input.value.trim();
-                if (!code) return;
-
-                try {
-                    const res = await fetch('{{ base_url }}/stock/barcode/lookup?code=' + encodeURIComponent(code));
-                    const data = await res.json();
-
-                    if (data.found) {
-                        addProduct(data.product);
-                        feedback.textContent = '✓ ' + data.product.sku + ' — ' + data.product.name;
-                        feedback.className = 'form-text text-success';
-                    } else {
-                        feedback.textContent = '✗ {{ t('stock.barcode_unknown_code')|e('js') }} ' + code;
-                        feedback.className = 'form-text text-danger';
-                    }
-                } catch {
-                    feedback.textContent = '{{ t('stock.barcode_lookup_error')|e('js') }}';
-                    feedback.className = 'form-text text-danger';
-                }
-
-                input.value = '';
-                input.focus();
-            });
-
-            // Az Enter a beolvasó mezőben ne küldje el a formot más mezőkből sem véletlenül.
-            document.getElementById('barcode-form').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && e.target !== submitBtn && e.target.type !== 'submit') {
-                    if (e.target === input) return; // már kezelve
-                    e.preventDefault();
-                }
-            });
-        })();
-    </script>
+    {# A vonalkódgyűjtő beállításai (web/assets/js/barcode.js). #}
+    <script type="application/json" id="barcode-config">{{ js_data({
+        locations: locations,
+        no_location: t('stock.no_location'),
+        lookup_url: base_url ~ '/stock/barcode/lookup',
+        unknown_code: t('stock.barcode_unknown_code'),
+        lookup_error: t('stock.barcode_lookup_error')
+    }) }}</script>
+    <script src="{{ base_url }}/assets/js/barcode.js?v={{ asset_version }}" defer></script>
 {% endblock %}

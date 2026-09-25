@@ -65,18 +65,4 @@
         </div>
     </div>
 
-    <script>
-        const typeSelect = document.getElementById('type');
-        const invoiceField = document.getElementById('invoice-field');
-        const incomingField = document.getElementById('incoming-invoice-field');
-
-        function syncFields() {
-            const isIncome = typeSelect.value === 'bevetel';
-            invoiceField.classList.toggle('d-none', !isIncome);
-            incomingField.classList.toggle('d-none', isIncome);
-        }
-
-        typeSelect.addEventListener('change', syncFields);
-        syncFields();
-    </script>
 {% endblock %}

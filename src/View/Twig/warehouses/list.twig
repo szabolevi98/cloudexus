@@ -61,7 +61,7 @@
                                     </a>
                                 {% endif %}
                                 {% if can('warehouses.manage') %}
-                                    <form method="post" action="{{ base_url }}/warehouses/{{ warehouse.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('common.confirm_delete')|e('js') }}');">
+                                    <form method="post" action="{{ base_url }}/warehouses/{{ warehouse.id }}/delete" class="d-inline" data-confirm="{{ t('common.confirm_delete') }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>

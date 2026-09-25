@@ -11,11 +11,17 @@
 const base = require('@playwright/test');
 const crypto = require('crypto');
 
-/** The same test, but a script error on any page it opened fails it. */
+/** The same test, but a script error — or a script the CSP refused — on any page it opened fails it. */
 const test = base.test.extend({
     page: async ({ page }, use) => {
         const errors = [];
         page.on('pageerror', (error) => errors.push(error.message));
+        // A script the Content-Security-Policy stopped is only a console error, not a page error.
+        page.on('console', (message) => {
+            if (message.type() === 'error' && /Content Security Policy|Refused to (execute|load)/i.test(message.text())) {
+                errors.push(message.text());
+            }
+        });
         page.on('dialog', (dialog) => dialog.accept());
         await use(page);
         base.expect(errors, 'script errors on the page').toEqual([]);

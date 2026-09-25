@@ -41,7 +41,7 @@
                             {% if can('finance.mark_paid') %}
                                 <td class="text-end">
                                     {% if not payment.cash_voucher_id and doc.status in ['unpaid', 'paid'] %}
-                                        <form method="post" action="{{ base }}/payments/{{ payment.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('payments.confirm_delete')|e('js') }}');">
+                                        <form method="post" action="{{ base }}/payments/{{ payment.id }}/delete" class="d-inline" data-confirm="{{ t('payments.confirm_delete') }}">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('payments.delete') }}"><i class="bi bi-arrow-counterclockwise"></i></button>
                                         </form>
                                     {% endif %}

@@ -21,7 +21,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="location_id" class="form-label">{{ t('stock.location') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
-                                <select id="location_id" name="location_id" class="form-select">
+                                <select id="location_id" name="location_id" class="form-select" data-locations-of="warehouse_id" data-empty="{{ t('stock.no_location') }}">
                                     <option value="">{{ t('stock.no_location') }}</option>
                                 </select>
                             </div>
@@ -113,22 +113,5 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const locs = {{ locations|json_encode|raw }};
-            const wh = document.getElementById('warehouse_id');
-            const loc = document.getElementById('location_id');
-            function fill() {
-                const w = parseInt(wh.value, 10);
-                loc.innerHTML = '<option value="">{{ t('stock.no_location')|e('js') }}</option>';
-                locs.filter(l => l.warehouse_id == w).forEach(l => {
-                    const o = document.createElement('option');
-                    o.value = l.id; o.textContent = l.code;
-                    loc.appendChild(o);
-                });
-            }
-            wh.addEventListener('change', fill);
-            fill();
-        })();
-    </script>
+    <script type="application/json" id="locations-data">{{ js_data(locations) }}</script>
 {% endblock %}

@@ -71,21 +71,4 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const wh = document.getElementById('ov-warehouse');
-            const loc = document.getElementById('ov-location');
-            function filter() {
-                const w = wh.value;
-                Array.from(loc.options).forEach(o => {
-                    if (!o.value) return;
-                    const show = !w || o.dataset.warehouse === w;
-                    o.hidden = !show;
-                    if (!show && o.selected) loc.value = '';
-                });
-            }
-            wh.addEventListener('change', filter);
-            filter();
-        })();
-    </script>
 {% endblock %}

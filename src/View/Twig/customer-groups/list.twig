@@ -56,7 +56,7 @@
                                     <td class="text-end text-nowrap">
                                         {% if can('customer_groups.manage') %}
                                             <button type="submit" form="cg-{{ g.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
-                                            <button type="submit" form="cg-del-{{ g.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" form="cg-del-{{ g.id }}" class="btn btn-sm btn-outline-danger" data-confirm="{{ t('common.confirm_delete') }}"><i class="bi bi-trash"></i></button>
                                         {% endif %}
                                     </td>
                                 </tr>

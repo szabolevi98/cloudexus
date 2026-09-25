@@ -60,7 +60,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% if user.id != auth_user_id %}
-                                    <form method="post" action="{{ base_url }}/users/{{ user.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('users.confirm_delete')|e('js') }}');">
+                                    <form method="post" action="{{ base_url }}/users/{{ user.id }}/delete" class="d-inline" data-confirm="{{ t('users.confirm_delete') }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>

@@ -66,7 +66,7 @@
 </head>
 <body>
 <div class="toolbar">
-    <button type="button" class="primary" onclick="window.print()">🖨 {{ t('common.print') }}</button>
+    <button type="button" class="primary" data-print>🖨 {{ t('common.print') }}</button>
     <a href="{{ base_url }}/invoices/{{ invoice.id }}">« {{ t('invoices.title_prefix') }}</a>
 </div>
 
@@ -193,5 +193,6 @@
         {{ t('invoices.print_footer') }} · {{ "now"|date("Y-m-d H:i") }}
     </div>
 </div>
+<script src="{{ base_url }}/assets/js/app.js?v={{ asset_version }}" defer></script>
 </body>
 </html>

@@ -66,7 +66,7 @@
                 </form>
             {% endif %}
             {% if can('purchasing.manage') and invoice.paid_amount == 0 %}
-                <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/cancel" onsubmit="return confirm('{{ t('incoming_invoices.confirm_void')|e('js') }}');">
+                <form method="post" action="{{ base_url }}/incoming-invoices/{{ invoice.id }}/cancel" data-confirm="{{ t('incoming_invoices.confirm_void') }}">
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>{{ t('incoming_invoices.void') }}
                     </button>

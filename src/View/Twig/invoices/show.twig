@@ -139,7 +139,7 @@
                 </form>
             {% endif %}
             {% if can('invoices.storno') and invoice.paid_amount == 0 %}
-                <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" onsubmit="return confirm('{{ t('invoices.confirm_void')|e('js') }}');">
+                <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/storno" data-confirm="{{ t('invoices.confirm_void') }}">
                     <button type="submit" class="btn btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>{{ t('invoices.void') }}
                     </button>

@@ -10,7 +10,7 @@
     <link href="{{ base_url }}/assets/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ base_url }}/assets/css/app.css?v={{ asset_version }}">
 </head>
-<body class="cx-auth-body">
+<body class="cx-auth-body"{% if recaptcha_enabled|default(false) %} data-recaptcha-key="{{ recaptcha_site_key }}"{% endif %}>
 <div class="cx-auth-decor"></div>
 <div class="cx-auth-wrap">
 <div class="cx-auth-card">
@@ -49,49 +49,10 @@
 </div>
 <p class="cx-auth-footer">Copyright &copy; {{ "now"|date("Y") }} <a href="https://github.com/szabolevi98/Cloudexus" target="_blank" rel="noopener">szabolevi98</a></p>
 </div>
-<script>
-    // A <details> alapból nyitva marad külső kattintásra és Escape-re is,
-    // ezért ezt a két lezárást pótoljuk (a topbar dropdownja is így viselkedik).
-    (function () {
-        const lang = document.querySelector('.cx-auth-lang');
-        if (!lang) return;
-
-        document.addEventListener('click', function (e) {
-            if (lang.open && !lang.contains(e.target)) lang.open = false;
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && lang.open) {
-                lang.open = false;
-                lang.querySelector('summary').focus();
-            }
-        });
-    })();
-</script>
+<script src="{{ base_url }}/assets/js/auth.js?v={{ asset_version }}" defer></script>
 </body>
-{#
-    reCAPTCHA v3 egy űrlapon, ha be van kapcsolva: az űrlap data-recaptcha
-    attribútuma a művelet neve (login, forgot), a tokent a recaptcha_token
-    rejtett mezőbe teszi, és csak utána küldi el.
-#}
+{# reCAPTCHA v3, ha be van kapcsolva: a Google szkriptje; a kötés az auth.js-ben. #}
 {% if recaptcha_enabled|default(false) %}
-    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-    <script>
-        (function () {
-            const form = document.querySelector('form[data-recaptcha]');
-            if (!form) return;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                submitBtn.disabled = true;
-                grecaptcha.ready(function () {
-                    grecaptcha.execute('{{ recaptcha_site_key }}', {action: form.dataset.recaptcha}).then(function (token) {
-                        form.querySelector('input[name="recaptcha_token"]').value = token;
-                        form.submit();
-                    });
-                });
-            });
-        })();
-    </script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}" defer></script>
 {% endif %}
 </html>

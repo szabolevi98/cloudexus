@@ -24,7 +24,8 @@ module.exports = defineConfig({
     fullyParallel: false,
     workers: 1,
     retries: process.env.CI ? 1 : 0,
-    timeout: 30_000,
+    // A local development server is slower than CI's (a debugger, no opcache).
+    timeout: process.env.CI ? 30_000 : 60_000,
     expect: { timeout: 7_000 },
     reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
     use: {

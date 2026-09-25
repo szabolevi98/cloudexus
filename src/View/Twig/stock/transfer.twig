@@ -20,7 +20,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="from_location_id" class="form-label">{{ t('stock.transfer_from_location') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
-                            <select id="from_location_id" name="from_location_id" class="form-select">
+                            <select id="from_location_id" name="from_location_id" class="form-select" data-locations-of="from_warehouse_id" data-empty="{{ t('stock.no_location') }}">
                                 <option value="">{{ t('stock.no_location') }}</option>
                             </select>
                         </div>
@@ -35,7 +35,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="to_location_id" class="form-label">{{ t('stock.transfer_to_location') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
-                            <select id="to_location_id" name="to_location_id" class="form-select">
+                            <select id="to_location_id" name="to_location_id" class="form-select" data-locations-of="to_warehouse_id" data-empty="{{ t('stock.no_location') }}">
                                 <option value="">{{ t('stock.no_location') }}</option>
                             </select>
                         </div>
@@ -137,26 +137,5 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const locs = {{ locations|json_encode|raw }};
-            function bind(whId, locId) {
-                const wh = document.getElementById(whId);
-                const loc = document.getElementById(locId);
-                function fill() {
-                    const w = parseInt(wh.value, 10);
-                    loc.innerHTML = '<option value="">{{ t('stock.no_location')|e('js') }}</option>';
-                    locs.filter(l => l.warehouse_id == w).forEach(l => {
-                        const o = document.createElement('option');
-                        o.value = l.id; o.textContent = l.code;
-                        loc.appendChild(o);
-                    });
-                }
-                wh.addEventListener('change', fill);
-                fill();
-            }
-            bind('from_warehouse_id', 'from_location_id');
-            bind('to_warehouse_id', 'to_location_id');
-        })();
-    </script>
+    <script type="application/json" id="locations-data">{{ js_data(locations) }}</script>
 {% endblock %}

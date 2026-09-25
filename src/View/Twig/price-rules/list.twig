@@ -83,7 +83,7 @@
                             {% if can('pricing.manage') %}
                                 <td class="text-end text-nowrap">
                                     <a href="{{ base_url }}/price-rules/{{ rule.id }}/edit" class="btn btn-sm btn-outline-secondary" title="{{ t('common.edit') }}"><i class="bi bi-pencil"></i></a>
-                                    <form method="post" action="{{ base_url }}/price-rules/{{ rule.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('price_rules.confirm_delete')|e('js') }}');">
+                                    <form method="post" action="{{ base_url }}/price-rules/{{ rule.id }}/delete" class="d-inline" data-confirm="{{ t('price_rules.confirm_delete') }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </td>

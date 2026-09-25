@@ -21,7 +21,7 @@
                             {% if filter.is_shared %}<i class="bi bi-people text-muted ms-1" title="{{ t('saved_filters.shared_by', {name: filter.owner_name}) }}"></i>{% endif %}
                         </a>
                         {% if filter.user_id == auth_user_id or can('system.settings') %}
-                            <form method="post" action="{{ base_url }}/saved-filters/{{ filter.id }}/delete" class="pe-2" onsubmit="return confirm('{{ t('saved_filters.confirm_delete', {name: filter.name})|e('js') }}');">
+                            <form method="post" action="{{ base_url }}/saved-filters/{{ filter.id }}/delete" class="pe-2" data-confirm="{{ t('saved_filters.confirm_delete', {name: filter.name}) }}">
                                 <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="{{ t('saved_filters.delete') }}" aria-label="{{ t('saved_filters.delete') }}"><i class="bi bi-x-lg"></i></button>
                             </form>
                         {% endif %}

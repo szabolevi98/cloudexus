@@ -198,9 +198,13 @@ page.
   everywhere. Without email the page says to ask an administrator.
 - Every page and every API call checks its permission on the server; the
   interface hiding a button is a convenience, never the gate.
-- Nosniff, same-origin framing, a strict referrer policy, a Content-Security-Policy
-  that forbids framing, plugins and foreign form targets, and HSTS when served
-  over HTTPS.
+- A Content-Security-Policy with `script-src 'self'`: no inline script and no
+  inline event handler anywhere — the templates hand data to the scripts in
+  data attributes and JSON blocks that do not run, and the behaviour lives in
+  `web/assets/js` — so a `<script>` or `onerror="…"` that somehow got into a
+  page does not run. (reCAPTCHA's two addresses are added when it is on.) The
+  policy also forbids framing, plugins and foreign form targets; with nosniff,
+  a strict referrer policy, and HSTS when served over HTTPS.
 - Money and stock are written in transactions with the rows they depend on
   locked: a payment cannot overpay an invoice, a stock-out cannot oversell.
 - The document root is the `web/` folder alone; the code, the configuration

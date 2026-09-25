@@ -87,7 +87,7 @@
                         </div>
                         <div class="mt-2 text-end">
                             <button type="submit" form="addr-{{ a.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
-                            <button type="submit" form="addr-del-{{ a.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('partners.confirm_delete_address')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                            <button type="submit" form="addr-del-{{ a.id }}" class="btn btn-sm btn-outline-danger" data-confirm="{{ t('partners.confirm_delete_address') }}"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
                 {% else %}

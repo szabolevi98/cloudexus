@@ -37,8 +37,8 @@
                                     </td>
                                     <td>
                                         <div class="input-group input-group-sm" style="min-width:280px;">
-                                            <input type="text" class="form-control form-control-sm font-monospace" value="{{ u.token }}" readonly onclick="this.select()" style="font-size:.75rem;">
-                                            <button type="button" class="btn btn-outline-secondary" title="{{ t('api_users.copy') }}" onclick="navigator.clipboard.writeText('{{ u.token }}')"><i class="bi bi-clipboard"></i></button>
+                                            <input type="text" class="form-control form-control-sm font-monospace" value="{{ u.token }}" readonly data-select style="font-size:.75rem;">
+                                            <button type="button" class="btn btn-outline-secondary" title="{{ t('api_users.copy') }}" data-copy="{{ u.token }}"><i class="bi bi-clipboard"></i></button>
                                         </div>
                                     </td>
                                     <td>
@@ -53,8 +53,8 @@
                                         <button type="submit" form="apiu-toggle-{{ u.id }}" class="btn btn-sm btn-outline-secondary" title="{{ u.is_active ? t('api_users.deactivate') : t('api_users.activate') }}">
                                             <i class="bi {{ u.is_active ? 'bi-pause' : 'bi-play' }}"></i>
                                         </button>
-                                        <button type="submit" form="apiu-regen-{{ u.id }}" class="btn btn-sm btn-outline-warning" title="{{ t('api_users.new_token') }}" onclick="return confirm('{{ t('api_users.regen_confirm')|e('js') }}');"><i class="bi bi-arrow-repeat"></i></button>
-                                        <button type="submit" form="apiu-del-{{ u.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" form="apiu-regen-{{ u.id }}" class="btn btn-sm btn-outline-warning" title="{{ t('api_users.new_token') }}" data-confirm="{{ t('api_users.regen_confirm') }}"><i class="bi bi-arrow-repeat"></i></button>
+                                        <button type="submit" form="apiu-del-{{ u.id }}" class="btn btn-sm btn-outline-danger" data-confirm="{{ t('common.confirm_delete') }}"><i class="bi bi-trash"></i></button>
                                     </td>
                                 </tr>
                             {% else %}

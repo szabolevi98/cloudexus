@@ -13,7 +13,7 @@
     <link href="{{ base_url }}/assets/vendor/select2/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ base_url }}/assets/css/app.css?v={{ asset_version }}">
 </head>
-<body>
+<body data-base="{{ base_url }}">
 <div class="cx-shell">
     <div class="cx-backdrop"></div>
     <aside class="cx-sidebar">
@@ -323,124 +323,10 @@
 <script src="{{ base_url }}/assets/vendor/jquery/jquery.min.js"></script>
 <script src="{{ base_url }}/assets/vendor/select2/select2.min.js"></script>
 <script src="{{ base_url }}/assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-<script>
-    // Select2 csak angol üzeneteket tartalmaz, ezért a sajátjainkat adjuk át neki.
-    // A {n} helyőrzőket itt, JS-ben cseréljük, mert a darabszám csak futásidőben ismert.
-    window.cxSelect2Lang = {
-        errorLoading: () => '{{ t('select2.error_loading')|e('js') }}',
-        inputTooLong: (args) => {
-            const n = args.input.length - args.maximum;
-            const tpl = n === 1
-                ? '{{ t('select2.input_too_long_one')|e('js') }}'
-                : '{{ t('select2.input_too_long_other')|e('js') }}';
-            return tpl.replace('{n}', n);
-        },
-        inputTooShort: (args) => {
-            const n = args.minimum - args.input.length;
-            return '{{ t('select2.input_too_short')|e('js') }}'.replace('{n}', n);
-        },
-        loadingMore: () => '{{ t('select2.loading_more')|e('js') }}',
-        maximumSelected: (args) => {
-            const tpl = args.maximum === 1
-                ? '{{ t('select2.maximum_selected_one')|e('js') }}'
-                : '{{ t('select2.maximum_selected_other')|e('js') }}';
-            return tpl.replace('{n}', args.maximum);
-        },
-        noResults: () => '{{ t('select2.no_results')|e('js') }}',
-        searching: () => '{{ t('select2.searching')|e('js') }}',
-        removeAllItems: () => '{{ t('select2.remove_all_items')|e('js') }}',
-        removeItem: () => '{{ t('select2.remove_item')|e('js') }}',
-        search: () => '{{ t('select2.search')|e('js') }}',
-    };
-
-    // Select2: helyi (kis lista) és AJAX-os (nagy adathalmaz, pl. 20.000 termék) mezők.
-    // Újrahasználható, hogy a dinamikusan hozzáadott mezőkre is meghívható legyen.
-    window.cxInitSelect2 = function (root) {
-        if (!window.jQuery || !jQuery.fn.select2) return;
-        const $root = root ? jQuery(root) : jQuery(document);
-
-        $root.find('.cx-select2').addBack('.cx-select2').each(function () {
-            if (this.classList.contains('select2-hidden-accessible')) return;
-            jQuery(this).select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: jQuery(this).data('placeholder') || '{{ t('common.choose_placeholder')|e('js') }}',
-                language: window.cxSelect2Lang,
-                allowClear: !jQuery(this).prop('multiple') && !this.hasAttribute('required'),
-            });
-        });
-
-        $root.find('.cx-ajax-select').addBack('.cx-ajax-select').each(function () {
-            if (this.classList.contains('select2-hidden-accessible')) return;
-            const $el = jQuery(this);
-            $el.select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: $el.data('placeholder') || '{{ t('common.search_placeholder')|e('js') }}',
-                language: window.cxSelect2Lang,
-                allowClear: !$el.prop('multiple') && !this.hasAttribute('required'),
-                minimumInputLength: 0,
-                ajax: {
-                    url: $el.data('url'),
-                    dataType: 'json',
-                    delay: 200,
-                    data: (params) => ({ q: params.term || '', page: params.page || 1 }),
-                    processResults: (data) => ({ results: data.results, pagination: { more: data.more } }),
-                    cache: true,
-                },
-            });
-        });
-    };
-    window.cxInitSelect2();
-
-    (function () {
-        const sidebar = document.querySelector('.cx-sidebar');
-        const backdrop = document.querySelector('.cx-backdrop');
-        const toggle = document.querySelector('.cx-topbar__toggle');
-
-        function openSidebar() {
-            sidebar.classList.add('is-open');
-            backdrop.classList.add('is-visible');
-        }
-        function closeSidebar() {
-            sidebar.classList.remove('is-open');
-            backdrop.classList.remove('is-visible');
-        }
-
-        toggle?.addEventListener('click', function () {
-            sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
-        });
-        backdrop?.addEventListener('click', closeSidebar);
-
-        // Egy menüpontra kattintva mobilon záruljon be a menü.
-        sidebar.querySelectorAll('.cx-nav__link').forEach(function (link) {
-            link.addEventListener('click', function () {
-                if (window.innerWidth < 992) closeSidebar();
-            });
-        });
-
-        // Esc bezárja.
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeSidebar();
-        });
-    })();
-
-    // Append the CSRF token to every POST form on the page.
-    (function () {
-        const token = document.querySelector('meta[name="csrf-token"]')?.content;
-        if (!token) return;
-        document.querySelectorAll('form').forEach((form) => {
-            // getAttribute: a field named "method" would shadow form.method.
-            if ((form.getAttribute('method') || '').toLowerCase() === 'post' && !form.querySelector('input[name="_token"]')) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_token';
-                input.value = token;
-                form.appendChild(input);
-            }
-        });
-    })();
-</script>
+{# A közös script szövegei — egy nem futtatható JSON-blokk, a CSP script-src 'self' mellett is olvasható. #}
+<script type="application/json" id="cx-i18n">{{ js_data({select2: {error_loading: t('select2.error_loading'), input_too_long_one: t('select2.input_too_long_one'), input_too_long_other: t('select2.input_too_long_other'), input_too_short: t('select2.input_too_short'), loading_more: t('select2.loading_more'), maximum_selected_one: t('select2.maximum_selected_one'), maximum_selected_other: t('select2.maximum_selected_other'), no_results: t('select2.no_results'), searching: t('select2.searching'), remove_all_items: t('select2.remove_all_items'), remove_item: t('select2.remove_item'), search: t('select2.search')}, choose_placeholder: t('common.choose_placeholder'), search_placeholder: t('common.search_placeholder')}) }}</script>
+<script src="{{ base_url }}/assets/js/app.js?v={{ asset_version }}"></script>
+<script src="{{ base_url }}/assets/js/pages.js?v={{ asset_version }}" defer></script>
 <dialog class="cx-palette" id="cx-palette" aria-label="{{ t('palette.open') }}"
         data-url="{{ base_url }}/palette" data-nothing="{{ t('palette.nothing') }}">
     <input type="search" class="cx-palette__input" data-palette-input placeholder="{{ t('palette.placeholder') }}" aria-label="{{ t('palette.placeholder') }}" autocomplete="off">

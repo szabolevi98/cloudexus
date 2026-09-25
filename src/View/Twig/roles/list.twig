@@ -50,7 +50,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% if not role.is_system and role.user_count == 0 %}
-                                    <form method="post" action="{{ base_url }}/roles/{{ role.id }}/delete" class="d-inline" onsubmit="return confirm('{{ t('roles.confirm_delete')|e('js') }}');">
+                                    <form method="post" action="{{ base_url }}/roles/{{ role.id }}/delete" class="d-inline" data-confirm="{{ t('roles.confirm_delete') }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
                                     </form>
                                 {% endif %}

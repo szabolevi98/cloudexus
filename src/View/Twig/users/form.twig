@@ -52,7 +52,7 @@
                 {% if user.totp_enabled_at %}
                     <p class="small">{{ t('two_factor.admin_on', {date: user.totp_enabled_at|date('Y-m-d')}) }}</p>
                     <form method="post" action="{{ base_url }}/users/{{ user.id }}/two-factor/reset"
-                          onsubmit="return confirm('{{ t('two_factor.admin_reset_confirm', {name: user.full_name})|e('js') }}');">
+                          data-confirm="{{ t('two_factor.admin_reset_confirm', {name: user.full_name}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token }}">
                         <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('two_factor.admin_reset') }}</button>
                     </form>

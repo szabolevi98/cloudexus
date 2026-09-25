@@ -124,7 +124,7 @@
                                     <td class="text-end text-nowrap">
                                         <button type="submit" form="cur-{{ c.id }}" class="btn btn-sm btn-outline-primary">{{ t('common.save') }}</button>
                                         {% if not c.is_primary %}
-                                            <button type="submit" form="cur-del-{{ c.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ t('common.confirm_delete')|e('js') }}');"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" form="cur-del-{{ c.id }}" class="btn btn-sm btn-outline-danger" data-confirm="{{ t('common.confirm_delete') }}"><i class="bi bi-trash"></i></button>
                                         {% endif %}
                                     </td>
                                 </tr>

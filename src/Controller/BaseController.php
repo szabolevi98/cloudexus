@@ -51,6 +51,12 @@ abstract class BaseController
         $this->twig->addFunction(new TwigFunction('saved_filter_path', static fn(string $page): string => SavedFilterController::PAGES[$page][0] ?? '/dashboard'));
         // A mostani cím lekérdezés-része, a lapozás nélkül — amit egy mentett szűrő eltesz.
         $this->twig->addFunction(new TwigFunction('current_query', static fn(): string => http_build_query(array_diff_key($_GET, ['page' => true]))));
+        // Adat egy scriptnek, egy <script type="application/json"> blokkba: a < > & ' " kódolva, hogy
+        // a blokkot semmilyen szöveg ne zárhassa le. A CSP script-src 'self' miatt nincs inline script.
+        $this->twig->addFunction(new TwigFunction('js_data', static fn(mixed $value): string => (string) json_encode(
+            $value,
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        ), ['is_safe' => ['html']]));
         // Egy törlés visszavonása a következő oldalon (Undo).
         $this->twig->addFunction(new TwigFunction('undo_offer', [\Cloudexus\Core\Undo::class, 'offer']));
         // Az elakadt levelek száma a menüben; csak akkor kérdezi le, ha a menüpont látszik.
