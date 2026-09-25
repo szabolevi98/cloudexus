@@ -73,8 +73,13 @@ trait HandlesPayments
             $this->redirect($this->paymentBasePath() . '/' . $id);
         }
 
-        AuditLog::record(AuditLog::DELETE, 'payment', $paymentId, $this->paymentDocumentNumber($id),
-            ['amount' => Currency::format((float) $payment['amount'])]);
+        AuditLog::record(
+            AuditLog::DELETE,
+            'payment',
+            $paymentId,
+            $this->paymentDocumentNumber($id),
+            ['amount' => Currency::format((float) $payment['amount'])]
+        );
         $this->flashSuccess($this->t('payments.deleted'));
         $this->redirect($this->paymentBasePath() . '/' . $id);
     }

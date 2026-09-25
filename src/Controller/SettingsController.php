@@ -44,10 +44,15 @@ class SettingsController extends BaseController
 
         $before = $this->settings->company();
         $this->settings->setMany($pairs);
-        $changed = array_keys(array_filter($fields, static fn(string $f): bool => (string) ($before[$f] ?? '') !== $pairs['company.' . $f]));
+        $changed = array_values(array_filter($fields, static fn(string $f): bool => (string) ($before[$f] ?? '') !== $pairs['company.' . $f]));
         if ($changed) {
-            AuditLog::record(AuditLog::UPDATE, 'settings', null, $this->t('nav.settings_company'),
-                ['fields' => implode(', ', array_map(fn(string $f): string => $this->t('settings.' . ($f === 'name' ? 'company_name' : $f)), $changed))]);
+            AuditLog::record(
+                AuditLog::UPDATE,
+                'settings',
+                null,
+                $this->t('nav.settings_company'),
+                ['fields' => implode(', ', array_map(fn(string $f): string => $this->t('settings.' . ($f === 'name' ? 'company_name' : $f)), $changed))]
+            );
         }
         $this->flashSuccess($this->t('settings.company_saved'));
         $this->redirect('/settings/company');

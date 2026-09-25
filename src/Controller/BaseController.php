@@ -8,8 +8,8 @@ use Cloudexus\Core\Auth;
 use Cloudexus\Core\Config;
 use Cloudexus\Core\Currency;
 use Cloudexus\Core\Lang;
-use Cloudexus\Core\Permissions;
 use Cloudexus\Core\Language;
+use Cloudexus\Core\Permissions;
 use Cloudexus\Core\Session;
 use Cloudexus\Core\Sort;
 use Twig\Environment;
@@ -81,7 +81,7 @@ abstract class BaseController
         ], $data));
     }
 
-    protected function redirect(string $path): void
+    protected function redirect(string $path): never
     {
         header('Location: ' . Config::get('app.base_url') . $path);
         exit;
@@ -99,7 +99,7 @@ abstract class BaseController
         return $newest > 0 ? (string) $newest : '1';
     }
 
-    protected function json(array $data): void
+    protected function json(array $data): never
     {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);

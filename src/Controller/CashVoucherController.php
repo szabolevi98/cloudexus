@@ -6,14 +6,12 @@ use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Cash\CashVoucherModel;
-use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
 use Cloudexus\Model\Sales\InvoiceModel;
 
 class CashVoucherController extends BaseController
 {
     private CashVoucherModel $vouchers;
-    private PartnerModel $partners;
     private InvoiceModel $invoices;
     private IncomingInvoiceModel $incomingInvoices;
 
@@ -21,7 +19,6 @@ class CashVoucherController extends BaseController
     {
         parent::__construct();
         $this->vouchers = new CashVoucherModel();
-        $this->partners = new PartnerModel();
         $this->invoices = new InvoiceModel();
         $this->incomingInvoices = new IncomingInvoiceModel();
         $this->activeMenu = 'cash';
@@ -99,8 +96,13 @@ class CashVoucherController extends BaseController
             $this->redirect('/cash/create');
         }
 
-        AuditLog::record(AuditLog::CREATE, 'cash_voucher', $id, $this->vouchers->findNumber($id),
-            ['type' => $this->t($type === 'kiadas' ? 'cash.expense' : 'cash.income'), 'total' => \Cloudexus\Core\Currency::format($amount)]);
+        AuditLog::record(
+            AuditLog::CREATE,
+            'cash_voucher',
+            $id,
+            $this->vouchers->findNumber($id),
+            ['type' => $this->t($type === 'kiadas' ? 'cash.expense' : 'cash.income'), 'total' => \Cloudexus\Core\Currency::format($amount)]
+        );
         $this->flashSuccess($this->t('cash.created'));
         $this->redirect('/cash');
     }

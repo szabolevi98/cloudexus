@@ -71,7 +71,7 @@ class ApiUserController extends BaseController
             $this->flashError($this->t('api_users.name_required'));
         } else {
             $apiUserId = $this->apiUsers->create($name);
-            AuditLog::record(AuditLog::CREATE, 'api_user', is_int($apiUserId) ? $apiUserId : null, $name);
+            AuditLog::record(AuditLog::CREATE, 'api_user', $apiUserId, $name);
             $this->flashSuccess($this->t('api_users.created'));
         }
         $this->redirect('/api-users');

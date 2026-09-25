@@ -52,12 +52,12 @@ class TodoModel
     public function openForDashboard(int $limit = 8): array
     {
         return DatabaseConnection::get()->query(
-            "SELECT t.*, p.name AS partner_name
+            'SELECT t.*, p.name AS partner_name
              FROM todos t
              LEFT JOIN partners p ON p.id = t.partner_id
              WHERE t.is_done = 0
              ORDER BY (t.due_date IS NULL), t.due_date ASC, t.id DESC
-             LIMIT " . (int) $limit
+             LIMIT ' . (int) $limit
         )->fetchAll();
     }
 

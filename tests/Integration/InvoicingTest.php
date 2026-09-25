@@ -66,8 +66,11 @@ final class InvoicingTest extends DatabaseTestCase
             self::assertEqualsWithDelta(1, $e->first()['available'], 0.0001);
         }
         self::assertSame(1, (int) $this->scalar('SELECT COUNT(*) FROM invoices'));
-        self::assertSame(1, (int) $this->scalar("SELECT last_number FROM document_sequences WHERE doc_type = 'invoice'"),
-            'the refused invoice did not use up a number');
+        self::assertSame(
+            1,
+            (int) $this->scalar("SELECT last_number FROM document_sequences WHERE doc_type = 'invoice'"),
+            'the refused invoice did not use up a number'
+        );
     }
 
     public function testStornoMirrorsTheInvoiceAndBooksTheStockBack(): void

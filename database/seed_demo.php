@@ -20,11 +20,11 @@ use Cloudexus\Model\Core\CustomerGroupModel;
 use Cloudexus\Model\Core\PartnerAddressModel;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\PriceRuleModel;
-use Cloudexus\Model\Finance\PaymentModel;
 use Cloudexus\Model\Core\ProductModel;
 use Cloudexus\Model\Core\StockMovementModel;
 use Cloudexus\Model\Core\StocktakingModel;
 use Cloudexus\Model\Core\WarehouseModel;
+use Cloudexus\Model\Finance\PaymentModel;
 use Cloudexus\Model\Purchasing\IncomingInvoiceModel;
 use Cloudexus\Model\Purchasing\PurchaseOrderModel;
 use Cloudexus\Model\Sales\InvoiceModel;
@@ -295,7 +295,7 @@ foreach ($subcategories as $parentName => $children) {
 // legyen (pl. külön "Kerékpár > Városi kerékpár" sor is szerepeljen).
 $reassignStmt = $pdo->prepare('UPDATE products SET category_id = :cat WHERE id = :id');
 foreach ($subIdsByParent as $parentName => $childIds) {
-    foreach ($productIdsByParent[$parentName] ?? [] as $index => $productId) {
+    foreach ($productIdsByParent[$parentName] as $index => $productId) {
         // A szülő termékeinek nagy részét egy-egy alkategóriába soroljuk,
         // néhányat viszont a szülőn hagyunk.
         if ($index === 0) {
@@ -305,7 +305,7 @@ foreach ($subIdsByParent as $parentName => $childIds) {
     }
 }
 
-echo count($products) . " products in " . (count($categoryIds) + $subCount) . " categories (incl. subcategories).\n";
+echo count($products) . ' products in ' . (count($categoryIds) + $subCount) . " categories (incl. subcategories).\n";
 
 // ---------------------------------------------------------------------------
 // Customer groups
@@ -424,7 +424,7 @@ foreach ($bothNames as $i => $name) {
     $allPartnerIds[] = $id;
 }
 
-echo count($partners['customer']) . " customer-capable, " . count($partners['supplier']) . " supplier-capable partners.\n";
+echo count($partners['customer']) . ' customer-capable, ' . count($partners['supplier']) . " supplier-capable partners.\n";
 
 // Minden partnernek 1-2 szerkezetes cím (szállítási/számlázási kiválasztáshoz a rendeléseknél).
 echo "Seeding partner addresses...\n";
@@ -534,10 +534,6 @@ foreach ($products as $product) {
 
         $type = ($balance > 10 && rand(0, 1)) ? 'out' : 'in';
         $qty = $type === 'in' ? rand(10, 80) : min($balance, rand(1, 20));
-
-        if ($type === 'out' && $qty <= 0) {
-            continue;
-        }
 
         $stockModel->create([
             'warehouse_id' => $warehouseId,
@@ -681,8 +677,15 @@ for ($i = 0; $i < 130; $i++) {
             // Néhányat részben átutalással fizettek: a nyitott tételek között
             // így részben fizetett számla is van.
             $invoice = $invoiceModel->findById($invoiceId);
-            $paymentModel->record(PaymentModel::INVOICE, $invoiceId, round((float) $invoice['total_amount'] * rand(30, 70) / 100),
-                date('Y-m-d', min(time(), strtotime($dueDate . ' -' . rand(0, 10) . ' days'))), 'transfer', 'Részteljesítés', null);
+            $paymentModel->record(
+                PaymentModel::INVOICE,
+                $invoiceId,
+                round((float) $invoice['total_amount'] * rand(30, 70) / 100),
+                date('Y-m-d', min(time(), strtotime($dueDate . ' -' . rand(0, 10) . ' days'))),
+                'transfer',
+                'Részteljesítés',
+                null
+            );
             $partialCount++;
         }
     }

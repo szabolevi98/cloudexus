@@ -15,9 +15,6 @@
             "Cloudexus\\Tests\\": "tests/"
         }
     },
-    "scripts": {
-        "test": "phpunit"
-    },
     "config": {
         "sort-packages": true,
         "platform": {
@@ -25,7 +22,14 @@
         },
         "platform-check": false
     },
+    "scripts": {
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "style": "php-cs-fixer fix --dry-run --diff",
+        "test": "phpunit"
+    },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5"
     }
 }

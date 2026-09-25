@@ -340,7 +340,10 @@ class InvoiceModel
 
         try {
             (new \Cloudexus\Model\Finance\PaymentModel())->settle(
-                \Cloudexus\Model\Finance\PaymentModel::INVOICE, $id, (string) ($invoice['payment_method'] ?: 'transfer'), $userId
+                \Cloudexus\Model\Finance\PaymentModel::INVOICE,
+                $id,
+                (string) ($invoice['payment_method'] ?: 'transfer'),
+                $userId
             );
         } catch (\DomainException) {
             return false;

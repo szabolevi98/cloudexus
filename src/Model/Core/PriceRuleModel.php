@@ -15,7 +15,7 @@ use Cloudexus\Core\Translation;
  */
 class PriceRuleModel
 {
-    private const LIST_SELECT = "r.*, g.name AS customer_group_name, pr.sku AS product_sku";
+    private const LIST_SELECT = 'r.*, g.name AS customer_group_name, pr.sku AS product_sku';
 
     /** Sortable columns of the list (see Sort): key => SQL expression. */
     public const SORTS = [
@@ -37,11 +37,11 @@ class PriceRuleModel
 
         $stmt = DatabaseConnection::get()->prepare(
             'SELECT ' . self::LIST_SELECT . ', ' . Translation::select('pd', 'name', 'product_name') . ',
-                    ' . Translation::select('cd', 'name', 'category_name') . "
+                    ' . Translation::select('cd', 'name', 'category_name') . '
              FROM price_rules r
              LEFT JOIN customer_groups g ON g.id = r.customer_group_id
              LEFT JOIN products pr ON pr.id = r.product_id
-             " . Translation::join('product_description', 'product_id', 'r.product_id', 'pd') . '
+             ' . Translation::join('product_description', 'product_id', 'r.product_id', 'pd') . '
              ' . Translation::join('category_description', 'category_id', 'r.category_id', 'cd') . "
              $whereSql
              ORDER BY " . Sort::orderBy(self::SORTS, 'r.is_active DESC, r.name ASC') . "

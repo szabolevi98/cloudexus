@@ -95,18 +95,22 @@ final class StockTest extends DatabaseTestCase
         $orders = new OrderModel();
         $partner = $this->partner();
         $product = $this->product(100);
-        $id = $orders->create(['partner_id' => $partner, 'shipping_address_id' => 0, 'billing_address_id' => 0, 'status' => 'confirmed',
+        $id = $orders->create(
+            ['partner_id' => $partner, 'shipping_address_id' => 0, 'billing_address_id' => 0, 'status' => 'confirmed',
             'order_date' => date('Y-m-d'), 'shipping_cost' => 0, 'payment_cost' => 0, 'created_by' => null],
-            [['product_id' => $product, 'quantity' => 1, 'unit_price' => 100]]);
+            [['product_id' => $product, 'quantity' => 1, 'unit_price' => 100]]
+        );
 
         self::assertFalse($orders->delete($id), 'a confirmed order is cancelled, not deleted');
         self::assertTrue($orders->cancel($id));
         self::assertFalse($orders->cancel($id), 'twice is not possible');
         self::assertTrue($orders->delete($id));
 
-        $invoiced = $orders->create(['partner_id' => $partner, 'shipping_address_id' => 0, 'billing_address_id' => 0, 'status' => 'confirmed',
+        $invoiced = $orders->create(
+            ['partner_id' => $partner, 'shipping_address_id' => 0, 'billing_address_id' => 0, 'status' => 'confirmed',
             'order_date' => date('Y-m-d'), 'shipping_cost' => 0, 'payment_cost' => 0, 'created_by' => null],
-            [['product_id' => $product, 'quantity' => 1, 'unit_price' => 100]]);
+            [['product_id' => $product, 'quantity' => 1, 'unit_price' => 100]]
+        );
         $this->pdo()->prepare("UPDATE orders SET status = 'invoiced' WHERE id = :id")->execute(['id' => $invoiced]);
         self::assertFalse($orders->cancel($invoiced));
         self::assertTrue($orders->isLocked($invoiced));

@@ -45,8 +45,14 @@ class Auth
      */
     public static function recordFailure(string $username, ?array $user, ?array $details = null): void
     {
-        AuditLog::record(AuditLog::LOGIN_FAILED, 'user', $user ? (int) $user['id'] : null, $username, $details,
-            ['id' => $user ? (int) $user['id'] : null, 'name' => $user['full_name'] ?? null]);
+        AuditLog::record(
+            AuditLog::LOGIN_FAILED,
+            'user',
+            $user ? (int) $user['id'] : null,
+            $username,
+            $details,
+            ['id' => $user ? (int) $user['id'] : null, 'name' => $user['full_name'] ?? null]
+        );
     }
 
     /** @param array<string, mixed> $user a users tábla sora, már ellenőrizve */

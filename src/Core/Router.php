@@ -56,7 +56,7 @@ class Router
             echo json_encode(['error' => ['status' => 404, 'message' => 'Unknown API endpoint: ' . $method . ' ' . $path]], JSON_UNESCAPED_SLASHES);
             return;
         }
-        $esc = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+        $esc = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         // The dark colours: chosen outright, or the system's when that is the choice.
         $dark = 'body{background:#0f1220;color:#e3e6f1}h1,a{color:#7580f0}p{color:#9097ad}';
         $mode = Theme::mode();

@@ -91,8 +91,13 @@ class StocktakingController extends BaseController
         }
 
         $id = $this->stocktakings->book($warehouseId, $note, $items, Auth::id());
-        AuditLog::record(AuditLog::BOOK, 'stocktaking', $id, $this->stocktakings->findById($id)['stocktaking_number'] ?? null,
-            ['items' => count($items)]);
+        AuditLog::record(
+            AuditLog::BOOK,
+            'stocktaking',
+            $id,
+            $this->stocktakings->findById($id)['stocktaking_number'] ?? null,
+            ['items' => count($items)]
+        );
 
         $this->flashSuccess($this->t('stocktaking.booked'));
         $this->redirect('/stocktaking/' . $id);

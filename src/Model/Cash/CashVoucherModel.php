@@ -120,8 +120,16 @@ class CashVoucherModel
             $payments = new \Cloudexus\Model\Finance\PaymentModel();
             foreach ([['invoice_id', $payments::INVOICE], ['incoming_invoice_id', $payments::INCOMING]] as [$key, $type]) {
                 if (!empty($data[$key])) {
-                    $payments->record($type, (int) $data[$key], (float) $data['amount'], (string) $data['voucher_date'], 'cash',
-                        null, $data['created_by'] ?: null, $id);
+                    $payments->record(
+                        $type,
+                        (int) $data[$key],
+                        (float) $data['amount'],
+                        (string) $data['voucher_date'],
+                        'cash',
+                        null,
+                        $data['created_by'] ?: null,
+                        $id
+                    );
                 }
             }
 

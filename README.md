@@ -258,6 +258,9 @@ documentation**.
 ## Checking it
 
 ```
+vendor/bin/php-cs-fixer fix --dry-run --diff         # code style (without --dry-run it fixes it)
+vendor/bin/phpstan analyse --memory-limit=1G         # static analysis
+php bin/check_templates.php                          # every Twig template compiles
 vendor/bin/phpunit                                   # unit tests, and integration tests against a *_test database
 php tests/smoke.php --url=http://127.0.0.1:8080 --user=admin --password=…
 ```

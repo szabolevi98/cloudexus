@@ -162,7 +162,7 @@ class CategoryModel
 
         $slice = array_slice($matches, $offset, $perPage);
         return [
-            'results' => array_values($slice),
+            'results' => $slice,
             'more' => count($matches) > $offset + $perPage,
         ];
     }

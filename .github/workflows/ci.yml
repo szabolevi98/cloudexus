@@ -1,4 +1,5 @@
-# Every push and pull request: every PHP file parses, the unit and integration
+# Every push and pull request: every PHP file parses, the code style and the
+# static analysis pass, every Twig template compiles, the unit and integration
 # tests pass against a real MariaDB, the built stylesheet matches its sources,
 # and a fresh installation — migrated, seeded, signed into — is walked through
 # over HTTP.
@@ -48,6 +49,15 @@ jobs:
 
       - name: Every PHP file parses
         run: find src web database bin tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Code style
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Every template compiles
+        run: php bin/check_templates.php
 
       - name: Unit and integration tests
         run: vendor/bin/phpunit

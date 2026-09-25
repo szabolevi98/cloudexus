@@ -1,0 +1,20 @@
+# Statikus elemzés: típusok, és hogy lehet-e null valami, amit úgy használunk,
+# mintha nem lehetne.
+#
+# A kikapcsolt ellenőrzés minden tömb alakjának docblockba írását kérné. A sorok
+# itt PDO-ból jönnek sima tömbként, és egy docblock mindegyiken a séma egy
+# második példánya lenne, amit semmi sem tart szinkronban az elsővel.
+parameters:
+    level: 6
+    paths:
+        - src
+        - web/index.php
+        - database
+        - bin
+    tmpDir: var/cache/phpstan
+    # A tranzakciók kezelése a PDO állapotára kérdez rá többször
+    # (inTransaction() a beginTransaction() előtt és a catch ágban is): a
+    # második válasz nem azonos az elsővel.
+    rememberPossiblyImpureFunctionValues: false
+    ignoreErrors:
+        - identifier: missingType.iterableValue

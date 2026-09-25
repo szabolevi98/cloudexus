@@ -11,8 +11,8 @@ class CustomerGroupModel
     public function all(): array
     {
         return DatabaseConnection::get()->query(
-            "SELECT g.*, (SELECT COUNT(*) FROM partners p WHERE p.customer_group_id = g.id) AS partner_count
-             FROM customer_groups g ORDER BY g.name ASC"
+            'SELECT g.*, (SELECT COUNT(*) FROM partners p WHERE p.customer_group_id = g.id) AS partner_count
+             FROM customer_groups g ORDER BY g.name ASC'
         )->fetchAll();
     }
 

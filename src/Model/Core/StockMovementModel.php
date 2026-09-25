@@ -8,7 +8,6 @@ use Cloudexus\Core\Sort;
 
 class StockMovementModel
 {
-
     /**
      * A terméknév a product_description táblából, alapnyelvi visszaeséssel.
      * Metódusként, mert az itteni lekérdezések dupla idézőjelű sztringek, ahol

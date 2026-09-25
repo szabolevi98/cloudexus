@@ -4,8 +4,8 @@ namespace Cloudexus\Tests\Integration;
 
 use Cloudexus\Core\Acl;
 use Cloudexus\Core\Auth;
-use Cloudexus\Core\PermissionSeeder;
 use Cloudexus\Core\Permissions;
+use Cloudexus\Core\PermissionSeeder;
 use Cloudexus\Model\Account\RoleModel;
 
 final class AccessTest extends DatabaseTestCase

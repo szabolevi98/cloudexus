@@ -4,7 +4,6 @@ namespace Cloudexus\Model\Account;
 
 use Cloudexus\Core\DatabaseConnection;
 use Cloudexus\Core\Sort;
-use PDO;
 
 class UserModel
 {

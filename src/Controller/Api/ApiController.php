@@ -99,7 +99,11 @@ abstract class ApiController
 
         if (!\Cloudexus\Core\Acl::userCan((int) $this->user['id'], $permission)) {
             \Cloudexus\Core\AuditLog::record(
-                \Cloudexus\Core\AuditLog::DENIED, 'permission', null, $permission, 'api',
+                \Cloudexus\Core\AuditLog::DENIED,
+                'permission',
+                null,
+                $permission,
+                'api',
                 ['id' => (int) $this->user['id'], 'name' => (string) $this->user['full_name']]
             );
             $this->error('Your role does not allow this: ' . $permission . '.', 403);

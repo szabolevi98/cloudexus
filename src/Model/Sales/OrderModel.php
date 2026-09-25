@@ -9,7 +9,6 @@ use Cloudexus\Core\Sort;
 
 class OrderModel
 {
-
     /** A kategórianév a category_description táblából, alapnyelvi visszaeséssel. */
     private function categoryJoin(): string
     {
@@ -256,7 +255,7 @@ class OrderModel
                 $this->insertItems($id, $items);
                 $itemsTotal = array_sum(array_map(fn($i) => $i['quantity'] * $i['unit_price'], $items));
             } else {
-                $itemsTotal = (float) $pdo->query("SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = " . (int) $id)->fetchColumn();
+                $itemsTotal = (float) $pdo->query('SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = ' . (int) $id)->fetchColumn();
             }
 
             $stmt = $pdo->prepare(

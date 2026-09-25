@@ -105,9 +105,9 @@ class PaymentModel
     }
 
     /** A teljes nyitott egyenleg befizetése — a "Kifizetve" gomb. */
-    public function settle(string $type, int $documentId, string $method, ?int $userId): ?int
+    public function settle(string $type, int $documentId, string $method, ?int $userId): int
     {
-        return $this->inTransaction(function () use ($type, $documentId, $method, $userId): ?int {
+        return $this->inTransaction(function () use ($type, $documentId, $method, $userId): int {
             $document = $this->lockDocument($type, $documentId);
             if ($document === null) {
                 throw new \DomainException('not_payable');
@@ -235,6 +235,7 @@ class PaymentModel
         return match ($type) {
             self::INVOICE => 'invoice_id',
             self::INCOMING => 'incoming_invoice_id',
+            default => throw new \InvalidArgumentException('Unknown document type: ' . $type),
         };
     }
 

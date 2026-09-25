@@ -112,7 +112,7 @@ final class Permissions
         $system = self::groups()['system'];
 
         return [
-            RoleCode::MANAGER => array_values(array_merge(array_diff(self::all(), $system), [self::AUDIT_VIEW])),
+            RoleCode::MANAGER => array_merge(array_diff(self::all(), $system), [self::AUDIT_VIEW]),
             RoleCode::FINANCE => [
                 self::DASHBOARD_VIEW, self::PRODUCTS_VIEW, self::PARTNERS_VIEW, self::STOCK_VIEW, self::CRM_VIEW,
                 self::ORDERS_VIEW, self::INVOICES_VIEW, self::INVOICES_ISSUE, self::INVOICES_STORNO,

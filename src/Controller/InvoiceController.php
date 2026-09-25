@@ -160,8 +160,13 @@ class InvoiceController extends BaseController
         }
 
         $issued = $this->invoices->findById($id);
-        AuditLog::record(AuditLog::ISSUE, 'invoice', $id, $issued['invoice_number'] ?? null,
-            ['total' => \Cloudexus\Core\Currency::format((float) ($issued['total_amount'] ?? 0))]);
+        AuditLog::record(
+            AuditLog::ISSUE,
+            'invoice',
+            $id,
+            $issued['invoice_number'] ?? null,
+            ['total' => \Cloudexus\Core\Currency::format((float) ($issued['total_amount'] ?? 0))]
+        );
 
         $this->flashSuccess($warehouseId ? $this->t('invoices.created_with_stock') : $this->t('invoices.created'));
         $this->redirect('/invoices/' . $id);
@@ -232,8 +237,13 @@ class InvoiceController extends BaseController
 
         $original = $this->invoices->findById($id);
         $storno = $this->invoices->findById($stornoId);
-        AuditLog::record(AuditLog::STORNO, 'invoice', $stornoId, $storno['invoice_number'] ?? null,
-            ['storno_of' => $original['invoice_number'] ?? $id]);
+        AuditLog::record(
+            AuditLog::STORNO,
+            'invoice',
+            $stornoId,
+            $storno['invoice_number'] ?? null,
+            ['storno_of' => $original['invoice_number'] ?? $id]
+        );
         $this->flashSuccess($this->t('invoices.stornoed'));
         $this->redirect('/invoices/' . $stornoId);
     }

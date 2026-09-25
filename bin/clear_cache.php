@@ -62,7 +62,7 @@ function clearDir(string $dir, string $boundary, bool $dryRun, array &$stats): v
 
         // Never step outside the directory we were pointed at (symlink safety).
         if ($real === false || !str_starts_with($real, $boundary . DIRECTORY_SEPARATOR)) {
-            fwrite(STDERR, "Skipped (outside " . basename($boundary) . "): $path\n");
+            fwrite(STDERR, 'Skipped (outside ' . basename($boundary) . "): $path\n");
             continue;
         }
 

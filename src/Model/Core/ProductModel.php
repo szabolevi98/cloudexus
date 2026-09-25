@@ -423,12 +423,12 @@ class ProductModel
         $pager->clamp();
 
         $stmt = DatabaseConnection::get()->prepare(
-            "SELECT p.*, " . self::descSelectFull() . ", " . self::categorySelect() . ", " . self::unitSelect() . ", COALESCE(s.qty, 0) AS stock_qty,
+            'SELECT p.*, ' . self::descSelectFull() . ', ' . self::categorySelect() . ', ' . self::unitSelect() . ', COALESCE(s.qty, 0) AS stock_qty,
                     (SELECT path FROM product_images pi WHERE pi.product_id = p.id ORDER BY is_primary DESC, sort_order ASC, id ASC LIMIT 1) AS thumb
              FROM products p
-             " . self::descJoin() . "
-             " . self::categoryJoin() . "
-             " . self::unitJoin() . "
+             ' . self::descJoin() . '
+             ' . self::categoryJoin() . '
+             ' . self::unitJoin() . "
              LEFT JOIN (
                  SELECT product_id, SUM(CASE WHEN type = 'in' THEN quantity ELSE -quantity END) AS qty
                  FROM stock_movements GROUP BY product_id
@@ -551,10 +551,10 @@ class ProductModel
     public function lowStock(int $limit = 10): array
     {
         return DatabaseConnection::get()->query(
-            "SELECT p.id, p.sku, " . self::descSelect() . ", " . self::unitSelect() . ", p.min_stock, COALESCE(s.qty, 0) AS stock_qty
+            'SELECT p.id, p.sku, ' . self::descSelect() . ', ' . self::unitSelect() . ', p.min_stock, COALESCE(s.qty, 0) AS stock_qty
              FROM products p
-             " . self::descJoin() . "
-             " . self::unitJoin() . "
+             ' . self::descJoin() . '
+             ' . self::unitJoin() . "
              LEFT JOIN (
                  SELECT product_id, SUM(CASE WHEN type = 'in' THEN quantity ELSE -quantity END) AS qty
                  FROM stock_movements GROUP BY product_id
