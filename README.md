@@ -36,6 +36,14 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   price wins — rules do not add up. Purchase forms take the plain price.
 - **Partners** — customers, suppliers or both — with tax number, contacts,
   addresses and a history of calls, emails and meetings.
+- **CSV import** of products (by SKU) and partners (by tax number, or name),
+  in the same columns the exports write, so an export can be edited and loaded
+  back: headers recognised in Hungarian or English, semicolons or commas, a
+  Hungarian Excel file as it is; a preview row by row — new, updated,
+  unchanged, refused with the reason — and nothing written until it is
+  confirmed. An update writes only the cells filled in and never touches a
+  product's pictures, parameters or links; stock only changes through
+  movements.
 - Searchable, filterable, paged lists everywhere, sorted by clicking a column
   header (ascending, descending, then back to the list's own order), and
   search-as-you-type pickers for the long ones (products, categories, partners).

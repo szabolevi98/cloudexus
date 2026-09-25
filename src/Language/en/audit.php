@@ -28,6 +28,7 @@ return [
         'password_reset_requested' => 'New password asked for',
         'password_reset' => 'New password set',
         'emailed' => 'Emailed',
+        'import' => 'CSV import',
     ],
     'entities' => [
         'user' => 'User',
@@ -43,6 +44,8 @@ return [
         'purchase_order' => 'Purchase order',
         'price_rule' => 'Price rule',
         'payment' => 'Payment',
+        'product' => 'Product',
+        'partner' => 'Partner',
     ],
     'fields' => [
         'role' => 'Role',
@@ -51,6 +54,8 @@ return [
         'token_changed' => 'Token regenerated',
         'wrong_code_changed' => 'Wrong two-step code',
         'to' => 'To',
+        'created' => 'New',
+        'updated' => 'Updated',
         'reset_by_admin_changed' => 'Turned off by a user manager',
         'total' => 'Total',
         'number' => 'Number',

@@ -28,6 +28,7 @@ return [
         'password_reset_requested' => 'Új jelszó kérése',
         'password_reset' => 'Új jelszó beállítva',
         'emailed' => 'E-mailben elküldve',
+        'import' => 'CSV-import',
     ],
     'entities' => [
         'user' => 'Felhasználó',
@@ -43,6 +44,8 @@ return [
         'purchase_order' => 'Szállítói rendelés',
         'price_rule' => 'Árszabály',
         'payment' => 'Befizetés',
+        'product' => 'Termék',
+        'partner' => 'Partner',
     ],
     'fields' => [
         'role' => 'Szerepkör',
@@ -51,6 +54,8 @@ return [
         'token_changed' => 'Új token generálva',
         'wrong_code_changed' => 'Rossz kétlépcsős kód',
         'to' => 'Címzett',
+        'created' => 'Új',
+        'updated' => 'Frissítve',
         'reset_by_admin_changed' => 'A felhasználók kezelője kapcsolta ki',
         'total' => 'Összeg',
         'number' => 'Szám',

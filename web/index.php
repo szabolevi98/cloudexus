@@ -22,6 +22,7 @@ use Cloudexus\Controller\CurrencyController;
 use Cloudexus\Controller\CustomerGroupController;
 use Cloudexus\Controller\DashboardController;
 use Cloudexus\Controller\EmailController;
+use Cloudexus\Controller\ImportController;
 use Cloudexus\Controller\IncomingInvoiceController;
 use Cloudexus\Controller\InvoiceController;
 use Cloudexus\Controller\LanguageController;
@@ -154,6 +155,9 @@ $router->post('/profile/two-factor/recovery', fn() => (new TwoFactorController()
 $router->post('/profile/two-factor/disable', fn() => (new TwoFactorController())->disable());
 
 $router->get('/products/export', fn() => (new ProductController())->export());
+$router->get('/import/{kind}', fn($kind) => (new ImportController())->form((string) $kind));
+$router->post('/import/{kind}', fn($kind) => (new ImportController())->preview((string) $kind));
+$router->post('/import/{kind}/confirm', fn($kind) => (new ImportController())->confirm((string) $kind));
 $router->get('/products/search', fn() => (new ProductController())->search());
 $router->get('/partners/export', fn() => (new PartnerController())->export());
 $router->get('/categories/search', fn() => (new CategoryController())->search());

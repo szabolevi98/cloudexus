@@ -1,0 +1,80 @@
+{% extends 'common/layout.twig' %}
+
+{% set badges = {create: 'bg-success-subtle text-success-emphasis', update: 'bg-primary-subtle text-primary-emphasis', unchanged: 'bg-secondary-subtle text-secondary-emphasis', error: 'bg-danger-subtle text-danger-emphasis'} %}
+
+{% block content %}
+    <div class="cx-card mb-4">
+        <div class="cx-card__header">
+            <h2>{{ t('import.preview_title', {file: file_name}) }}</h2>
+        </div>
+        <div class="cx-card__body">
+            {% if plan.missing is not empty %}
+                <div class="alert alert-danger mb-0">
+                    {{ t('import.missing_columns', {columns: plan.missing|map(f => t('import.field_' ~ f))|join(', ')}) }}
+                </div>
+            {% else %}
+                <div class="d-flex flex-wrap gap-2 mb-3" id="import-counts">
+                    {% for action in ['create', 'update', 'unchanged', 'error'] %}
+                        <span class="badge rounded-pill {{ badges[action] }} fs-6 fw-normal" data-action="{{ action }}">{{ t('import.count_' ~ action, {count: plan.counts[action]}) }}</span>
+                    {% endfor %}
+                </div>
+                <p class="small text-muted mb-1">{{ t('import.recognised', {columns: field_labels|join(', ')}) }}</p>
+                {% if plan.ignored is not empty %}
+                    <p class="small text-warning-emphasis mb-0">{{ t('import.ignored', {columns: plan.ignored|join(', ')}) }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if plan.rows is not empty %}
+        <div class="cx-card mb-4">
+            <div class="cx-card__body p-0">
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0" id="import-rows">
+                        <thead>
+                        <tr>
+                            <th class="text-end" style="width: 70px;">{{ t('import.line') }}</th>
+                            <th>{{ t('import.key_' ~ kind) }}</th>
+                            <th>{{ t('import.action') }}</th>
+                            <th>{{ t('import.what') }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in plan.rows %}
+                            <tr data-action="{{ row.action }}">
+                                <td class="text-end text-muted small">{{ row.line }}</td>
+                                <td class="fw-medium">{{ row.label ?: '—' }}</td>
+                                <td><span class="badge rounded-pill {{ badges[row.action] }}">{{ t('import.action_' ~ row.action) }}</span></td>
+                                <td class="small">
+                                    {% if row.action in ['create', 'update'] %}
+                                        {% for field, value in row.data %}
+                                            {% if field not in ['sku', 'category_id', 'unit_id'] %}
+                                                <span class="text-muted">{{ t('import.field_' ~ field) }}:</span> {{ value is same as(true) ? t('common.yes') : value }}{{ not loop.last ? ' · ' }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    {% for message in row.messages %}
+                                        <div class="{{ row.action == 'error' ? 'text-danger' : 'text-warning-emphasis' }}">{{ message }}</div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2">
+        {% if plan.missing is empty and (plan.counts.create + plan.counts.update) > 0 %}
+            <form method="post" action="{{ base_url }}/import/{{ kind }}/confirm">
+                <button type="submit" class="btn btn-primary" id="import-confirm">
+                    <i class="bi bi-check-lg me-1"></i>{{ t('import.confirm', {created: plan.counts.create, updated: plan.counts.update}) }}
+                </button>
+            </form>
+        {% endif %}
+        <a href="{{ base_url }}/import/{{ kind }}" class="btn btn-outline-secondary">{{ t('import.other_file') }}</a>
+        <a href="{{ base_url }}/{{ kind }}" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>
+    </div>
+{% endblock %}
