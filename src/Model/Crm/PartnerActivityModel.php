@@ -9,9 +9,10 @@ class PartnerActivityModel
     public function forPartner(int $partnerId): array
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'SELECT a.*, u.full_name AS created_by_name
+            'SELECT a.*, u.full_name AS created_by_name, c.name AS contact_name
              FROM partner_activities a
              LEFT JOIN users u ON u.id = a.created_by
+             LEFT JOIN partner_contacts c ON c.id = a.contact_id
              WHERE a.partner_id = :id
              ORDER BY a.activity_date DESC, a.id DESC'
         );
@@ -29,11 +30,12 @@ class PartnerActivityModel
     public function create(array $data): int
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'INSERT INTO partner_activities (partner_id, type, subject, note, activity_date, created_by, created_at)
-             VALUES (:partner_id, :type, :subject, :note, :activity_date, :created_by, NOW())'
+            'INSERT INTO partner_activities (partner_id, contact_id, type, subject, note, activity_date, created_by, created_at)
+             VALUES (:partner_id, :contact_id, :type, :subject, :note, :activity_date, :created_by, NOW())'
         );
         $stmt->execute([
             'partner_id' => $data['partner_id'],
+            'contact_id' => !empty($data['contact_id']) ? (int) $data['contact_id'] : null,
             'type' => $data['type'],
             'subject' => $data['subject'],
             'note' => $data['note'] ?: null,

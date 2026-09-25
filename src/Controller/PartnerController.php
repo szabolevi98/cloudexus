@@ -53,6 +53,7 @@ class PartnerController extends BaseController
             'partner' => $partner,
             'activities' => $this->activities->forPartner($id),
             'addresses' => $this->addresses->forPartner($id),
+            'contacts' => (new \Cloudexus\Model\Core\PartnerContactModel())->forPartner($id),
         ]);
     }
 
@@ -145,6 +146,7 @@ class PartnerController extends BaseController
 
         $this->activities->create([
             'partner_id' => $id,
+            'contact_id' => $this->ownContact($id, (int) ($_POST['contact_id'] ?? 0)),
             'type' => in_array($_POST['type'] ?? '', ['call', 'email', 'meeting', 'note', 'offer'], true) ? $_POST['type'] : 'note',
             'subject' => $subject,
             'note' => trim($_POST['note'] ?? ''),
@@ -289,6 +291,7 @@ class PartnerController extends BaseController
             \Cloudexus\Core\Undo::capture($this->t('undo.partner', ['name' => $partner['name']]), '/partners/' . $id, [
                 ['partners', 'id', $id],
                 ['partner_addresses', 'partner_id', $id],
+                ['partner_contacts', 'partner_id', $id],
                 ['partner_activities', 'partner_id', $id],
             ], [
                 ['todos', 'partner_id', $id],
@@ -345,5 +348,74 @@ class PartnerController extends BaseController
         AuditLog::record(AuditLog::UPDATE, 'partner', null, $this->t('bulk.audit_label', ['count' => count($ids)]), ['bulk' => $this->t('bulk.' . ($action === 'group' ? 'set_group' : $action))]);
         $this->flashSuccess($this->t('bulk.done', ['count' => count($ids)]));
         $this->redirect($back);
+    }
+
+    /** Egy kapcsolattartó felvétele vagy átírása a partner oldaláról. */
+    public function saveContact(int $id, ?int $contactId = null): void
+    {
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
+
+        $partner = $this->partners->findById($id);
+        if (!$partner) {
+            $this->redirect('/partners');
+        }
+        $contacts = new \Cloudexus\Model\Core\PartnerContactModel();
+        if ($contactId !== null && (int) ($contacts->find($contactId)['partner_id'] ?? 0) !== $id) {
+            $this->redirect('/partners/' . $id);
+        }
+
+        $name = trim(mb_substr((string) ($_POST['name'] ?? ''), 0, 120));
+        $email = trim(mb_substr((string) ($_POST['email'] ?? ''), 0, 190));
+        if ($name === '') {
+            $this->flashError($this->t('contacts.name_required'));
+            $this->redirect('/partners/' . $id);
+        }
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $this->flashError($this->t('contacts.email_invalid'));
+            $this->redirect('/partners/' . $id);
+        }
+
+        $contacts->save($id, $contactId, [
+            'name' => $name,
+            'position' => trim(mb_substr((string) ($_POST['position'] ?? ''), 0, 120)),
+            'email' => $email,
+            'phone' => trim(mb_substr((string) ($_POST['phone'] ?? ''), 0, 40)),
+            'note' => trim(mb_substr((string) ($_POST['note'] ?? ''), 0, 255)),
+            'is_primary' => ($_POST['is_primary'] ?? '') === '1',
+            'receives_invoices' => ($_POST['receives_invoices'] ?? '') === '1',
+        ]);
+        AuditLog::record($contactId === null ? AuditLog::CREATE : AuditLog::UPDATE, 'partner', $id, (string) $partner['name'], ['contact' => $name]);
+
+        $this->flashSuccess($this->t('contacts.saved', ['name' => $name]));
+        $this->redirect('/partners/' . $id);
+    }
+
+    public function updateContact(int $id, int $contactId): void
+    {
+        $this->saveContact($id, $contactId);
+    }
+
+    public function deleteContact(int $id, int $contactId): void
+    {
+        $this->requirePermission(Permissions::PARTNERS_MANAGE);
+
+        $contacts = new \Cloudexus\Model\Core\PartnerContactModel();
+        $contact = $contacts->find($contactId);
+        if ($contact !== null && (int) $contact['partner_id'] === $id) {
+            $contacts->delete($id, $contactId);
+            $this->flashSuccess($this->t('contacts.deleted', ['name' => $contact['name']]));
+        }
+        $this->redirect('/partners/' . $id);
+    }
+
+    /** A kapcsolattartó azonosítója, ha tényleg ennek a partnernek a kapcsolattartója, különben null. */
+    private function ownContact(int $partnerId, int $contactId): ?int
+    {
+        if ($contactId <= 0) {
+            return null;
+        }
+        $contact = (new \Cloudexus\Model\Core\PartnerContactModel())->find($contactId);
+
+        return $contact !== null && (int) $contact['partner_id'] === $partnerId ? $contactId : null;
     }
 }

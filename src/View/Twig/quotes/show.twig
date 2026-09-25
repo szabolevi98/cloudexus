@@ -116,7 +116,8 @@
                         <form method="post" action="{{ base_url }}/quotes/{{ quote.id }}/email">
                             <div class="mb-3">
                                 <label for="email-to" class="form-label">{{ t('invoices.email_to') }}</label>
-                                <input type="email" id="email-to" name="to" class="form-control" value="{{ quote.emailed_to ?: quote.partner_email }}" required>
+                                <input type="email" id="email-to" name="to" class="form-control" value="{{ email_to }}" required>
+                            {% include 'common/recipients.twig' %}
                             </div>
                             <div class="mb-2">
                                 <label for="email-message" class="form-label">{{ t('invoices.email_message') }}</label>

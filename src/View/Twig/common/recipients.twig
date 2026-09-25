@@ -1,0 +1,10 @@
+{# A partner kapcsolattartói címzettnek, egy kattintással a #email-to mezőbe (app.js: data-fill). #}
+{% if recipients|default([]) is not empty %}
+    <div class="d-flex flex-wrap gap-1 mt-1" id="email-recipients">
+        {% for c in recipients %}
+            <button type="button" class="btn btn-sm btn-outline-secondary py-0" data-fill="#email-to" data-value="{{ c.email }}" title="{{ c.email }}">
+                <i class="bi bi-person"></i> {{ c.name }}{% if c.receives_invoices %} <i class="bi bi-receipt"></i>{% endif %}
+            </button>
+        {% endfor %}
+    </div>
+{% endif %}

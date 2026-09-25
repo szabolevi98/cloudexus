@@ -90,6 +90,8 @@ class QuoteController extends BaseController
         $this->render('quotes/show.twig', [
             'quote' => $quote,
             'mail_enabled' => Mailer::isConfigured(),
+            'email_to' => $quote['emailed_to'] ?: (new \Cloudexus\Model\Core\PartnerContactModel())->recipientFor((int) $quote['partner_id'], false, $quote['partner_email']),
+            'recipients' => array_values(array_filter((new \Cloudexus\Model\Core\PartnerContactModel())->forPartner((int) $quote['partner_id']), static fn(array $c): bool => (string) $c['email'] !== '')),
             'email_message' => $this->t('quotes.email_default_message', [
                 'number' => $quote['quote_number'],
                 'valid_until' => $quote['valid_until'],

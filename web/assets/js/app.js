@@ -10,6 +10,7 @@
  *   data-select        mező: kattintásra kijelöli a tartalmát
  *   data-copy="…"      gomb: a szöveget a vágólapra teszi
  *   data-autosubmit    mező: változáskor elküldi az űrlapját
+ *   data-fill="#id" data-value="…"  gomb: a mezőbe írja az értéket (pl. egy kapcsolattartó e-mailjét)
  *
  * A szövegeket a layout adja, egy nem futtatható JSON-blokkban (#cx-i18n).
  */
@@ -158,9 +159,15 @@
     }, true);
 
     document.addEventListener('click', function (e) {
-        var el = e.target.closest ? e.target.closest('[data-print], [data-back], [data-copy], [data-select]') : null;
+        var el = e.target.closest ? e.target.closest('[data-print], [data-back], [data-copy], [data-select], [data-fill]') : null;
         if (!el) return;
-        if (el.hasAttribute('data-print')) {
+        if (el.hasAttribute('data-fill')) {
+            var target = document.querySelector(el.getAttribute('data-fill'));
+            if (target) {
+                target.value = el.getAttribute('data-value') || '';
+                target.focus();
+            }
+        } else if (el.hasAttribute('data-print')) {
             e.preventDefault();
             window.print();
         } else if (el.hasAttribute('data-back')) {

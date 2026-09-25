@@ -34,8 +34,12 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   and invoice lines are priced for their quantity and the document's date, the
   rule that set the price is named under it, and when several fit, the lowest
   price wins — rules do not add up. Purchase forms take the plain price.
-- **Partners** — customers, suppliers or both — with tax number, contacts,
-  addresses and a history of calls, emails and meetings.
+- **Partners** — customers, suppliers or both — with tax number, addresses
+  and a history of calls, emails and meetings, each one tied to the person it
+  was with.
+- **Contacts** at each partner: name, position, email, phone, and which of
+  them is the primary one and which gets the invoices — invoices and quotes are
+  emailed to that person by default, with the others one click away.
 - **CSV import** of products (by SKU) and partners (by tax number, or name),
   in the same columns the exports write, so an export can be edited and loaded
   back: headers recognised in Hungarian or English, semicolons or commas, a

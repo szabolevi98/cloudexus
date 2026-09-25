@@ -189,6 +189,8 @@ class InvoiceController extends BaseController
             'invoice' => $invoice,
             'payments' => (new PaymentModel())->forDocument(PaymentModel::INVOICE, $id),
             'mail_enabled' => Mailer::isConfigured(),
+            'email_to' => $invoice['emailed_to'] ?: (new \Cloudexus\Model\Core\PartnerContactModel())->recipientFor((int) $invoice['partner_id'], true, $invoice['partner_email']),
+            'recipients' => array_values(array_filter((new \Cloudexus\Model\Core\PartnerContactModel())->forPartner((int) $invoice['partner_id']), static fn(array $c): bool => (string) $c['email'] !== '')),
             'email_message' => $this->t('invoices.email_default_message', [
                 'number' => $invoice['invoice_number'],
                 'due' => $invoice['due_date'],

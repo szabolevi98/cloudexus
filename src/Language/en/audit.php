@@ -56,6 +56,7 @@ return [
         'token_changed' => 'Token regenerated',
         'wrong_code_changed' => 'Wrong two-step code',
         'to' => 'To',
+        'contact' => 'Contact',
         'url' => 'Address',
         'created' => 'New',
         'bulk' => 'Bulk change',

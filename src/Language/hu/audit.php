@@ -56,6 +56,7 @@ return [
         'token_changed' => 'Új token generálva',
         'wrong_code_changed' => 'Rossz kétlépcsős kód',
         'to' => 'Címzett',
+        'contact' => 'Kapcsolattartó',
         'url' => 'Cím',
         'created' => 'Új',
         'bulk' => 'Tömeges művelet',

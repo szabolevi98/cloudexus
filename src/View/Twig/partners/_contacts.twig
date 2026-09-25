@@ -1,0 +1,66 @@
+{# A partner kapcsolattartói, az oldalán: lista, szerkesztés és új felvétele, lenyíló űrlapokkal. #}
+{% macro contact_form(partner, c, action, submit) %}
+    <form method="post" action="{{ action }}" class="small">
+        <div class="row g-2">
+            <div class="col-6"><input type="text" name="name" class="form-control form-control-sm" placeholder="{{ t('contacts.name') }}" value="{{ c.name|default('') }}" maxlength="120" required></div>
+            <div class="col-6"><input type="text" name="position" class="form-control form-control-sm" placeholder="{{ t('contacts.position') }}" value="{{ c.position|default('') }}" maxlength="120"></div>
+            <div class="col-6"><input type="email" name="email" class="form-control form-control-sm" placeholder="{{ t('partners.email') }}" value="{{ c.email|default('') }}" maxlength="190"></div>
+            <div class="col-6"><input type="text" name="phone" class="form-control form-control-sm" placeholder="{{ t('partners.phone') }}" value="{{ c.phone|default('') }}" maxlength="40"></div>
+            <div class="col-12"><input type="text" name="note" class="form-control form-control-sm" placeholder="{{ t('common.note') }}" value="{{ c.note|default('') }}" maxlength="255"></div>
+        </div>
+        <div class="d-flex flex-wrap gap-3 my-2">
+            <label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="is_primary" value="1" {{ c.is_primary|default(false) ? 'checked' : '' }}>{{ t('contacts.primary') }}</label>
+            <label class="form-check-label"><input type="checkbox" class="form-check-input me-1" name="receives_invoices" value="1" {{ c.receives_invoices|default(false) ? 'checked' : '' }}>{{ t('contacts.receives_invoices') }}</label>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">{{ submit }}</button>
+    </form>
+{% endmacro %}
+
+<div class="cx-card mb-3" id="partner-contacts">
+    <div class="cx-card__header">
+        <h2>{{ t('contacts.title') }}</h2>
+        <span class="text-muted small">{{ contacts|length }} {{ t('common.pcs') }}</span>
+    </div>
+    <div class="cx-card__body">
+        {% for c in contacts %}
+            <div class="pb-2 mb-2 small {{ not loop.last ? 'border-bottom' : '' }}" data-contact="{{ c.id }}">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <span class="fw-medium">{{ c.name }}</span>
+                        {% if c.position %}<span class="text-muted">· {{ c.position }}</span>{% endif %}
+                        {% if c.is_primary %}<span class="badge rounded-pill bg-primary-subtle text-primary-emphasis ms-1">{{ t('contacts.primary') }}</span>{% endif %}
+                        {% if c.receives_invoices %}<span class="badge rounded-pill bg-success-subtle text-success-emphasis ms-1" title="{{ t('contacts.receives_invoices') }}"><i class="bi bi-receipt"></i></span>{% endif %}
+                        <div>
+                            {% if c.email %}<a href="mailto:{{ c.email }}" class="text-decoration-none me-2"><i class="bi bi-envelope"></i> {{ c.email }}</a>{% endif %}
+                            {% if c.phone %}<a href="tel:{{ c.phone|replace({' ': ''}) }}" class="text-decoration-none"><i class="bi bi-telephone"></i> {{ c.phone }}</a>{% endif %}
+                        </div>
+                        {% if c.note %}<div class="text-muted">{{ c.note }}</div>{% endif %}
+                    </div>
+                    {% if can('partners.manage') %}
+                        <div class="text-nowrap">
+                            <button type="button" class="btn btn-sm btn-link p-0 me-1" data-bs-toggle="collapse" data-bs-target="#contact-edit-{{ c.id }}" title="{{ t('common.edit') }}"><i class="bi bi-pencil"></i></button>
+                            <form method="post" action="{{ base_url }}/partners/{{ partner.id }}/contacts/{{ c.id }}/delete" class="d-inline" data-confirm="{{ t('contacts.confirm_delete', {name: c.name}) }}">
+                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if can('partners.manage') %}
+                    <div class="collapse mt-2" id="contact-edit-{{ c.id }}">
+                        {{ _self.contact_form(partner, c, base_url ~ '/partners/' ~ partner.id ~ '/contacts/' ~ c.id, t('common.save')) }}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-muted small">{{ t('contacts.none') }}</div>
+        {% endfor %}
+        {% if can('partners.manage') %}
+            <button type="button" class="btn btn-sm btn-outline-secondary w-100 mt-2" data-bs-toggle="collapse" data-bs-target="#contact-new" id="contact-add">
+                <i class="bi bi-person-plus me-1"></i>{{ t('contacts.add') }}
+            </button>
+            <div class="collapse mt-2" id="contact-new">
+                {{ _self.contact_form(partner, null, base_url ~ '/partners/' ~ partner.id ~ '/contacts', t('common.add')) }}
+            </div>
+        {% endif %}
+    </div>
+</div>
