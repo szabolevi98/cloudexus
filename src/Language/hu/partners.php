@@ -55,6 +55,7 @@ return [
     'created' => 'Partner létrehozva.',
     'updated' => 'Partner frissítve.',
     'deleted' => 'Partner törölve.',
+    'delete_blocked' => 'A partner nem törölhető, mert tartozik hozzá rendelés vagy számla. Állítsd inkább inaktívra.',
     'address_fields_required' => 'A város, az irányítószám és az utca-házszám megadása kötelező.',
     'address_added' => 'Cím hozzáadva.',
     'address_updated' => 'Cím frissítve.',

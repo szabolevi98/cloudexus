@@ -49,7 +49,10 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   search-as-you-type pickers for the long ones (products, categories, partners).
   A list's filter can be **saved under a name**, for oneself or for everybody;
   products and partners can be ticked and **changed at once** (active,
-  webshop, category, customer group).
+  webshop, category, customer group). A deleted product, partner, price rule or
+  to-do can be **brought back** from the next page for ten minutes — with its
+  id, its pictures, parameters, categories and links, and its partner's
+  to-dos linked back.
 
 ![Price rules: who, on what, from how many, how much, and when](docs/price-rules.png)
 

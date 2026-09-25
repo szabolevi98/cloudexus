@@ -284,8 +284,26 @@ class PartnerController extends BaseController
     {
         $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
-        $this->partners->delete($id);
-        $this->flashSuccess($this->t('partners.deleted'));
+        $partner = $this->partners->findById($id);
+        if ($partner) {
+            \Cloudexus\Core\Undo::capture($this->t('undo.partner', ['name' => $partner['name']]), '/partners/' . $id, [
+                ['partners', 'id', $id],
+                ['partner_addresses', 'partner_id', $id],
+                ['partner_activities', 'partner_id', $id],
+            ], [
+                ['todos', 'partner_id', $id],
+                ['cash_vouchers', 'partner_id', $id],
+            ]);
+        }
+
+        try {
+            $this->partners->delete($id);
+            $this->flashSuccess($this->t('partners.deleted'));
+        } catch (\PDOException $e) {
+            // Van rendelése, számlája: nem törölhető, csak inaktiválható.
+            \Cloudexus\Core\Undo::forget();
+            $this->flashError($this->t('partners.delete_blocked'));
+        }
         $this->redirect('/partners');
     }
 

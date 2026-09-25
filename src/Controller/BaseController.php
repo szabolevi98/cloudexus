@@ -51,6 +51,8 @@ abstract class BaseController
         $this->twig->addFunction(new TwigFunction('saved_filter_path', static fn(string $page): string => SavedFilterController::PAGES[$page][0] ?? '/dashboard'));
         // A mostani cím lekérdezés-része, a lapozás nélkül — amit egy mentett szűrő eltesz.
         $this->twig->addFunction(new TwigFunction('current_query', static fn(): string => http_build_query(array_diff_key($_GET, ['page' => true]))));
+        // Egy törlés visszavonása a következő oldalon (Undo).
+        $this->twig->addFunction(new TwigFunction('undo_offer', [\Cloudexus\Core\Undo::class, 'offer']));
         // Az elakadt levelek száma a menüben; csak akkor kérdezi le, ha a menüpont látszik.
         $this->twig->addFunction(new TwigFunction('failed_mail_count', static fn(): int => (new \Cloudexus\Core\Outbox())->counts()['failed']));
     }
@@ -200,5 +202,19 @@ abstract class BaseController
         $this->pageTitle = $this->t('errors.forbidden_title');
         $this->render('common/forbidden.twig');
         exit;
+    }
+
+    /** A legutóbbi törlés visszavonása (Undo). */
+    public function undo(string $token): void
+    {
+        $this->requireAuth();
+
+        $back = \Cloudexus\Core\Undo::restore($token);
+        if ($back === null) {
+            $this->flashError($this->t('undo.failed'));
+            $this->redirect('/dashboard');
+        }
+        $this->flashSuccess($this->t('undo.done'));
+        $this->redirect($back);
     }
 }

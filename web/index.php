@@ -146,6 +146,7 @@ $router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode
 
 $router->get('/dashboard', fn() => (new DashboardController())->show());
 $router->get('/palette', fn() => (new PaletteController())->search());
+$router->post('/undo/{token}', fn($token) => (new DashboardController())->undo((string) $token));
 $router->post('/saved-filters', fn() => (new SavedFilterController())->create());
 $router->post('/saved-filters/{id}/delete', fn($id) => (new SavedFilterController())->delete((int) $id));
 

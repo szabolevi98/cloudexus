@@ -155,11 +155,27 @@ class ProductController extends BaseController
     {
         $this->requirePermission(Permissions::PRODUCTS_MANAGE);
 
+        $product = $this->products->findById($id);
+        if ($product) {
+            \Cloudexus\Core\Undo::capture($this->t('undo.product', ['name' => $product['sku']]), '/products/' . $id . '/edit', [
+                ['products', 'id', $id],
+                ['product_description', 'product_id', $id],
+                ['product_categories', 'product_id', $id],
+                ['product_parameters', 'product_id', $id],
+                ['product_images', 'product_id', $id],
+                ['product_group_prices', 'product_id', $id],
+                ['product_links', 'product_id', $id],
+                ['product_links', 'linked_product_id', $id],
+                ['price_rules', 'product_id', $id],
+            ]);
+        }
+
         try {
             $this->products->delete($id);
             $this->flashSuccess($this->t('products.deleted'));
         } catch (\PDOException $e) {
             // Van hozzá készletmozgás / bizonylat — ne töröljük, inkább inaktiváljuk.
+            \Cloudexus\Core\Undo::forget();
             $this->flashError($this->t('products.delete_blocked'));
         }
 

@@ -115,6 +115,7 @@ class PriceRuleController extends BaseController
 
         $rule = $this->rules->findById($id);
         if ($rule) {
+            \Cloudexus\Core\Undo::capture($this->t('undo.price_rule', ['name' => $rule['name']]), '/price-rules', [['price_rules', 'id', $id]]);
             $this->rules->delete($id);
             AuditLog::record(AuditLog::DELETE, 'price_rule', $id, $rule['name']);
             $this->flashSuccess($this->t('price_rules.deleted'));

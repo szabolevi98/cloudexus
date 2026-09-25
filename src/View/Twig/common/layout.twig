@@ -295,6 +295,16 @@
         </header>
 
         <main class="cx-content">
+            {% set undo = undo_offer() %}
+            {% if undo %}
+                <div class="alert alert-secondary d-flex flex-wrap align-items-center gap-2 shadow-sm" role="status" id="undo-offer">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <span>{{ t('undo.offer', {what: undo.label}) }}</span>
+                    <form method="post" action="{{ base_url }}/undo/{{ undo.token }}" class="ms-auto">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ t('undo.button') }}</button>
+                    </form>
+                </div>
+            {% endif %}
             {% for type, message in flashes|default([]) %}
                 <div class="alert alert-{{ type == 'error' ? 'danger' : 'success' }} d-flex align-items-center shadow-sm" role="alert">
                     <i class="bi {{ type == 'error' ? 'bi-exclamation-triangle' : 'bi-check-circle' }} me-2"></i>

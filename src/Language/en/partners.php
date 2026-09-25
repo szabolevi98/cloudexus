@@ -55,6 +55,7 @@ return [
     'created' => 'Partner created.',
     'updated' => 'Partner updated.',
     'deleted' => 'Partner deleted.',
+    'delete_blocked' => 'The partner cannot be deleted: it has orders or invoices. Make it inactive instead.',
     'address_fields_required' => 'City, postal code and street/number are required.',
     'address_added' => 'Address added.',
     'address_updated' => 'Address updated.',

@@ -72,6 +72,7 @@ class TodoController extends BaseController
     public function delete(int $id): void
     {
         $this->requirePermission(Permissions::CRM_MANAGE);
+        \Cloudexus\Core\Undo::capture($this->t('undo.todo'), '/todos', [['todos', 'id', $id]]);
         $this->todos->delete($id);
         $this->flashSuccess($this->t('todos.deleted'));
         $this->redirect('/todos');
