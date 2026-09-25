@@ -73,6 +73,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - The buyer's and the seller's name, tax number and address are **written onto
   the invoice when it is issued**, with the date of supply and the payment
   method, so a later change to a partner does not rewrite an old invoice.
+- **An invoice as a PDF**, drawn on the server (A4, with every Hungarian
+  letter), to download or to **send by email** to the customer with a message
+  of one's own; the invoice page says when and to whom it last went.
 - **Nothing issued is deleted or edited.** A wrong invoice is reversed with a
   storno invoice: the goods go back into the warehouse and the order can be
   invoiced again. An invoiced order cannot be cancelled or deleted.

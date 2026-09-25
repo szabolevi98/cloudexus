@@ -97,7 +97,7 @@ class InvoiceModel
         // A vevő a kiállításkor rögzített adataival; a régebbi, rögzítés
         // előtti számláknál a partner mostani adataival.
         $stmt = DatabaseConnection::get()->prepare(
-            'SELECT i.*, COALESCE(i.buyer_name, p.name) AS partner_name,
+            'SELECT i.*, COALESCE(i.buyer_name, p.name) AS partner_name, p.email AS partner_email,
                     COALESCE(i.buyer_tax_number, p.tax_number) AS tax_number,
                     i.buyer_address AS address, w.name AS warehouse_name,
                     so.invoice_number AS storno_of_number, sb.id AS storno_by_id, sb.invoice_number AS storno_by_number
@@ -553,5 +553,12 @@ class InvoiceModel
             'overdue' => (float) $row['overdue'],
             'current' => (float) $row['total'] - (float) $row['overdue'],
         ];
+    }
+
+    /** Hogy mikor és kinek ment el utoljára e-mailben. */
+    public function markEmailed(int $id, string $to): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE invoices SET emailed_at = NOW(), emailed_to = :to WHERE id = :id')
+            ->execute(['id' => $id, 'to' => mb_substr($to, 0, 255)]);
     }
 }

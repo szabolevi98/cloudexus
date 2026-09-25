@@ -4,7 +4,9 @@ namespace Cloudexus\Controller;
 
 use Cloudexus\Core\AuditLog;
 use Cloudexus\Core\Auth;
+use Cloudexus\Core\Mailer;
 use Cloudexus\Core\Paginator;
+use Cloudexus\Core\Pdf;
 use Cloudexus\Core\Permissions;
 use Cloudexus\Model\Core\PartnerModel;
 use Cloudexus\Model\Core\ProductModel;
@@ -185,7 +187,88 @@ class InvoiceController extends BaseController
         $this->render('invoices/show.twig', [
             'invoice' => $invoice,
             'payments' => (new PaymentModel())->forDocument(PaymentModel::INVOICE, $id),
+            'mail_enabled' => Mailer::isConfigured(),
+            'email_message' => $this->t('invoices.email_default_message', [
+                'number' => $invoice['invoice_number'],
+                'due' => $invoice['due_date'],
+                'company' => (string) ((new \Cloudexus\Model\Core\SettingModel())->company()['name'] ?? ''),
+            ]),
         ]);
+    }
+
+    /** A számla PDF-ként, letöltésre. */
+    public function pdf(int $id): void
+    {
+        $this->requirePermission(Permissions::INVOICES_VIEW);
+
+        $invoice = $this->invoices->findById($id);
+        if (!$invoice) {
+            $this->redirect('/invoices');
+        }
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . self::pdfName($invoice) . '"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        echo $this->renderPdf($invoice);
+        exit;
+    }
+
+    /**
+     * A számla PDF-je e-mailben, a levélsoron át. A cím alapból a partneré,
+     * de átírható; minden küldés az audit naplóba kerül.
+     */
+    public function email(int $id): void
+    {
+        $this->requirePermission(Permissions::INVOICES_ISSUE);
+
+        $invoice = $this->invoices->findById($id);
+        if (!$invoice) {
+            $this->redirect('/invoices');
+        }
+
+        $to = trim((string) ($_POST['to'] ?? ''));
+        $message = trim((string) ($_POST['message'] ?? ''));
+        if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+            $this->flashError($this->t('invoices.email_invalid'));
+            $this->redirect('/invoices/' . $id);
+        }
+
+        $queued = Mailer::send(
+            $to,
+            (string) $invoice['partner_name'],
+            $this->t('invoices.email_subject', ['number' => $invoice['invoice_number']]),
+            $message,
+            'invoice',
+            self::pdfName($invoice),
+            $this->renderPdf($invoice)
+        );
+        if (!$queued) {
+            $this->flashError($this->t(Mailer::isConfigured() ? 'invoices.email_unreachable' : 'email.off', ['address' => $to]));
+            $this->redirect('/invoices/' . $id);
+        }
+
+        $this->invoices->markEmailed($id, $to);
+        AuditLog::record(AuditLog::EMAILED, 'invoice', $id, (string) $invoice['invoice_number'], ['to' => $to]);
+        $this->flashSuccess($this->t('invoices.email_queued', ['address' => $to]));
+        $this->redirect('/invoices/' . $id);
+    }
+
+    private function renderPdf(array $invoice): string
+    {
+        $html = $this->twig->render('invoices/pdf.twig', [
+            'invoice' => $invoice,
+            'company' => (new \Cloudexus\Model\Core\SettingModel())->company(),
+            'current_locale' => \Cloudexus\Core\Lang::locale(),
+        ]);
+
+        return Pdf::render($html, $this->t('invoices.pdf_page'));
+    }
+
+    /** "SZLA-2026-0042.pdf" — a számlaszám, fájlnévnek való betűkkel. */
+    private static function pdfName(array $invoice): string
+    {
+        return preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $invoice['invoice_number']) . '.pdf';
     }
 
     /** Printer-friendly invoice document. */

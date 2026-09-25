@@ -28,12 +28,13 @@ final class AuditLog
     public const TWO_FACTOR_OFF = 'two_factor_off';
     public const PASSWORD_RESET_REQUESTED = 'password_reset_requested';
     public const PASSWORD_RESET = 'password_reset';
+    public const EMAILED = 'emailed';
 
     /** A napló szűrőjében választható műveletek. */
     public const ACTIONS = [
         self::LOGIN, self::LOGIN_FAILED, self::LOGOUT, self::DENIED, self::CREATE, self::UPDATE,
         self::DELETE, self::PERMISSIONS, self::ISSUE, self::STORNO, self::PAID, self::BOOK,
-        self::TWO_FACTOR_ON, self::TWO_FACTOR_OFF, self::PASSWORD_RESET_REQUESTED, self::PASSWORD_RESET,
+        self::TWO_FACTOR_ON, self::TWO_FACTOR_OFF, self::PASSWORD_RESET_REQUESTED, self::PASSWORD_RESET, self::EMAILED,
     ];
 
     /**

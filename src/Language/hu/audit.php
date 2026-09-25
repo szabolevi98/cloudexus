@@ -27,6 +27,7 @@ return [
         'two_factor_off' => 'Kétlépcsős belépés ki',
         'password_reset_requested' => 'Új jelszó kérése',
         'password_reset' => 'Új jelszó beállítva',
+        'emailed' => 'E-mailben elküldve',
     ],
     'entities' => [
         'user' => 'Felhasználó',
@@ -49,6 +50,7 @@ return [
         'password_changed' => 'Jelszó módosítva',
         'token_changed' => 'Új token generálva',
         'wrong_code_changed' => 'Rossz kétlépcsős kód',
+        'to' => 'Címzett',
         'reset_by_admin_changed' => 'A felhasználók kezelője kapcsolta ki',
         'total' => 'Összeg',
         'number' => 'Szám',

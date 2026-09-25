@@ -111,13 +111,25 @@
         {% include 'common/payments.twig' with {doc: invoice, payments: payments, base: base_url ~ '/invoices/' ~ invoice.id, payable: invoice.status == 'unpaid'} %}
     {% endif %}
 
-    <div class="d-flex gap-2">
+    {% if invoice.emailed_at %}
+        <p class="small text-muted mb-2"><i class="bi bi-envelope-check me-1"></i>{{ t('invoices.email_last', {date: invoice.emailed_at|date('Y-m-d H:i'), address: invoice.emailed_to}) }}</p>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2">
         <a href="{{ base_url }}/invoices" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>{{ t('common.back_to_list') }}
         </a>
         <a href="{{ base_url }}/invoices/{{ invoice.id }}/print" target="_blank" class="btn btn-outline-secondary">
             <i class="bi bi-printer me-1"></i>{{ t('common.print') }}
         </a>
+        <a href="{{ base_url }}/invoices/{{ invoice.id }}/pdf" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-pdf me-1"></i>{{ t('invoices.pdf_download') }}
+        </a>
+        {% if mail_enabled and can('invoices.issue') %}
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#invoice-email" aria-expanded="false" aria-controls="invoice-email">
+                <i class="bi bi-envelope me-1"></i>{{ t('invoices.email_send') }}
+            </button>
+        {% endif %}
         {% if invoice.status == 'unpaid' and invoice.invoice_type == 'normal' %}
             {% if can('finance.mark_paid') %}
                 <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/mark-paid">
@@ -135,4 +147,28 @@
             {% endif %}
         {% endif %}
     </div>
+
+    {% if mail_enabled and can('invoices.issue') %}
+        <div class="collapse mt-3" id="invoice-email">
+            <div class="cx-card" style="max-width: 640px;">
+                <div class="cx-card__header">
+                    <h2>{{ t('invoices.email_title') }}</h2>
+                </div>
+                <div class="cx-card__body">
+                    <form method="post" action="{{ base_url }}/invoices/{{ invoice.id }}/email">
+                        <div class="mb-3">
+                            <label for="email-to" class="form-label">{{ t('invoices.email_to') }}</label>
+                            <input type="email" id="email-to" name="to" class="form-control" value="{{ invoice.emailed_to ?: invoice.partner_email }}" required>
+                        </div>
+                        <div class="mb-2">
+                            <label for="email-message" class="form-label">{{ t('invoices.email_message') }}</label>
+                            <textarea id="email-message" name="message" class="form-control" rows="7">{{ email_message }}</textarea>
+                        </div>
+                        <p class="small text-muted"><i class="bi bi-paperclip"></i>{{ t('invoices.email_attachment', {name: invoice.invoice_number ~ '.pdf'}) }}</p>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>{{ t('invoices.email_submit') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

@@ -27,6 +27,7 @@ return [
         'two_factor_off' => 'Two-step sign-in off',
         'password_reset_requested' => 'New password asked for',
         'password_reset' => 'New password set',
+        'emailed' => 'Emailed',
     ],
     'entities' => [
         'user' => 'User',
@@ -49,6 +50,7 @@ return [
         'password_changed' => 'Password changed',
         'token_changed' => 'Token regenerated',
         'wrong_code_changed' => 'Wrong two-step code',
+        'to' => 'To',
         'reset_by_admin_changed' => 'Turned off by a user manager',
         'total' => 'Total',
         'number' => 'Number',
