@@ -36,6 +36,7 @@ return [
     'roles' => 'Jogosultságok',
     'audit' => 'Audit napló',
     'settings_company' => 'Cégadatok',
+    'settings_email' => 'E-mail',
     'parameters' => 'Paraméterek',
     'units' => 'Mennyiségi egységek',
     'currencies' => 'Pénznemek',

@@ -36,6 +36,7 @@ return [
     'roles' => 'Permissions',
     'audit' => 'Audit log',
     'settings_company' => 'Company details',
+    'settings_email' => 'Email',
     'parameters' => 'Parameters',
     'units' => 'Units of measure',
     'currencies' => 'Currencies',

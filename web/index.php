@@ -21,6 +21,7 @@ use Cloudexus\Controller\CategoryController;
 use Cloudexus\Controller\CurrencyController;
 use Cloudexus\Controller\CustomerGroupController;
 use Cloudexus\Controller\DashboardController;
+use Cloudexus\Controller\EmailController;
 use Cloudexus\Controller\IncomingInvoiceController;
 use Cloudexus\Controller\InvoiceController;
 use Cloudexus\Controller\LanguageController;
@@ -185,6 +186,9 @@ registerCrud($router, '/locations', LocationController::class);
 
 $router->get('/settings/company', fn() => (new SettingsController())->company());
 $router->post('/settings/company', fn() => (new SettingsController())->companyUpdate());
+$router->get('/settings/email', fn() => (new EmailController())->show());
+$router->post('/settings/email/test', fn() => (new EmailController())->test());
+$router->post('/settings/email/{id}/retry', fn($id) => (new EmailController())->retry((int) $id));
 
 $router->get('/parameters', fn() => (new ParameterController())->list());
 $router->post('/parameters/create', fn() => (new ParameterController())->create());

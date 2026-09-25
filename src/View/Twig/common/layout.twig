@@ -174,6 +174,11 @@
                     <a class="cx-nav__link {{ active_menu == 'settings-company' ? 'is-active' : '' }}" href="{{ base_url }}/settings/company">
                         <i class="bi bi-building-gear"></i><span>{{ t('nav.settings_company') }}</span>
                     </a>
+                    <a class="cx-nav__link {{ active_menu == 'settings-email' ? 'is-active' : '' }}" href="{{ base_url }}/settings/email">
+                        <i class="bi bi-envelope"></i><span>{{ t('nav.settings_email') }}</span>
+                        {% set failed_mail = failed_mail_count() %}
+                        {% if failed_mail > 0 %}<span class="badge rounded-pill bg-danger ms-auto" title="{{ t('email.state_failed') }}">{{ failed_mail }}</span>{% endif %}
+                    </a>
                 {% endif %}
                 {% if can('catalog.manage') %}
                     <a class="cx-nav__link {{ active_menu == 'parameters' ? 'is-active' : '' }}" href="{{ base_url }}/parameters">

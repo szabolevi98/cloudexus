@@ -391,7 +391,8 @@ foreach ($customerNames as $i => $name) {
     $id = $partnerModel->create([
         'type' => 'customer', 'customer_group_id' => $groupId, 'name' => $name,
         'tax_number' => sprintf('%08d-1-%02d', rand(10000000, 99999999), rand(1, 44)),
-        'email' => 'info@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.hu',
+        // .demo: kitalált cég, kitalált cím — a levélküldő ilyen címre sosem küld.
+        'email' => 'info@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.demo',
         'phone' => '+36 30 ' . rand(100, 999) . ' ' . rand(1000, 9999),
         'is_active' => 1,
     ]);
@@ -403,7 +404,7 @@ foreach ($supplierNames as $i => $name) {
     $id = $partnerModel->create([
         'type' => 'supplier', 'name' => $name,
         'tax_number' => sprintf('%08d-2-%02d', rand(10000000, 99999999), rand(1, 44)),
-        'email' => 'sales@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.hu',
+        'email' => 'sales@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.demo',
         'phone' => '+36 20 ' . rand(100, 999) . ' ' . rand(1000, 9999),
         'is_active' => 1,
     ]);
@@ -415,7 +416,7 @@ foreach ($bothNames as $i => $name) {
     $id = $partnerModel->create([
         'type' => 'both', 'name' => $name,
         'tax_number' => sprintf('%08d-2-%02d', rand(10000000, 99999999), rand(1, 44)),
-        'email' => 'kapcsolat@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.hu',
+        'email' => 'kapcsolat@' . strtolower(preg_replace('/[^a-z0-9]/i', '', $name)) . '.demo',
         'phone' => '+36 70 ' . rand(100, 999) . ' ' . rand(1000, 9999),
         'is_active' => 1,
     ]);

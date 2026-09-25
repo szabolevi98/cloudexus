@@ -32,10 +32,19 @@ email = "info@mintaceg.hu"
 phone = "+36 1 234 5678"
 
 [mail]
+; Merre megy a levél (számlák, elfelejtett jelszó, reggeli összefoglaló):
+;   mail   a PHP saját mail()-je, a gép sendmailjén át
+;   smtp   egy levelezőszerver: az alábbi host, port, username, password, encryption
+;   file   .eml fájlok a var/mail mappába, fejlesztéshez
+;   none   semmilyen levél
+; A leveleket a bin/outbox.php küldi ki, percenként, cronból.
+transport = none
 host =
 port = 587
 username =
 password =
+; tls (STARTTLS, a szokásos az 587-en), ssl (az elejétől, a 465-ön), vagy none
+encryption = tls
 from_address = "no-reply@cloudexus.local"
 from_name = "Cloudexus"
 

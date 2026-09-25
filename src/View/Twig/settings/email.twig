@@ -1,0 +1,90 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card mb-4">
+        <div class="cx-card__header">
+            <h2>{{ t('email.title') }}</h2>
+        </div>
+        <div class="cx-card__body">
+            <p class="text-muted small">{{ t('email.intro') }}</p>
+            <dl class="row mb-3 small">
+                <dt class="col-sm-3">{{ t('email.transport') }}</dt>
+                <dd class="col-sm-9">
+                    {% if transport == 'none' %}
+                        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">{{ t('email.transport_none') }}</span>
+                    {% else %}
+                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('email.transport_' ~ transport) }}</span>
+                    {% endif %}
+                </dd>
+                <dt class="col-sm-3">{{ t('email.from') }}</dt>
+                <dd class="col-sm-9">{{ from_address ?: '—' }}</dd>
+            </dl>
+            {% if transport == 'none' %}
+                <p class="small mb-0">{{ t('email.none_help') }}</p>
+            {% else %}
+                <form method="post" action="{{ base_url }}/settings/email/test" class="d-flex flex-wrap align-items-center gap-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-send me-1"></i>{{ t('email.test') }}</button>
+                    <span class="small text-muted">{{ t('email.test_to', {address: my_email ?: '—'}) }}</span>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="cx-card">
+        <div class="cx-card__header">
+            <ul class="nav nav-pills gap-1">
+                {% for s in ['waiting', 'failed', 'sent'] %}
+                    <li class="nav-item">
+                        <a class="nav-link py-1 px-3 {{ state == s ? 'active' : '' }}" href="{{ base_url }}/settings/email?state={{ s }}">
+                            {{ t('email.state_' ~ s) }}
+                            <span class="badge rounded-pill {{ s == 'failed' and counts.failed > 0 ? 'bg-danger' : 'bg-secondary-subtle text-secondary-emphasis' }} ms-1">{{ s == 'sent' ? counts.sent_today : counts[s] }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="cx-card__body p-0">
+            {% if messages is empty %}
+                <p class="text-muted text-center py-4 mb-0">{{ t('email.none_' ~ state) }}</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>{{ t('email.to') }}</th>
+                            <th>{{ t('email.subject') }}</th>
+                            <th>{{ t('email.kind') }}</th>
+                            <th>{{ state == 'sent' ? t('email.sent_at') : t('email.created_at') }}</th>
+                            <th class="text-end">{{ state == 'sent' ? '' : t('email.attempts') }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in messages %}
+                            <tr>
+                                <td>{{ m.to_name ?: m.to_address }}{% if m.to_name %} <span class="text-muted small">{{ m.to_address }}</span>{% endif %}</td>
+                                <td>
+                                    {{ m.subject }}
+                                    {% if m.attachment_name %}<span class="text-muted small ms-1"><i class="bi bi-paperclip"></i>{{ m.attachment_name }}</span>{% endif %}
+                                    {% if m.last_error %}<div class="small text-danger">{{ m.last_error }}</div>{% endif %}
+                                </td>
+                                <td class="small">{{ t('email.kind_' ~ m.kind) }}</td>
+                                <td class="small text-nowrap">{{ (state == 'sent' ? m.sent_at : m.created_at)|date('Y-m-d H:i') }}</td>
+                                <td class="text-end text-nowrap">
+                                    {% if state != 'sent' %}{{ m.attempts }}{% endif %}
+                                    {% if state == 'failed' %}
+                                        <form method="post" action="{{ base_url }}/settings/email/{{ m.id }}/retry" class="d-inline ms-2">
+                                            <input type="hidden" name="_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">{{ t('email.retry') }}</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

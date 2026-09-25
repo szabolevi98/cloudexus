@@ -46,6 +46,8 @@ abstract class BaseController
         $this->twig->addFunction(new TwigFunction('sort_link', [Sort::class, 'link'], ['is_safe' => ['html']]));
         $this->twig->addFunction(new TwigFunction('sort_aria', [Sort::class, 'aria'], ['is_safe' => ['html']]));
         $this->twig->addFunction(new TwigFunction('sort_inputs', [Sort::class, 'inputs'], ['is_safe' => ['html']]));
+        // Az elakadt levelek száma a menüben; csak akkor kérdezi le, ha a menüpont látszik.
+        $this->twig->addFunction(new TwigFunction('failed_mail_count', static fn(): int => (new \Cloudexus\Core\Outbox())->counts()['failed']));
     }
 
     /** Translate a key (controller-side: flash messages, page titles, …). */
