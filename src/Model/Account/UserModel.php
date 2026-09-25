@@ -153,6 +153,29 @@ class UserModel
         }
     }
 
+    /**
+     * A saját profil: név, e-mail és — ha meg van adva — új jelszó. A
+     * szerepkörhöz és az aktív jelzőhöz nem nyúl, így a profil mentése
+     * sosem veheti el senki jogait.
+     */
+    public function updateProfile(int $id, string $email, string $fullName, string $password = ''): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE users SET email = :email, full_name = :full_name WHERE id = :id')
+            ->execute(['id' => $id, 'email' => $email, 'full_name' => $fullName]);
+
+        if ($password !== '') {
+            $this->setPassword($id, $password);
+        }
+    }
+
+    /** Új jelszó, ami a mobilalkalmazásból is kiléptet minden eszközön. */
+    public function setPassword(int $id, string $password): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE users SET password_hash = :hash WHERE id = :id')
+            ->execute(['id' => $id, 'hash' => password_hash($password, PASSWORD_DEFAULT)]);
+        (new UserTokenModel())->revokeAllForUser($id);
+    }
+
     public function delete(int $id): void
     {
         DatabaseConnection::get()->prepare('DELETE FROM users WHERE id = :id')->execute(['id' => $id]);

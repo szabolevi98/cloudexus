@@ -63,14 +63,7 @@ class ProfileController extends BaseController
             $password = $newPassword;
         }
 
-        $this->users->update((int) $user['id'], [
-            'username' => $user['username'],
-            'email' => $email,
-            'full_name' => $fullName,
-            'role' => $user['role'],
-            'is_active' => $user['is_active'],
-            'password' => $password,
-        ]);
+        $this->users->updateProfile((int) $user['id'], $email, $fullName, $password);
 
         \Cloudexus\Core\Session::set('user_name', $fullName);
 

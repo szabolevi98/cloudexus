@@ -41,6 +41,26 @@ test('the sidebar stays where it was after a click in it', async ({ page }) => {
     await expect(sidebar.locator('.cx-nav__link.is-active')).toBeInViewport();
 });
 
+test('saving one’s own profile keeps one’s role', async ({ page }) => {
+    await page.goto('profile');
+    const name = page.locator('#full_name');
+    const original = await name.inputValue();
+
+    await name.fill(original + ' (e2e)');
+    await page.locator('main form[action$="/profile"] button[type="submit"]').click();
+    await expect(page.locator('.alert-success')).toBeVisible();
+
+    // Still a super admin: the user list is still there.
+    const users = await page.goto('users');
+    expect(users?.status()).toBe(200);
+    await expect(page.locator('main table')).toBeVisible();
+
+    await page.goto('profile');
+    await page.locator('#full_name').fill(original);
+    await page.locator('main form[action$="/profile"] button[type="submit"]').click();
+    await expect(page.locator('#full_name')).toHaveValue(original);
+});
+
 test('the theme switch stays switched', async ({ page }) => {
     await page.goto('dashboard');
     const html = page.locator('html');
