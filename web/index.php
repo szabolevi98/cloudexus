@@ -278,6 +278,7 @@ $router->post('/stocktaking/create', fn() => (new StocktakingController())->crea
 $router->get('/stocktaking/{id}', fn($id) => (new StocktakingController())->show((int) $id));
 
 $router->get('/deals', fn() => (new DealController())->list());
+$router->get('/deals/search', fn() => (new DealController())->search());
 $router->get('/deals/create', fn() => (new DealController())->createForm());
 $router->post('/deals/create', fn() => (new DealController())->create());
 $router->get('/deals/{id}', fn($id) => (new DealController())->show((int) $id));
@@ -287,10 +288,14 @@ $router->post('/deals/{id}/move', fn($id) => (new DealController())->move((int) 
 $router->post('/deals/{id}/delete', fn($id) => (new DealController())->delete((int) $id));
 $router->get('/todos', fn() => (new TodoController())->list());
 $router->post('/todos/create', fn() => (new TodoController())->create());
+$router->get('/todos/week', fn() => (new TodoController())->week());
+$router->get('/todos/{id}/edit', fn($id) => (new TodoController())->editForm((int) $id));
+$router->post('/todos/{id}', fn($id) => (new TodoController())->update((int) $id));
 $router->post('/todos/{id}/toggle', fn($id) => (new TodoController())->toggle((int) $id));
 $router->post('/todos/{id}/delete', fn($id) => (new TodoController())->delete((int) $id));
 
 $router->get('/quotes', fn() => (new QuoteController())->list());
+$router->get('/quotes/search', fn() => (new QuoteController())->search());
 $router->get('/quotes/create', fn() => (new QuoteController())->createForm());
 $router->post('/quotes/create', fn() => (new QuoteController())->create());
 $router->get('/quotes/{id}', fn($id) => (new QuoteController())->show((int) $id));

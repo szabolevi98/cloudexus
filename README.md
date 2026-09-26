@@ -183,7 +183,11 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   and exchange rates for the others, fetched from the Hungarian National Bank's
   daily mid rates with a button or from cron.
 - **A dark theme**, or the system's.
-- **To-dos** with a due date, a person and a partner.
+- **To-dos**: a task, call, email or meeting, with a due date and time, a
+  person, and the partner, deal or quote it belongs to. One can repeat daily,
+  weekly or monthly — ticking it off makes the next. They show in a week
+  calendar, on the deal's and the quote's page, and on the dashboard as one's
+  own list, ticked off from there.
 - **A morning digest** by email on weekdays, for whoever asks for it on their
   profile: overdue customer and supplier invoices, products under their
   minimum, their own to-dos that are due — only what their role can see, and

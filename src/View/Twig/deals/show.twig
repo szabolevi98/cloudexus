@@ -95,6 +95,51 @@
         </div>
     </div>
 
+    <div class="cx-card mb-3" id="deal-todos">
+        <div class="cx-card__header"><h2>{{ t('todos.list_title') }}</h2></div>
+        {% if can('crm.manage') %}
+            <div class="cx-card__body border-bottom">
+                <form method="post" action="{{ base_url }}/todos/create" class="row g-2 align-items-end" id="deal-todo-form">
+                    <input type="hidden" name="deal_id" value="{{ deal.id }}">
+                    <input type="hidden" name="partner_id" value="{{ deal.partner_id }}">
+                    {% if deal.quote_id %}<input type="hidden" name="quote_id" value="{{ deal.quote_id }}">{% endif %}
+                    <input type="hidden" name="assigned_to" value="{{ deal.owner_id }}">
+                    <input type="hidden" name="return" value="/deals/{{ deal.id }}">
+                    <div class="col-md-5">
+                        <label for="deal-todo-title" class="form-label small">{{ t('todos.title_label') }}</label>
+                        <input type="text" id="deal-todo-title" name="title" class="form-control form-control-sm" maxlength="200" required>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="deal-todo-type" class="form-label small">{{ t('todos.type_label') }}</label>
+                        <select id="deal-todo-type" name="type" class="form-select form-select-sm">
+                            {% for type in ['call', 'email', 'meeting', 'task'] %}<option value="{{ type }}">{{ t('todos.type.' ~ type) }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="deal-todo-date" class="form-label small">{{ t('todos.due_date') }}</label>
+                        <input type="date" id="deal-todo-date" name="due_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="deal-todo-time" class="form-label small">{{ t('todos.due_time') }}</label>
+                        <input type="time" id="deal-todo-time" name="due_time" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6 col-md-1">
+                        <button type="submit" class="btn btn-sm btn-primary w-100" aria-label="{{ t('common.add') }}"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        {% if todos is empty %}
+            <div class="cx-card__body text-muted small">{{ t('todos.none_linked') }}</div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table cx-table align-middle mb-0"><tbody>
+                    {% for todo in todos %}{% include 'todos/_row.twig' with {return: '/deals/' ~ deal.id} %}{% endfor %}
+                </tbody></table>
+            </div>
+        {% endif %}
+    </div>
+
     <div class="d-flex flex-wrap gap-2">
         <a href="{{ base_url }}/deals" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ t('deals.back') }}</a>
         {% if can('crm.manage') %}

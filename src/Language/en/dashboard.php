@@ -31,4 +31,6 @@ return [
     'receive' => 'Receive',
     'all_above_minimum' => 'All stock is above the minimum.',
     'orders_value_label' => 'Order value ({currency})',
+    'my_todos' => 'My to-dos',
+    'today' => 'today',
 ];

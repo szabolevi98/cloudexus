@@ -52,6 +52,13 @@ class QuoteController extends BaseController
         ]);
     }
 
+    /** A választók keresője (select2). */
+    public function search(): void
+    {
+        $this->requirePermission(Permissions::ORDERS_VIEW);
+        $this->json($this->quotes->search(trim((string) ($_GET['q'] ?? '')), (int) ($_GET['page'] ?? 1)));
+    }
+
     public function createForm(): void
     {
         $this->requirePermission(Permissions::ORDERS_MANAGE);
@@ -96,6 +103,8 @@ class QuoteController extends BaseController
         $this->render('quotes/show.twig', [
             'quote' => $quote,
             'deal' => \Cloudexus\Core\Acl::can(Permissions::CRM_VIEW) ? (new \Cloudexus\Model\Crm\DealModel())->findByQuote($id) : null,
+            'todos' => \Cloudexus\Core\Acl::can(Permissions::CRM_VIEW) ? (new \Cloudexus\Model\Crm\TodoModel())->forQuote($id) : null,
+            'today' => date('Y-m-d'),
             'mail_enabled' => Mailer::isConfigured(),
             'email_to' => $quote['emailed_to'] ?: (new \Cloudexus\Model\Core\PartnerContactModel())->recipientFor((int) $quote['partner_id'], false, $quote['partner_email']),
             'recipients' => array_values(array_filter((new \Cloudexus\Model\Core\PartnerContactModel())->forPartner((int) $quote['partner_id']), static fn(array $c): bool => (string) $c['email'] !== '')),

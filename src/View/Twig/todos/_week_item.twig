@@ -1,0 +1,23 @@
+{# Egy teendő a heti naptárban. todo, types, return, today. #}
+<div class="cx-week__item{{ todo.is_done ? ' is-done' : '' }}{{ not todo.is_done and todo.due_date < today ? ' is-late' : '' }}" data-todo="{{ todo.id }}">
+    {% if can('crm.manage') %}
+        <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
+            <input type="hidden" name="return" value="{{ return }}">
+            <button type="submit" class="cx-week__check" aria-label="{{ todo.is_done ? t('todos.reopen_title') : t('todos.mark_done_title') }}" title="{{ todo.is_done ? t('todos.reopen_title') : t('todos.mark_done_title') }}">
+                <i class="bi {{ todo.is_done ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
+            </button>
+        </form>
+    {% endif %}
+    <div class="min-w-0">
+        <div class="cx-week__title">
+            {% if todo.due_time %}<span class="cx-week__time">{{ todo.due_time|slice(0, 5) }}</span>{% endif %}
+            <i class="bi {{ types[todo.type]|default('bi-check2-square') }} text-muted" title="{{ t('todos.type.' ~ todo.type) }}"></i>
+            {% if can('crm.manage') %}<a href="{{ base_url }}/todos/{{ todo.id }}/edit?return={{ return|url_encode }}">{{ todo.title }}</a>{% else %}{{ todo.title }}{% endif %}
+            {% if todo.recurrence != 'none' %}<i class="bi bi-arrow-repeat text-muted" title="{{ t('todos.recurrence.' ~ todo.recurrence) }}"></i>{% endif %}
+        </div>
+        {% if todo.partner_name or todo.deal_title %}
+            <div class="cx-week__meta">{{ todo.partner_name }}{% if todo.deal_title %}{{ todo.partner_name ? ' · ' : '' }}{{ todo.deal_title }}{% endif %}</div>
+        {% endif %}
+        {% if todo.assigned_name %}<div class="cx-week__meta"><i class="bi bi-person-badge"></i> {{ todo.assigned_name }}</div>{% endif %}
+    </div>
+</div>

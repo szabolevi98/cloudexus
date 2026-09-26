@@ -32,7 +32,8 @@ class DashboardController extends BaseController
             'top_categories_max' => $topCategories ? max(array_column($topCategories, 'value')) : 0,
             'recent_invoices' => $invoices->recent(6),
             'low_stock' => (new ProductModel())->lowStock(8),
-            'open_todos' => (new \Cloudexus\Model\Crm\TodoModel())->openForDashboard(6),
+            'open_todos' => (new \Cloudexus\Model\Crm\TodoModel())->mine((int) \Cloudexus\Core\Auth::id(), 6),
+            'open_todo_count' => (new \Cloudexus\Model\Crm\TodoModel())->mineCount((int) \Cloudexus\Core\Auth::id()),
             'today' => date('Y-m-d'),
         ]);
     }

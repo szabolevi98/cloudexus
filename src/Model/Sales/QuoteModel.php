@@ -256,6 +256,41 @@ class QuoteModel
         return $orderId;
     }
 
+    /**
+     * Kereső a választókhoz (select2): az ajánlatok szám vagy partner szerint, a legújabbak elöl.
+     *
+     * @return array{results: list<array{id: int, text: string}>, more: bool}
+     */
+    public function search(string $q, int $page = 1, int $perPage = 20): array
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            'SELECT q.id, q.quote_number, p.name AS partner FROM quotes q JOIN partners p ON p.id = q.partner_id
+             WHERE q.quote_number LIKE :q1 OR p.name LIKE :q2
+             ORDER BY q.id DESC LIMIT ' . ($perPage + 1) . ' OFFSET ' . (max(1, $page) - 1) * $perPage
+        );
+        $stmt->execute(['q1' => '%' . $q . '%', 'q2' => '%' . $q . '%']);
+        $rows = $stmt->fetchAll();
+
+        return [
+            'results' => array_map(static fn(array $r): array => ['id' => (int) $r['id'], 'text' => $r['quote_number'] . ' — ' . $r['partner']], array_slice($rows, 0, $perPage)),
+            'more' => count($rows) > $perPage,
+        ];
+    }
+
+    /** @return list<array{id: int, text: string}> */
+    public function labelsForIds(array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $stmt = DatabaseConnection::get()->query(
+            'SELECT q.id, q.quote_number, p.name AS partner FROM quotes q JOIN partners p ON p.id = q.partner_id WHERE q.id IN (' . implode(',', $ids) . ')'
+        );
+
+        return array_map(static fn(array $r): array => ['id' => (int) $r['id'], 'text' => $r['quote_number'] . ' — ' . $r['partner']], $stmt->fetchAll());
+    }
+
     /** Törölhető, amíg nem lett belőle (még meglévő) rendelés. */
     public function delete(int $id): bool
     {

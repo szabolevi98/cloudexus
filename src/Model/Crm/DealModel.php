@@ -272,6 +272,41 @@ class DealModel
         )->execute(['order' => $orderId, 'quote' => $quoteId]);
     }
 
+    /**
+     * Kereső a választókhoz (select2): a nyitott üzletek, cím vagy partner szerint.
+     *
+     * @return array{results: list<array{id: int, text: string}>, more: bool}
+     */
+    public function search(string $q, int $page = 1, int $perPage = 20): array
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT d.id, d.title, p.name AS partner FROM deals d JOIN partners p ON p.id = d.partner_id
+             WHERE d.stage IN ('lead','qualified','proposal','negotiation') AND (d.title LIKE :q1 OR p.name LIKE :q2)
+             ORDER BY d.id DESC LIMIT " . ($perPage + 1) . ' OFFSET ' . (max(1, $page) - 1) * $perPage
+        );
+        $stmt->execute(['q1' => '%' . $q . '%', 'q2' => '%' . $q . '%']);
+        $rows = $stmt->fetchAll();
+
+        return [
+            'results' => array_map(static fn(array $r): array => ['id' => (int) $r['id'], 'text' => $r['title'] . ' — ' . $r['partner']], array_slice($rows, 0, $perPage)),
+            'more' => count($rows) > $perPage,
+        ];
+    }
+
+    /** @return list<array{id: int, text: string}> A választó kiválasztott eleme, a kereső formájában. */
+    public function labelsForIds(array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $stmt = DatabaseConnection::get()->query(
+            'SELECT d.id, d.title, p.name AS partner FROM deals d JOIN partners p ON p.id = d.partner_id WHERE d.id IN (' . implode(',', $ids) . ')'
+        );
+
+        return array_map(static fn(array $r): array => ['id' => (int) $r['id'], 'text' => $r['title'] . ' — ' . $r['partner']], $stmt->fetchAll());
+    }
+
     public function delete(int $id): void
     {
         DatabaseConnection::get()->prepare('DELETE FROM deals WHERE id = :id')->execute(['id' => $id]);

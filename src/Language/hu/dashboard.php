@@ -31,4 +31,6 @@ return [
     'receive' => 'Bevételezés',
     'all_above_minimum' => 'Minden készlet a minimum felett van.',
     'orders_value_label' => 'Rendelés érték ({currency})',
+    'my_todos' => 'Teendőim',
+    'today' => 'ma',
 ];

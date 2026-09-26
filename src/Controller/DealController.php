@@ -48,6 +48,13 @@ class DealController extends BaseController
         ]);
     }
 
+    /** A választók keresője (select2). */
+    public function search(): void
+    {
+        $this->requirePermission(Permissions::CRM_VIEW);
+        $this->json($this->deals->search(trim((string) ($_GET['q'] ?? '')), (int) ($_GET['page'] ?? 1)));
+    }
+
     public function createForm(): void
     {
         $this->requirePermission(Permissions::CRM_MANAGE);
@@ -89,6 +96,8 @@ class DealController extends BaseController
             'stages' => DealModel::STAGES,
             'can_quote' => Acl::can(Permissions::ORDERS_MANAGE),
             'can_see_quotes' => Acl::can(Permissions::ORDERS_VIEW),
+            'todos' => (new \Cloudexus\Model\Crm\TodoModel())->forDeal($id),
+            'today' => date('Y-m-d'),
         ]);
     }
 

@@ -7,29 +7,8 @@
                 <div class="cx-card">
                     <div class="cx-card__header"><h2>{{ t('todos.new') }}</h2></div>
                     <div class="cx-card__body">
-                        <form method="post" action="{{ base_url }}/todos/create">
-                            <div class="mb-3">
-                                <label for="title" class="form-label">{{ t('todos.title_label') }}</label>
-                                <input type="text" id="title" name="title" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="due_date" class="form-label">{{ t('todos.due_date') }}</label>
-                                <input type="date" id="due_date" name="due_date" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label for="partner_id" class="form-label">{{ t('todos.partner') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
-                                <select id="partner_id" name="partner_id" class="form-select cx-ajax-select"
-                                        data-url="{{ base_url }}/partners/search" data-placeholder="{{ t('todos.none_option') }}"></select>
-                            </div>
-                            <div class="mb-4">
-                                <label for="assigned_to" class="form-label">{{ t('todos.assignee') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
-                                <select id="assigned_to" name="assigned_to" class="form-select">
-                                    <option value="">{{ t('todos.none_option') }}</option>
-                                    {% for u in users %}
-                                        <option value="{{ u.id }}">{{ u.full_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        <form method="post" action="{{ base_url }}/todos/create" id="todo-form">
+                            {% include 'todos/_fields.twig' with {todo: prefill} %}
                             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>{{ t('common.add') }}</button>
                         </form>
                     </div>
@@ -38,17 +17,29 @@
         {% endif %}
         <div class="{{ can('crm.manage') ? 'col-lg-8' : 'col-12' }}">
             <div class="cx-card">
-                <div class="cx-card__header"><h2>{{ t('todos.list_title') }}</h2></div>
+                <div class="cx-card__header">
+                    <h2>{{ t('todos.list_title') }}</h2>
+                    <a href="{{ base_url }}/todos/week" class="btn btn-sm btn-outline-primary"><i class="bi bi-calendar-week me-1"></i>{{ t('todos.week_title') }}</a>
+                </div>
                 <div class="cx-card__body p-0">
                     <form method="get" class="p-3 border-bottom">
                         <div class="row g-2 align-items-end">
-                            <div class="col-sm-5">
-                                <label class="form-label small text-muted mb-1">{{ t('common.search') }}</label>
-                                <input type="text" name="q" class="form-control form-control-sm" value="{{ filters.q }}">
-                            </div>
                             <div class="col-sm-4">
-                                <label class="form-label small text-muted mb-1">{{ t('todos.status') }}</label>
-                                <select name="status" class="form-select form-select-sm">
+                                <label class="form-label small text-muted mb-1" for="filter-q">{{ t('common.search') }}</label>
+                                <input type="text" id="filter-q" name="q" class="form-control form-control-sm" value="{{ filters.q }}">
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="form-label small text-muted mb-1" for="filter-type">{{ t('todos.type_label') }}</label>
+                                <select id="filter-type" name="type" class="form-select form-select-sm">
+                                    <option value="">{{ t('todos.all') }}</option>
+                                    {% for type, icon in form.types %}
+                                        <option value="{{ type }}" {{ filters.type == type ? 'selected' : '' }}>{{ t('todos.type.' ~ type) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="form-label small text-muted mb-1" for="filter-status">{{ t('todos.status') }}</label>
+                                <select id="filter-status" name="status" class="form-select form-select-sm">
                                     <option value="">{{ t('todos.all') }}</option>
                                     <option value="open" {{ filters.status == 'open' ? 'selected' : '' }}>{{ t('todos.open') }}</option>
                                     <option value="done" {{ filters.status == 'done' ? 'selected' : '' }}>{{ t('todos.done') }}</option>
@@ -60,54 +51,10 @@
                         </div>
                     </form>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 cx-table">
+                        <table class="table table-hover align-middle mb-0 cx-table" id="todo-list">
                             <tbody>
                             {% for todo in todos %}
-                                <tr>
-                                    <td class="text-nowrap" style="width:150px;">
-                                        {% if can('crm.manage') %}
-                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
-                                                <input type="hidden" name="return" value="/todos?{{ filters|url_encode }}">
-                                                {% if todo.is_done %}
-                                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ t('todos.reopen_title') }}">
-                                                        <i class="bi bi-arrow-counterclockwise me-1"></i>{{ t('todos.reopen') }}
-                                                    </button>
-                                                {% else %}
-                                                    <button type="submit" class="btn btn-sm btn-success" title="{{ t('todos.mark_done_title') }}">
-                                                        <i class="bi bi-check-lg me-1"></i>{{ t('todos.mark_done') }}
-                                                    </button>
-                                                {% endif %}
-                                            </form>
-                                        {% else %}
-                                            <span class="badge rounded-pill {{ todo.is_done ? 'bg-success-subtle text-success-emphasis' : 'text-bg-secondary' }}">{{ todo.is_done ? t('todos.done') : t('todos.open') }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="{{ todo.is_done ? 'text-decoration-line-through text-muted' : 'fw-medium' }}">{{ todo.title }}</div>
-                                        <div class="small text-muted">
-                                            {% if todo.partner_name %}<i class="bi bi-person me-1"></i>{{ todo.partner_name }}{% endif %}
-                                            {% if todo.assigned_name %} · <i class="bi bi-person-badge me-1"></i>{{ todo.assigned_name }}{% endif %}
-                                        </div>
-                                    </td>
-                                    <td class="text-end" style="width:130px;">
-                                        {% if todo.due_date %}
-                                            {% if not todo.is_done and todo.due_date < today %}
-                                                <span class="badge rounded-pill text-bg-danger">{{ todo.due_date }}</span>
-                                            {% else %}
-                                                <span class="text-muted small">{{ todo.due_date }}</span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="text-muted">—</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-end" style="width:56px;">
-                                        {% if can('crm.manage') %}
-                                            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" data-confirm="{{ t('todos.confirm_delete') }}">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        {% endif %}
-                                    </td>
-                                </tr>
+                                {% include 'todos/_row.twig' with {return: '/todos?' ~ filters|url_encode} %}
                             {% else %}
                                 <tr><td class="text-center text-muted py-4">{{ t('todos.none_found') }}</td></tr>
                             {% endfor %}

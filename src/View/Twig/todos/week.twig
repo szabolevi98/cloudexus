@@ -1,0 +1,68 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    {% set return = '/todos/week?date=' ~ monday ~ '&who=' ~ who %}
+    {% set sunday = monday|date_modify('+6 days')|date('Y-m-d') %}
+    <div class="cx-card mb-3">
+        <div class="cx-card__header flex-wrap gap-2">
+            <div>
+                <h2>{{ t('todos.week_title') }}</h2>
+                <div class="text-muted small" id="week-range">{{ monday }} – {{ sunday }}</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="btn-group btn-group-sm" role="group" aria-label="{{ t('todos.week_title') }}">
+                    <a href="{{ base_url }}/todos/week?date={{ prev }}&amp;who={{ who }}" class="btn btn-outline-secondary" id="week-prev" aria-label="{{ t('todos.prev_week') }}"><i class="bi bi-chevron-left"></i></a>
+                    <a href="{{ base_url }}/todos/week?who={{ who }}" class="btn btn-outline-secondary {{ this_week ? 'active' : '' }}">{{ t('todos.this_week') }}</a>
+                    <a href="{{ base_url }}/todos/week?date={{ next }}&amp;who={{ who }}" class="btn btn-outline-secondary" id="week-next" aria-label="{{ t('todos.next_week') }}"><i class="bi bi-chevron-right"></i></a>
+                </div>
+                <form method="get" class="d-flex gap-2">
+                    <input type="hidden" name="date" value="{{ monday }}">
+                    <select name="who" class="form-select form-select-sm" style="width: auto;" data-autosubmit aria-label="{{ t('todos.assignee') }}">
+                        <option value="me" {{ who == 'me' ? 'selected' : '' }}>{{ t('todos.mine') }}</option>
+                        <option value="all" {{ who == 'all' ? 'selected' : '' }}>{{ t('todos.everyone') }}</option>
+                        {% for u in users %}
+                            <option value="{{ u.id }}" {{ who == u.id ~ '' ? 'selected' : '' }}>{{ u.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <a href="{{ base_url }}/todos" class="btn btn-sm btn-outline-secondary"><i class="bi bi-list-ul me-1"></i>{{ t('todos.list_title') }}</a>
+            </div>
+        </div>
+        {% if week.overdue is not empty %}
+            <div class="cx-card__body border-bottom" id="week-overdue">
+                <div class="small fw-semibold text-danger mb-2"><i class="bi bi-exclamation-circle me-1"></i>{{ t('todos.overdue_count', {count: week.overdue|length}) }}</div>
+                <div class="cx-week__late">
+                    {% for todo in week.overdue %}
+                        <div>
+                            <div class="small text-danger">{{ todo.due_date }}</div>
+                            {% include 'todos/_week_item.twig' %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="cx-week" id="week-days">
+        {% for day, todos in week.days %}
+            <section class="cx-week__day{{ day == today ? ' is-today' : '' }}" data-day="{{ day }}" aria-label="{{ day }}">
+                <header class="cx-week__head">
+                    <div>
+                        <div class="fw-semibold">{{ t('todos.weekday.' ~ (day|date('N'))) }}</div>
+                        <div class="small text-muted">{{ day }}</div>
+                    </div>
+                    {% if can('crm.manage') %}
+                        <a href="{{ base_url }}/todos?due_date={{ day }}" class="btn btn-sm btn-link text-muted p-0" aria-label="{{ t('todos.add_on', {date: day}) }}" title="{{ t('todos.add_on', {date: day}) }}"><i class="bi bi-plus-lg"></i></a>
+                    {% endif %}
+                </header>
+                <div class="cx-week__list">
+                    {% for todo in todos %}
+                        {% include 'todos/_week_item.twig' %}
+                    {% else %}
+                        <div class="cx-week__empty">—</div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+{% endblock %}

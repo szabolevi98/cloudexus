@@ -160,27 +160,42 @@
         {% endif %}
         {% if can('crm.view') %}
             <div class="col-lg-4">
-                <div class="cx-card mb-0 h-100">
+                <div class="cx-card mb-0 h-100" id="my-todos">
                     <div class="cx-card__header">
-                        <h2>{{ t('dashboard.todos') }}</h2>
-                        <a href="{{ base_url }}/todos" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all') }}</a>
+                        <h2>{{ t('dashboard.my_todos') }}{% if open_todo_count %} <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis ms-1">{{ open_todo_count }}</span>{% endif %}</h2>
+                        <div class="d-flex gap-1">
+                            <a href="{{ base_url }}/todos/week" class="btn btn-sm btn-outline-secondary" title="{{ t('todos.week_title') }}" aria-label="{{ t('todos.week_title') }}"><i class="bi bi-calendar-week"></i></a>
+                            <a href="{{ base_url }}/todos" class="btn btn-sm btn-outline-secondary">{{ t('dashboard.all') }}</a>
+                        </div>
                     </div>
                     <div class="cx-card__body p-0">
+                        {% set icons = {task: 'bi-check2-square', call: 'bi-telephone', email: 'bi-envelope', meeting: 'bi-people'} %}
                         {% for todo in open_todos %}
-                            <div class="d-flex align-items-center gap-2 px-3 py-2 {{ not loop.last ? 'border-bottom' : '' }}">
-                                <i class="bi bi-circle text-muted"></i>
-                                <div class="flex-grow-1">
-                                    <div class="small fw-medium">
-                                        <a href="{{ base_url }}/todos?q={{ todo.title|url_encode }}&status=open" class="text-body text-decoration-none">{{ todo.title }}</a>
+                            <div class="d-flex align-items-center gap-2 px-3 py-2 {{ not loop.last ? 'border-bottom' : '' }}" data-todo="{{ todo.id }}">
+                                {% if can('crm.manage') %}
+                                    <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
+                                        <input type="hidden" name="return" value="/dashboard">
+                                        <button type="submit" class="btn btn-sm btn-link p-0 text-muted" title="{{ t('todos.mark_done_title') }}" aria-label="{{ t('todos.mark_done_title') }}"><i class="bi bi-circle"></i></button>
+                                    </form>
+                                {% else %}
+                                    <i class="bi bi-circle text-muted"></i>
+                                {% endif %}
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="small fw-medium text-truncate">
+                                        <i class="bi {{ icons[todo.type]|default('bi-check2-square') }} text-muted me-1"></i>
+                                        {% if can('crm.manage') %}<a href="{{ base_url }}/todos/{{ todo.id }}/edit?return=%2Fdashboard" class="text-body text-decoration-none">{{ todo.title }}</a>{% else %}{{ todo.title }}{% endif %}
                                     </div>
-                                    {% if todo.partner_name %}
-                                        <div style="font-size:.75rem;">
-                                            <a href="{{ base_url }}/partners/{{ todo.partner_id }}" class="text-muted text-decoration-none">{{ todo.partner_name }}</a>
+                                    {% if todo.partner_name or todo.deal_title %}
+                                        <div class="text-truncate" style="font-size:.75rem;">
+                                            {% if todo.partner_name %}<a href="{{ base_url }}/partners/{{ todo.partner_id }}" class="text-muted text-decoration-none">{{ todo.partner_name }}</a>{% endif %}
+                                            {% if todo.deal_title %}<span class="text-muted">{{ todo.partner_name ? ' · ' : '' }}{{ todo.deal_title }}</span>{% endif %}
                                         </div>
                                     {% endif %}
                                 </div>
                                 {% if todo.due_date %}
-                                    <span class="small text-nowrap {{ todo.due_date < today ? 'text-danger fw-medium' : 'text-muted' }}">{{ todo.due_date }}</span>
+                                    <span class="small text-nowrap {{ todo.due_date < today ? 'text-danger fw-medium' : (todo.due_date == today ? 'text-primary fw-medium' : 'text-muted') }}">
+                                        {{ todo.due_date == today ? t('dashboard.today') : todo.due_date }}{% if todo.due_time %} {{ todo.due_time|slice(0, 5) }}{% endif %}
+                                    </span>
                                 {% endif %}
                             </div>
                         {% else %}

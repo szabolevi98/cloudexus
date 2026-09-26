@@ -1,0 +1,73 @@
+{#
+ # A teendő mezői — a lista felvevő űrlapja és a szerkesztő oldal közös része.
+ # todo: a szerkesztett teendő (vagy az előre kitöltött értékek);
+ # form: a TodoController::formContext().
+ #}
+<div class="mb-3">
+    <label for="title" class="form-label">{{ t('todos.title_label') }}</label>
+    <input type="text" id="title" name="title" class="form-control" maxlength="200" value="{{ todo.title|default('') }}" required>
+</div>
+<div class="row g-2">
+    <div class="col-sm-6 mb-3">
+        <label for="type" class="form-label">{{ t('todos.type_label') }}</label>
+        <select id="type" name="type" class="form-select">
+            {% for type, icon in form.types %}
+                <option value="{{ type }}" {{ todo.type|default('task') == type ? 'selected' : '' }}>{{ t('todos.type.' ~ type) }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-sm-6 mb-3">
+        <label for="recurrence" class="form-label">{{ t('todos.recurrence_label') }}</label>
+        <select id="recurrence" name="recurrence" class="form-select">
+            {% for r in form.recurrences %}
+                <option value="{{ r }}" {{ todo.recurrence|default('none') == r ? 'selected' : '' }}>{{ t('todos.recurrence.' ~ r) }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<div class="row g-2">
+    <div class="col-7 mb-3">
+        <label for="due_date" class="form-label">{{ t('todos.due_date') }}</label>
+        <input type="date" id="due_date" name="due_date" class="form-control" value="{{ todo.due_date|default('') }}">
+    </div>
+    <div class="col-5 mb-3">
+        <label for="due_time" class="form-label">{{ t('todos.due_time') }}</label>
+        <input type="time" id="due_time" name="due_time" class="form-control" value="{{ todo.due_time ? todo.due_time|slice(0, 5) : '' }}">
+    </div>
+</div>
+<div class="mb-3">
+    <label for="partner_id" class="form-label">{{ t('todos.partner') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+    <select id="partner_id" name="partner_id" class="form-select cx-ajax-select"
+            data-url="{{ base_url }}/partners/search" data-placeholder="{{ t('todos.none_option') }}">
+        {% for opt in form.partner_option %}<option value="{{ opt.id }}" selected>{{ opt.text }}</option>{% endfor %}
+    </select>
+</div>
+<div class="mb-3">
+    <label for="deal_id" class="form-label">{{ t('todos.deal') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+    <select id="deal_id" name="deal_id" class="form-select cx-ajax-select"
+            data-url="{{ base_url }}/deals/search" data-placeholder="{{ t('todos.none_option') }}">
+        {% for opt in form.deal_option %}<option value="{{ opt.id }}" selected>{{ opt.text }}</option>{% endfor %}
+    </select>
+</div>
+{% if form.can_quotes %}
+    <div class="mb-3">
+        <label for="quote_id" class="form-label">{{ t('todos.quote') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+        <select id="quote_id" name="quote_id" class="form-select cx-ajax-select"
+                data-url="{{ base_url }}/quotes/search" data-placeholder="{{ t('todos.none_option') }}">
+            {% for opt in form.quote_option %}<option value="{{ opt.id }}" selected>{{ opt.text }}</option>{% endfor %}
+        </select>
+    </div>
+{% endif %}
+<div class="mb-3">
+    <label for="assigned_to" class="form-label">{{ t('todos.assignee') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+    <select id="assigned_to" name="assigned_to" class="form-select">
+        <option value="">{{ t('todos.none_option') }}</option>
+        {% for u in form.users %}
+            <option value="{{ u.id }}" {{ todo.assigned_to|default(0) == u.id ? 'selected' : '' }}>{{ u.full_name }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="mb-4">
+    <label for="note" class="form-label">{{ t('todos.note') }} <span class="text-muted small">{{ t('todos.optional') }}</span></label>
+    <textarea id="note" name="note" class="form-control" rows="2" maxlength="4000">{{ todo.note|default('') }}</textarea>
+</div>

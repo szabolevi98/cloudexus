@@ -132,4 +132,23 @@
             </div>
         {% endif %}
     {% endif %}
+    {% if todos is not null %}
+        <div class="cx-card mt-4" id="quote-todos">
+            <div class="cx-card__header">
+                <h2>{{ t('todos.list_title') }}</h2>
+                {% if can('crm.manage') %}
+                    <a href="{{ base_url }}/todos?quote_id={{ quote.id }}&amp;partner_id={{ quote.partner_id }}{{ deal ? '&deal_id=' ~ deal.id : '' }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>{{ t('todos.new') }}</a>
+                {% endif %}
+            </div>
+            {% if todos is empty %}
+                <div class="cx-card__body text-muted small">{{ t('todos.none_linked') }}</div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0"><tbody>
+                        {% for todo in todos %}{% include 'todos/_row.twig' with {return: '/quotes/' ~ quote.id} %}{% endfor %}
+                    </tbody></table>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 {% endblock %}

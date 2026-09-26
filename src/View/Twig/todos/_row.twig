@@ -1,0 +1,50 @@
+{#
+ # Egy teendő sora — a listán, egy üzlet és egy ajánlat oldalán.
+ # todo, return: hová vigyen vissza a pipálás/törlés, today.
+ #}
+{% set icons = {task: 'bi-check2-square', call: 'bi-telephone', email: 'bi-envelope', meeting: 'bi-people'} %}
+{% set late = not todo.is_done and todo.due_date and todo.due_date < today|default('now'|date('Y-m-d')) %}
+<tr data-todo="{{ todo.id }}">
+    <td class="text-nowrap" style="width: 52px;">
+        {% if can('crm.manage') %}
+            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/toggle">
+                <input type="hidden" name="return" value="{{ return }}">
+                <button type="submit" class="btn btn-sm {{ todo.is_done ? 'btn-success' : 'btn-outline-secondary' }}"
+                        title="{{ todo.is_done ? t('todos.reopen_title') : t('todos.mark_done_title') }}" aria-label="{{ todo.is_done ? t('todos.reopen_title') : t('todos.mark_done_title') }}">
+                    <i class="bi {{ todo.is_done ? 'bi-check-lg' : 'bi-circle' }}"></i>
+                </button>
+            </form>
+        {% else %}
+            <i class="bi {{ todo.is_done ? 'bi-check-circle text-success' : 'bi-circle text-muted' }}"></i>
+        {% endif %}
+    </td>
+    <td>
+        <div class="{{ todo.is_done ? 'text-decoration-line-through text-muted' : 'fw-medium' }}">
+            <i class="bi {{ icons[todo.type]|default('bi-check2-square') }} me-1 text-muted" title="{{ t('todos.type.' ~ todo.type) }}"></i>
+            {% if can('crm.manage') %}<a href="{{ base_url }}/todos/{{ todo.id }}/edit?return={{ return|url_encode }}" class="text-reset text-decoration-none">{{ todo.title }}</a>{% else %}{{ todo.title }}{% endif %}
+            {% if todo.recurrence != 'none' %}<i class="bi bi-arrow-repeat ms-1 text-muted" title="{{ t('todos.recurrence.' ~ todo.recurrence) }}"></i>{% endif %}
+        </div>
+        <div class="small text-muted">
+            {% if todo.partner_name %}<span class="me-2"><i class="bi bi-building me-1"></i><a href="{{ base_url }}/partners/{{ todo.partner_id }}" class="text-muted">{{ todo.partner_name }}</a></span>{% endif %}
+            {% if todo.deal_title %}<span class="me-2"><i class="bi bi-kanban me-1"></i><a href="{{ base_url }}/deals/{{ todo.deal_id }}" class="text-muted">{{ todo.deal_title }}</a></span>{% endif %}
+            {% if todo.quote_number %}<span class="me-2"><i class="bi bi-file-earmark-text me-1"></i>{% if can('orders.view') %}<a href="{{ base_url }}/quotes/{{ todo.quote_id }}" class="text-muted">{{ todo.quote_number }}</a>{% else %}{{ todo.quote_number }}{% endif %}</span>{% endif %}
+            {% if todo.assigned_name %}<span><i class="bi bi-person-badge me-1"></i>{{ todo.assigned_name }}</span>{% endif %}
+        </div>
+        {% if todo.note %}<div class="small text-muted mt-1" style="white-space: pre-line;">{{ todo.note }}</div>{% endif %}
+    </td>
+    <td class="text-end text-nowrap" style="width: 130px;">
+        {% if todo.due_date %}
+            <span class="{{ late ? 'badge rounded-pill text-bg-danger' : 'text-muted small' }}">{{ todo.due_date }}{% if todo.due_time %} {{ todo.due_time|slice(0, 5) }}{% endif %}</span>
+        {% else %}
+            <span class="text-muted">—</span>
+        {% endif %}
+    </td>
+    <td class="text-end" style="width: 56px;">
+        {% if can('crm.manage') %}
+            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}/delete" data-confirm="{{ t('todos.confirm_delete') }}">
+                <input type="hidden" name="return" value="{{ return }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="{{ t('common.delete') }}"><i class="bi bi-trash"></i></button>
+            </form>
+        {% endif %}
+    </td>
+</tr>

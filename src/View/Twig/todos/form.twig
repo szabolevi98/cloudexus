@@ -1,0 +1,20 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    <div class="cx-card mb-3" style="max-width: 640px;">
+        <div class="cx-card__header">
+            <h2>{{ t('todos.edit') }}</h2>
+            {% if todo.is_done %}<span class="badge rounded-pill bg-success-subtle text-success-emphasis">{{ t('todos.done') }}</span>{% endif %}
+        </div>
+        <div class="cx-card__body">
+            <form method="post" action="{{ base_url }}/todos/{{ todo.id }}" id="todo-form">
+                <input type="hidden" name="return" value="{{ return }}">
+                {% include 'todos/_fields.twig' %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ t('common.save') }}</button>
+                    <a href="{{ base_url }}{{ return }}" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
