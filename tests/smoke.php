@@ -71,7 +71,7 @@ $pages = [
     '/stock/transfer', '/stock/barcode', '/stocktaking', '/stocktaking/create', '/orders', '/orders/create',
     '/invoices', '/invoices/create', '/purchase-orders', '/purchase-orders/create', '/incoming-invoices',
     '/incoming-invoices/create', '/cash', '/cash/create', '/reports/aging', '/reports/aging?type=payables',
-    '/todos', '/todos/week', '/deals', '/deals/create', '/users', '/users/create', '/roles', '/roles/list', '/audit', '/settings/company', '/parameters',
+    '/todos', '/todos/week', '/deals', '/deals/create', '/reports/dormant', '/users', '/users/create', '/roles', '/roles/list', '/audit', '/settings/company', '/parameters',
     '/units', '/currencies', '/languages', '/api-users', '/api-logs', '/api-docs', '/profile',
 ];
 foreach ($pages as $page) {

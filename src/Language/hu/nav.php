@@ -55,4 +55,5 @@ return [
     'theme_light' => 'Világos',
     'theme_dark' => 'Sötét',
     'theme_system' => 'A rendszer szerint',
+    'dormant' => 'Alvó ügyfelek',
 ];

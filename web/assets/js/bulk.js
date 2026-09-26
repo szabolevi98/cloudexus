@@ -39,7 +39,7 @@
     var action = form.querySelector('[name="action"]');
     function showTarget() {
         form.querySelectorAll('[data-bulk-for]').forEach(function (el) {
-            el.hidden = el.dataset.bulkFor !== action.value;
+            el.hidden = el.dataset.bulkFor.split(' ').indexOf(action.value) === -1;
         });
     }
     if (action) {

@@ -62,7 +62,9 @@
                 width: '100%',
                 placeholder: jQuery(this).data('placeholder') || i18n.choose_placeholder || '',
                 language: window.cxSelect2Lang,
-                allowClear: !jQuery(this).prop('multiple') && !this.hasAttribute('required')
+                allowClear: !jQuery(this).prop('multiple') && !this.hasAttribute('required'),
+                tags: this.hasAttribute('data-tags'),
+                tokenSeparators: this.hasAttribute('data-tags') ? [','] : []
             });
         });
 

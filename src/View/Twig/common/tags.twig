@@ -1,0 +1,8 @@
+{# Partnercímkék jelvényként. tags: a nevek listája; link: a partnerlista szűrve rá (alapból igen). #}
+{% for tag in tags|default([]) %}
+    {% if link|default(true) and tag_ids[tag] is defined %}
+        <a href="{{ base_url }}/partners?tag_id={{ tag_ids[tag] }}" class="badge rounded-pill {{ tag|tag_colour }} text-decoration-none cx-tag">{{ tag }}</a>
+    {% else %}
+        <span class="badge rounded-pill {{ tag|tag_colour }} cx-tag">{{ tag }}</span>
+    {% endif %}
+{% endfor %}

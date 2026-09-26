@@ -158,6 +158,9 @@
                     <a class="cx-nav__link {{ active_menu == 'todos' ? 'is-active' : '' }}" href="{{ base_url }}/todos">
                         <i class="bi bi-check2-square"></i><span>{{ t('nav.todos') }}</span>
                     </a>
+                    <a class="cx-nav__link {{ active_menu == 'dormant' ? 'is-active' : '' }}" href="{{ base_url }}/reports/dormant">
+                        <i class="bi bi-moon"></i><span>{{ t('nav.dormant') }}</span>
+                    </a>
                 {% endif %}
             {% endif %}
 

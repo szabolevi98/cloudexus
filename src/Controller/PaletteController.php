@@ -58,6 +58,7 @@ class PaletteController extends BaseController
         ['nav.deals', '/deals', Permissions::CRM_VIEW],
         ['nav.todos', '/todos', Permissions::CRM_VIEW],
         ['todos.week_title', '/todos/week', Permissions::CRM_VIEW],
+        ['nav.dormant', '/reports/dormant', Permissions::CRM_VIEW],
         ['nav.users', '/users', Permissions::USERS_MANAGE],
         ['nav.audit', '/audit', Permissions::AUDIT_VIEW],
         ['nav.settings_company', '/settings/company', Permissions::SETTINGS_MANAGE],

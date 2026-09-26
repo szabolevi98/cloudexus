@@ -147,6 +147,10 @@ class PartnerModel
             $where[] = 'p.customer_group_id = :group_id';
             $params['group_id'] = (int) $filters['customer_group_id'];
         }
+        if (!empty($filters['tag_id'])) {
+            $where[] = 'EXISTS (SELECT 1 FROM partner_tags pt WHERE pt.partner_id = p.id AND pt.tag_id = :tag_id)';
+            $params['tag_id'] = (int) $filters['tag_id'];
+        }
         if (!empty($filters['updated_since'])) {
             $where[] = 'p.updated_at >= :updated_since';
             $params['updated_since'] = $filters['updated_since'];

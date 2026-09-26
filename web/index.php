@@ -278,6 +278,7 @@ $router->post('/stocktaking/create', fn() => (new StocktakingController())->crea
 $router->get('/stocktaking/{id}', fn($id) => (new StocktakingController())->show((int) $id));
 
 $router->get('/deals', fn() => (new DealController())->list());
+$router->get('/reports/dormant', fn() => (new ReportController())->dormant());
 $router->get('/deals/search', fn() => (new DealController())->search());
 $router->get('/deals/create', fn() => (new DealController())->createForm());
 $router->post('/deals/create', fn() => (new DealController())->create());

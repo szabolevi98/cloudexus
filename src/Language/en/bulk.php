@@ -17,4 +17,6 @@ return [
     'nothing' => 'No rows are ticked, or nothing was chosen to set.',
     'done' => 'Done: {count} rows changed.',
     'audit_label' => '{count} items at once',
+    'tag_add' => 'Add a tag',
+    'tag_remove' => 'Remove a tag',
 ];

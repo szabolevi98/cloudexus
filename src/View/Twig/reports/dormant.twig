@@ -1,0 +1,81 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    {% set back = '/reports/dormant?days=' ~ days ~ (tag_id ? '&tag_id=' ~ tag_id : '') %}
+    <div class="cx-card">
+        <div class="cx-card__header flex-wrap gap-2">
+            <div>
+                <h2>{{ t('reports.dormant.title') }}</h2>
+                <div class="text-muted small" id="dormant-summary">{{ t('reports.dormant.summary', {count: rows|length, days: days, revenue: revenue|money}) }}</div>
+            </div>
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+                <label for="dormant-days" class="small text-muted">{{ t('reports.dormant.no_purchase_for') }}</label>
+                <select id="dormant-days" name="days" class="form-select form-select-sm w-auto" data-autosubmit>
+                    {% for d in day_options %}<option value="{{ d }}" {{ d == days ? 'selected' : '' }}>{{ t('reports.dormant.days', {days: d}) }}</option>{% endfor %}
+                </select>
+                {% if all_tags is not empty %}
+                    <select name="tag_id" class="form-select form-select-sm w-auto" data-autosubmit aria-label="{{ t('partners.tag') }}">
+                        <option value="">{{ t('reports.dormant.any_tag') }}</option>
+                        {% for tag in all_tags %}<option value="{{ tag.id }}" {{ tag_id == tag.id ? 'selected' : '' }}>{{ tag.name }}</option>{% endfor %}
+                    </select>
+                {% endif %}
+                <noscript><button class="btn btn-sm btn-primary">{{ t('common.filter') }}</button></noscript>
+            </form>
+        </div>
+        <div class="cx-card__body border-bottom small text-muted py-2">{{ t('reports.dormant.help') }}</div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 cx-table" id="dormant-list">
+                <thead>
+                <tr>
+                    <th>{{ t('common.partner') }}</th>
+                    <th>{{ t('reports.dormant.contact') }}</th>
+                    <th class="text-end">{{ t('reports.dormant.last_purchase') }}</th>
+                    <th class="text-end">{{ t('reports.dormant.purchases') }}</th>
+                    <th class="text-end">{{ t('reports.dormant.revenue') }}</th>
+                    <th class="text-end">{{ t('reports.dormant.follow_up') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr data-partner="{{ row.id }}">
+                        <td>
+                            <a href="{{ base_url }}/partners/{{ row.id }}" class="fw-medium text-decoration-none">{{ row.name }}</a>
+                            {% if partner_tags[row.id] is defined %}<div class="d-flex flex-wrap gap-1 mt-1">{% include 'common/tags.twig' with {tags: partner_tags[row.id]} %}</div>{% endif %}
+                        </td>
+                        <td class="small text-muted">
+                            {% if row.phone %}<div><i class="bi bi-telephone me-1"></i>{{ row.phone }}</div>{% endif %}
+                            {% if row.email %}<div><i class="bi bi-envelope me-1"></i>{{ row.email }}</div>{% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">
+                            {{ row.last_purchase }}
+                            <div class="small text-muted">{{ t('reports.dormant.days_ago', {days: row.days_since}) }}</div>
+                        </td>
+                        <td class="text-end">{{ row.purchases }}</td>
+                        <td class="text-end text-nowrap fw-medium">{{ row.revenue|money }}</td>
+                        <td class="text-end text-nowrap">
+                            {% if row.todo_id %}
+                                <a href="{{ base_url }}/todos/{{ row.todo_id }}/edit?return={{ back|url_encode }}" class="small {{ row.todo_due and row.todo_due < today ? 'text-danger' : 'text-muted' }}">
+                                    <i class="bi bi-check2-square me-1"></i>{{ row.todo_due ? t('reports.dormant.todo_due', {date: row.todo_due}) : t('reports.dormant.todo_open') }}
+                                </a>
+                            {% elseif can('crm.manage') %}
+                                <form method="post" action="{{ base_url }}/todos/create">
+                                    <input type="hidden" name="title" value="{{ t('reports.dormant.todo_title', {name: row.name}) }}">
+                                    <input type="hidden" name="type" value="call">
+                                    <input type="hidden" name="partner_id" value="{{ row.id }}">
+                                    <input type="hidden" name="due_date" value="{{ today }}">
+                                    <input type="hidden" name="assigned_to" value="{{ auth_user_id }}">
+                                    <input type="hidden" name="note" value="{{ t('reports.dormant.todo_note', {date: row.last_purchase, revenue: row.revenue|money}) }}">
+                                    <input type="hidden" name="return" value="{{ back }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-telephone-plus me-1"></i>{{ t('reports.dormant.make_todo') }}</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">{{ t('reports.dormant.none', {days: days}) }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

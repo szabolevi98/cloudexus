@@ -37,6 +37,33 @@ class ReportController extends BaseController
         ]);
     }
 
+    /** Az alvó ügyfelek: régóta nem vásároltak — egy kattintással hívás-teendő nekik. */
+    public function dormant(): void
+    {
+        $this->requirePermission(Permissions::CRM_VIEW);
+
+        $days = (int) ($_GET['days'] ?? 90);
+        $days = in_array($days, \Cloudexus\Model\Crm\DormantCustomerModel::DAYS, true) ? $days : 90;
+        $tagId = (int) ($_GET['tag_id'] ?? 0) ?: null;
+        $tags = new \Cloudexus\Model\Crm\TagModel();
+        $rows = (new \Cloudexus\Model\Crm\DormantCustomerModel())->find($days, $tagId);
+        $allTags = $tags->all();
+
+        $this->activeMenu = 'dormant';
+        $this->pageTitle = $this->t('reports.dormant.title');
+        $this->render('reports/dormant.twig', [
+            'rows' => $rows,
+            'days' => $days,
+            'day_options' => \Cloudexus\Model\Crm\DormantCustomerModel::DAYS,
+            'tag_id' => $tagId,
+            'all_tags' => $allTags,
+            'tag_ids' => array_column($allTags, 'id', 'name'),
+            'partner_tags' => $tags->forPartners(array_column($rows, 'id')),
+            'revenue' => array_sum(array_column($rows, 'revenue')),
+            'today' => date('Y-m-d'),
+        ]);
+    }
+
     public function agingExport(): void
     {
         [$type, $asOf] = $this->params();

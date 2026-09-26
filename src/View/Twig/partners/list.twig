@@ -55,6 +55,17 @@
                             {% endfor %}
                         </select>
                     </div>
+                    {% if all_tags is not empty %}
+                        <div class="col-sm-3 col-lg-2">
+                            <label class="form-label small text-muted mb-1" for="filter-tag">{{ t('partners.tag') }}</label>
+                            <select name="tag_id" id="filter-tag" class="form-select form-select-sm">
+                                <option value="">{{ t('common.all') }}</option>
+                                {% for tag in all_tags %}
+                                    <option value="{{ tag.id }}" {{ filters.tag_id == tag.id ? 'selected' : '' }}>{{ tag.name }} ({{ tag.partners }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
                     <div class="col-auto">
                         <button class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>{{ t('common.filter') }}</button>
                         <a href="{{ base_url }}/partners" class="btn btn-sm btn-outline-secondary">{{ t('common.clear') }}</a>
@@ -80,7 +91,10 @@
                     {% for partner in partners %}
                         <tr>
                             {% if can('partners.manage') %}<td><input type="checkbox" class="form-check-input" name="ids[]" value="{{ partner.id }}" form="bulk-form" aria-label="{{ t('bulk.tick', {name: partner.name}) }}"></td>{% endif %}
-                            <td class="fw-medium"><a href="{{ base_url }}/partners/{{ partner.id }}" class="text-decoration-none">{{ partner.name }}</a></td>
+                            <td class="fw-medium">
+                                <a href="{{ base_url }}/partners/{{ partner.id }}" class="text-decoration-none">{{ partner.name }}</a>
+                                {% if partner_tags[partner.id] is defined %}<div class="d-flex flex-wrap gap-1 mt-1">{% include 'common/tags.twig' with {tags: partner_tags[partner.id]} %}</div>{% endif %}
+                            </td>
                             <td>
                                 {% if partner.type == 'customer' %}
                                     <span class="badge rounded-pill text-bg-primary">{{ t('partners.type_customer') }}</span>
@@ -133,7 +147,13 @@
                         <option value="activate">{{ t('bulk.activate') }}</option>
                         <option value="deactivate">{{ t('bulk.deactivate') }}</option>
                         <option value="group">{{ t('bulk.set_group') }}</option>
+                        <option value="tag_add">{{ t('bulk.tag_add') }}</option>
+                        <option value="tag_remove">{{ t('bulk.tag_remove') }}</option>
                     </select>
+                    <div data-bulk-for="tag_add tag_remove" hidden>
+                        <input type="text" name="tag" class="form-control form-control-sm" list="bulk-tags" maxlength="60" placeholder="{{ t('partners.tag') }}" aria-label="{{ t('partners.tag') }}">
+                        <datalist id="bulk-tags">{% for tag in all_tags %}<option value="{{ tag.name }}">{% endfor %}</datalist>
+                    </div>
                     <div data-bulk-for="group" hidden>
                         <select name="customer_group_id" class="form-select form-select-sm w-auto" aria-label="{{ t('partners.customer_group') }}">
                             <option value="0">{{ t('bulk.no_group') }}</option>

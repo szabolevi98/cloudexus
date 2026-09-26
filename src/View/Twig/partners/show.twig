@@ -79,6 +79,9 @@
                         {% endif %}
                     </div>
                 </div>
+                {% if tags is not empty %}
+                    <div class="cx-card__body border-bottom py-2 d-flex flex-wrap gap-1" id="partner-tags">{% include 'common/tags.twig' %}</div>
+                {% endif %}
                 <div class="cx-card__body">
                     <div class="mb-2">
                         {% if partner.type == 'customer' %}

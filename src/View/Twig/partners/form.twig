@@ -48,6 +48,15 @@
                     </div>
                 </div>
                 <div class="mb-3">
+                    <label for="tags" class="form-label">{{ t('partners.tags') }} <span class="text-muted small">{{ t('common.optional') }}</span></label>
+                    <select id="tags" name="tags[]" class="form-select cx-select2" multiple data-tags="true" data-placeholder="{{ t('partners.tags_placeholder') }}">
+                        {% for tag in all_tags %}
+                            <option value="{{ tag.name }}" {{ tag.name in tags ? 'selected' : '' }}>{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">{{ t('partners.tags_help') }}</div>
+                </div>
+                <div class="mb-3">
                     <label for="customer_group_id" class="form-label">{{ t('partners.customer_group') }}</label>
                     <select id="customer_group_id" name="customer_group_id" class="form-select cx-select2">
                         <option value="">{{ t('partners.customer_group_none') }}</option>

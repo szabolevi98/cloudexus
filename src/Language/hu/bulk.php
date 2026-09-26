@@ -17,4 +17,6 @@ return [
     'nothing' => 'Nincs kijelölt sor, vagy hiányzik, mire állítsuk.',
     'done' => 'Kész: {count} sor módosítva.',
     'audit_label' => '{count} tétel egyszerre',
+    'tag_add' => 'Címke hozzáadása',
+    'tag_remove' => 'Címke levétele',
 ];

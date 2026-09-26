@@ -55,4 +55,5 @@ return [
     'theme_light' => 'Light',
     'theme_dark' => 'Dark',
     'theme_system' => 'As the system',
+    'dormant' => 'Dormant customers',
 ];

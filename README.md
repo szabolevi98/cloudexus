@@ -48,6 +48,11 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - **Credit limit and payment terms** per partner. The order, quote and invoice
   forms warn when the unpaid invoices reach the limit or some are overdue, and
   an invoice is due as many days after issue as the partner's terms say.
+- **Tags** on partners, typed in freely ("restaurant", "wholesale", "VIP"),
+  filtered on in the list and given to or taken off many partners at once.
+- **Dormant customers**: active customers who have bought before but not for
+  60, 90, 180 or 365 days, the ones who brought the most first, each with a
+  one-click call to-do — or the open to-do they already have.
 - **CSV import** of products (by SKU) and partners (by tax number, or name),
   in the same columns the exports write, so an export can be edited and loaded
   back: headers recognised in Hungarian or English, semicolons or commas, a

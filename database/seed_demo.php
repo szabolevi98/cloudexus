@@ -50,6 +50,8 @@ foreach ([
     'product_parameters', 'product_categories', 'product_images', 'product_links',
     'product_description', 'category_description',
     'products', 'categories',
+    // A partnerhez kötött CRM-táblák is: ajánlatok, üzletek, kapcsolattartók, címkék.
+    'deals', 'quote_items', 'quotes', 'partner_contacts', 'partner_tags', 'tags',
     'partners', 'warehouses', 'customer_groups', 'currencies',
 ] as $table) {
     $pdo->exec("TRUNCATE TABLE $table");
@@ -427,6 +429,18 @@ foreach ($bothNames as $i => $name) {
 
 echo count($partners['customer']) . ' customer-capable, ' . count($partners['supplier']) . " supplier-capable partners.\n";
 
+// Címkék néhány vevőn, hogy a lista szűrője és az alvó ügyfelek riport címkéi ne legyenek üresek.
+$tagModel = new \Cloudexus\Model\Crm\TagModel();
+$demoTags = [['Étterem'], ['Nagyker', 'VIP'], ['Webshop'], [], ['Nagyker']];
+foreach ($partners['customer'] as $i => $partnerId) {
+    $tagModel->setForPartner($partnerId, $demoTags[$i % count($demoTags)]);
+}
+echo count($tagModel->all()) . " partner tags.\n";
+
+// Három vevő "alvó": csak 100-300 napja rendelt, így az alvó ügyfelek riportban is van kit felhívni.
+$dormantCustomers = array_slice($partners['customer'], 5, 3);
+$activeCustomers = array_values(array_diff($partners['customer'], $dormantCustomers));
+
 // Minden partnernek 1-2 szerkezetes cím (szállítási/számlázási kiválasztáshoz a rendeléseknél).
 echo "Seeding partner addresses...\n";
 $addressModel = new PartnerAddressModel();
@@ -607,7 +621,8 @@ $shippingCostOptions = [990, 1490, 1990, 2490];
 $paymentCostOptions = [390, 590, 890];
 
 for ($i = 0; $i < 130; $i++) {
-    $orderDate = randDate(30, 0);
+    $isDormant = $i < 9;
+    $orderDate = $isDormant ? randDate(300, 100) : randDate(30, 0);
     $itemCount = rand(1, 6);
     $items = [];
 
@@ -620,7 +635,7 @@ for ($i = 0; $i < 130; $i++) {
         ];
     }
 
-    $orderPartnerId = $partners['customer'][array_rand($partners['customer'])];
+    $orderPartnerId = $isDormant ? $dormantCustomers[$i % count($dormantCustomers)] : $activeCustomers[array_rand($activeCustomers)];
     $orderAddressIds = $partnerAddressIds[$orderPartnerId] ?? [];
 
     $orderId = $orderModel->create([
@@ -875,5 +890,33 @@ foreach (array_unique($partners['customer']) as $partnerId) {
     }
 }
 echo "$activityCount partner activities.\n";
+
+// ---------------------------------------------------------------------------
+// Értékesítési folyamat: néhány üzlet minden szakaszban
+// ---------------------------------------------------------------------------
+echo "Seeding deals...\n";
+$dealModel = new \Cloudexus\Model\Crm\DealModel();
+$demoDeals = [
+    ['Új üzlet berendezése', 'lead', 850000, 40],
+    ['Éves szerviz keretszerződés', 'lead', 420000, 25],
+    ['Tavaszi kerékpár-flotta', 'qualified', 2400000, 20],
+    ['Iskolai sisakcsomag', 'qualified', 390000, 15],
+    ['Webshop viszonteladói ár', 'proposal', 1250000, 10],
+    ['Céges e-bike lízing', 'negotiation', 5600000, 12],
+    ['Kiegészítők újrarendelése', 'won', 310000, -5],
+    ['Túrakerékpár tender', 'lost', 3100000, -12],
+];
+foreach ($demoDeals as $k => [$title, $stage, $amount, $closeIn]) {
+    $dealId = $dealModel->create([
+        'title' => $title, 'partner_id' => $activeCustomers[$k % count($activeCustomers)], 'stage' => $stage === 'lost' ? 'negotiation' : $stage,
+        'amount' => (float) $amount, 'probability' => null,
+        'expected_close' => date('Y-m-d', strtotime(($closeIn >= 0 ? '+' : '') . $closeIn . ' days')),
+        'owner_id' => null, 'note' => '',
+    ]);
+    if ($stage === 'lost') {
+        $dealModel->move($dealId, 'lost', [], 'Olcsóbb ajánlatot kapott');
+    }
+}
+echo count($demoDeals) . " deals.\n";
 
 echo "\nDone. Demo data ready.\n";

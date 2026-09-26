@@ -35,6 +35,8 @@ abstract class BaseController
         $this->twig->addFilter(new TwigFilter('money', [Currency::class, 'format']));
         // Mennyiség annyi tizedessel, amennyi kell: 12, 2,5, 0,125 (kg, l, m is).
         $this->twig->addFilter(new TwigFilter('qty', [\Cloudexus\Core\Quantity::class, 'format']));
+        // Egy partnercímke színe, a nevéből — lásd TagModel::colour.
+        $this->twig->addFilter(new TwigFilter('tag_colour', [\Cloudexus\Model\Crm\TagModel::class, 'colour']));
         // {{ currency_symbol() }} önmagában, pl. beviteli mezők címkéihez. Twig
         // függvény és nem globális, hogy csak akkor kérdezze le a pénznemet, ha kell.
         $this->twig->addFunction(new TwigFunction('currency_symbol', [Currency::class, 'symbol']));

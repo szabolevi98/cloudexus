@@ -59,6 +59,8 @@ class PartnerController extends BaseController
             'timeline' => $overview->timeline($id),
             'top_products' => $overview->topProducts($id),
             'deals' => \Cloudexus\Core\Acl::can(Permissions::CRM_VIEW) ? (new \Cloudexus\Model\Crm\DealModel())->forPartner($id) : null,
+            'tags' => (new \Cloudexus\Model\Crm\TagModel())->forPartner($id),
+            'tag_ids' => array_column((new \Cloudexus\Model\Crm\TagModel())->all(), 'id', 'name'),
         ]);
     }
 
@@ -185,15 +187,22 @@ class PartnerController extends BaseController
             'type' => $_GET['type'] ?? '',
             'status' => $_GET['status'] ?? '',
             'customer_group_id' => (int) ($_GET['customer_group_id'] ?? 0),
+            'tag_id' => (int) ($_GET['tag_id'] ?? 0),
         ];
         $pager = new \Cloudexus\Core\Paginator(25);
+        $partners = $this->partners->paginate($filters, $pager);
+        $tags = new \Cloudexus\Model\Crm\TagModel();
+        $allTags = $tags->all();
 
         $this->pageTitle = $this->t('partners.list_title');
         $this->render('partners/list.twig', [
-            'partners' => $this->partners->paginate($filters, $pager),
+            'partners' => $partners,
             'pager' => $pager->toTwig($filters),
             'filters' => $filters,
             'customer_groups' => $this->customerGroups->all(),
+            'all_tags' => $allTags,
+            'tag_ids' => array_column($allTags, 'id', 'name'),
+            'partner_tags' => $tags->forPartners(array_map(static fn(array $p): int => (int) $p['id'], $partners)),
         ]);
     }
 
@@ -235,7 +244,7 @@ class PartnerController extends BaseController
         $this->requirePermission(Permissions::PARTNERS_MANAGE);
 
         $this->pageTitle = $this->t('partners.new');
-        $this->render('partners/form.twig', ['partner' => null, 'customer_groups' => $this->customerGroups->all()]);
+        $this->render('partners/form.twig', ['partner' => null, 'customer_groups' => $this->customerGroups->all(), 'all_tags' => (new \Cloudexus\Model\Crm\TagModel())->all(), 'tags' => []]);
     }
 
     public function create(): void
@@ -249,7 +258,8 @@ class PartnerController extends BaseController
             $this->redirect('/partners/create');
         }
 
-        $this->partners->create($data);
+        $id = $this->partners->create($data);
+        (new \Cloudexus\Model\Crm\TagModel())->setForPartner($id, (array) ($_POST['tags'] ?? []));
         $this->flashSuccess($this->t('partners.created'));
         $this->redirect('/partners');
     }
@@ -268,6 +278,8 @@ class PartnerController extends BaseController
             'partner' => $partner,
             'customer_groups' => $this->customerGroups->all(),
             'addresses' => $this->addresses->forPartner($id),
+            'all_tags' => (new \Cloudexus\Model\Crm\TagModel())->all(),
+            'tags' => (new \Cloudexus\Model\Crm\TagModel())->forPartner($id),
         ]);
     }
 
@@ -283,6 +295,7 @@ class PartnerController extends BaseController
         }
 
         $this->partners->update($id, $data);
+        (new \Cloudexus\Model\Crm\TagModel())->setForPartner($id, (array) ($_POST['tags'] ?? []));
         $this->flashSuccess($this->t('partners.updated'));
         $this->redirect('/partners');
     }
@@ -298,6 +311,7 @@ class PartnerController extends BaseController
                 ['partner_addresses', 'partner_id', $id],
                 ['partner_contacts', 'partner_id', $id],
                 ['partner_activities', 'partner_id', $id],
+                ['partner_tags', 'partner_id', $id],
             ], [
                 ['todos', 'partner_id', $id],
                 ['cash_vouchers', 'partner_id', $id],
@@ -339,6 +353,19 @@ class PartnerController extends BaseController
         $ids = array_values(array_unique(array_filter(array_map('intval', (array) ($_POST['ids'] ?? [])))));
         $action = (string) ($_POST['action'] ?? '');
         $back = '/partners' . (($_POST['back'] ?? '') !== '' ? '?' . $_POST['back'] : '');
+
+        if (in_array($action, ['tag_add', 'tag_remove'], true)) {
+            $tag = trim((string) ($_POST['tag'] ?? ''));
+            if ($ids === [] || $tag === '') {
+                $this->flashError($this->t('bulk.nothing'));
+                $this->redirect($back);
+            }
+            $tags = new \Cloudexus\Model\Crm\TagModel();
+            $action === 'tag_add' ? $tags->addToPartners($ids, $tag) : $tags->removeFromPartners($ids, $tag);
+            AuditLog::record(AuditLog::UPDATE, 'partner', null, $this->t('bulk.audit_label', ['count' => count($ids)]), ['bulk' => $this->t('bulk.' . $action) . ': ' . $tag]);
+            $this->flashSuccess($this->t('bulk.done', ['count' => count($ids)]));
+            $this->redirect($back);
+        }
         [$column, $value] = match ($action) {
             'activate' => ['is_active', 1],
             'deactivate' => ['is_active', 0],

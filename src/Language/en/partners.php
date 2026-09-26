@@ -111,4 +111,8 @@ return [
     'timeline_due' => 'Due: {date}',
     'top_products' => 'Most bought products',
     'last_12_months' => 'in the last 12 months',
+    'tags' => 'Tags',
+    'tag' => 'Tag',
+    'tags_placeholder' => 'Pick one or type a new one…',
+    'tags_help' => 'Type a new tag to add it; separate several with commas.',
 ];

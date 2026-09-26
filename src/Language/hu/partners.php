@@ -111,4 +111,8 @@ return [
     'timeline_due' => 'Határidő: {date}',
     'top_products' => 'Legtöbbet vett termékek',
     'last_12_months' => 'az elmúlt 12 hónapban',
+    'tags' => 'Címkék',
+    'tag' => 'Címke',
+    'tags_placeholder' => 'Válassz vagy írj újat…',
+    'tags_help' => 'Új címkét beírva lehet adni; vesszővel többet is.',
 ];
