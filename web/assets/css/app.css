@@ -1359,6 +1359,21 @@ a {
     color: var(--cx-primary);
 }
 
+.cx-deal__owner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 4px;
+    border-radius: 12px;
+    background: var(--cx-primary-soft);
+    color: var(--cx-primary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
 /* Heti naptár: hét nap egymás mellett, keskenyebb képernyőn tördelve. */
 .cx-week {
     display: grid;

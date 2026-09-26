@@ -57,14 +57,16 @@
                                 <span class="fw-semibold">{{ deal.amount|money }}</span>
                                 <span class="text-muted" title="{{ t('deals.probability') }}" data-chance {{ deal.is_open ? '' : 'hidden' }}>{{ deal.chance }}%</span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mt-1 small text-muted gap-2">
-                                <span class="text-truncate">{% if deal.owner_name %}<i class="bi bi-person me-1"></i>{{ deal.owner_name }}{% endif %}</span>
-                                {% if stage == 'lost' and deal.lost_reason %}
-                                    <span class="text-danger text-truncate" title="{{ deal.lost_reason }}">{{ deal.lost_reason }}</span>
-                                {% elseif deal.expected_close and deal.is_open %}
-                                    <span class="text-nowrap {{ deal.is_late ? 'text-danger fw-medium' : '' }}" title="{{ t('deals.expected_close') }}"><i class="bi bi-calendar-event me-1"></i>{{ deal.expected_close }}</span>
-                                {% endif %}
-                            </div>
+                            {% if stage == 'lost' and deal.lost_reason %}
+                                <div class="small text-danger mt-1">{{ deal.lost_reason }}</div>
+                            {% endif %}
+                            {% if deal.owner_name or (deal.expected_close and deal.is_open) %}
+                                <div class="d-flex justify-content-between align-items-center mt-1 small text-muted gap-2">
+                                    <span class="text-nowrap {{ deal.is_late ? 'text-danger fw-medium' : '' }}" title="{{ t('deals.expected_close') }}">{% if deal.expected_close and deal.is_open %}<i class="bi bi-calendar-event me-1"></i>{{ deal.expected_close }}{% endif %}</span>
+                                    {# A felelős monogramja; a teljes neve a címben. #}
+                                    {% if deal.owner_name %}<span class="cx-deal__owner" title="{{ t('deals.owner') }}: {{ deal.owner_name }}">{{ deal.owner_name|split(' ')|map(w => w|first)|join|upper|slice(0, 2) }}</span>{% endif %}
+                                </div>
+                            {% endif %}
                             {% if deal.quote_number or deal.order_number %}
                                 <div class="mt-1 small">
                                     {% if deal.order_number %}<span class="badge text-bg-success">{{ deal.order_number }}</span>{% elseif deal.quote_number %}<span class="badge bg-primary-subtle text-primary-emphasis">{{ deal.quote_number }}</span>{% endif %}
