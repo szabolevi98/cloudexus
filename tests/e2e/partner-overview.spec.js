@@ -4,7 +4,7 @@
  * credit limit and payment terms at work — the invoice form warns about the
  * limit and takes its due date from the terms. The partner is left as it was.
  */
-const { test, expect, pick } = require('./helpers');
+const { test, expect } = require('./helpers');
 
 const inDays = (days) => {
     const d = new Date();
@@ -33,7 +33,10 @@ test('the partner page, the credit limit and the payment terms', async ({ page, 
 
     try {
         await page.goto('invoices/create');
-        await pick(page, page.locator('#partner_id'), partner.text.split(' — ')[0]);
+        // Pontosan ez a partner: a neve egy másikéban is benne lehet.
+        await page.locator('#partner_id').locator('xpath=following-sibling::span[contains(@class, "select2")]').first().click();
+        await page.locator('.select2-container--open .select2-search__field').fill(partner.text.split(' — ')[0]);
+        await page.locator('.select2-container--open').getByRole('option', { name: partner.text, exact: true }).click();
         const credit = page.locator('.cx-partner-credit');
         await expect(credit).toBeVisible();
         await expect(credit).toContainText('30');
