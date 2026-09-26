@@ -1,0 +1,167 @@
+{% extends 'common/layout.twig' %}
+
+{% block content %}
+    {% set bucket_label = {overdue: t('reports.crm.bucket.overdue'), later: t('reports.crm.bucket.later'), none: t('reports.crm.bucket.none')} %}
+    <div class="cx-card mb-3">
+        <div class="cx-card__header flex-wrap gap-2">
+            <div>
+                <h2>{{ t('reports.crm.title') }}</h2>
+                <div class="text-muted small" id="crm-period">{{ from }} – {{ to }}</div>
+            </div>
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-center" id="crm-period-form">
+                <select name="period" class="form-select form-select-sm w-auto" data-autosubmit aria-label="{{ t('reports.crm.period') }}">
+                    {% for p in ['month', 'last30', 'quarter', 'year', 'custom'] %}
+                        <option value="{{ p }}" {{ period == p ? 'selected' : '' }}>{{ t('reports.crm.periods.' ~ p) }}</option>
+                    {% endfor %}
+                </select>
+                <input type="date" name="from" class="form-control form-control-sm w-auto" value="{{ from }}" aria-label="{{ t('reports.crm.from') }}">
+                <input type="date" name="to" class="form-control form-control-sm w-auto" value="{{ to }}" aria-label="{{ t('reports.crm.to') }}">
+                <button class="btn btn-sm btn-primary" name="period" value="custom">{{ t('common.filter') }}</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3" id="crm-kpis">
+        <div class="col-6 col-lg-3">
+            <div class="cx-card h-100 mb-0"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('reports.crm.pipeline') }}</div>
+                <div class="fs-5 fw-semibold">{{ pipeline.weighted|money }}</div>
+                <div class="small text-muted">{{ t('reports.crm.pipeline_detail', {count: pipeline.count, amount: pipeline.amount|money}) }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="cx-card h-100 mb-0"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('reports.crm.won') }}</div>
+                <div class="fs-5 fw-semibold text-success">{{ closed.won_amount|money }}</div>
+                <div class="small text-muted">{{ t('reports.crm.won_detail', {won: closed.won, lost: closed.lost}) }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="cx-card h-100 mb-0"><div class="cx-card__body py-3">
+                <div class="small text-muted">{{ t('reports.crm.win_rate') }}</div>
+                <div class="fs-5 fw-semibold">{{ closed.win_rate is null ? '—' : closed.win_rate ~ '%' }}</div>
+                <div class="small text-muted">{{ t('reports.crm.win_rate_help') }}</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="cx-card h-100 mb-0"><div class="cx-card__body py-3">
+                {% if quotes %}
+                    <div class="small text-muted">{{ t('reports.crm.quote_rate') }}</div>
+                    <div class="fs-5 fw-semibold">{{ quotes.rate is null ? '—' : quotes.rate ~ '%' }}</div>
+                    <div class="small text-muted">{{ t('reports.crm.quote_detail', {ordered: quotes.ordered, count: quotes.count, open: quotes.open}) }}</div>
+                {% else %}
+                    <div class="small text-muted">{{ t('reports.crm.activities') }}</div>
+                    <div class="fs-5 fw-semibold">{{ activities.activities|reduce((sum, n) => sum + n, 0) }}</div>
+                {% endif %}
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="cx-card h-100 mb-0">
+                <div class="cx-card__header">
+                    <h2>{{ t('reports.crm.forecast') }}</h2>
+                    <span class="small text-muted">{{ t('reports.crm.forecast_help') }}</span>
+                </div>
+                <div class="cx-card__body">
+                    <div style="height: 240px;"><canvas id="forecast-chart" data-amount="{{ t('reports.crm.amount') }}" data-weighted="{{ t('reports.crm.weighted') }}"></canvas></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table cx-table align-middle mb-0" id="forecast-table">
+                        <thead><tr><th>{{ t('reports.crm.close_month') }}</th><th class="text-end">{{ t('reports.crm.deals') }}</th><th class="text-end">{{ t('reports.crm.amount') }}</th><th class="text-end">{{ t('reports.crm.weighted') }}</th></tr></thead>
+                        <tbody>
+                        {% for row in forecast %}
+                            <tr class="{{ row.count == 0 ? 'text-muted' : '' }}{{ row.key == 'overdue' and row.count > 0 ? ' text-danger' : '' }}">
+                                <td>{{ bucket_label[row.key]|default(row.key|replace({'-': '.'})) }}</td>
+                                <td class="text-end">{{ row.count }}</td>
+                                <td class="text-end text-nowrap">{{ row.amount|money }}</td>
+                                <td class="text-end text-nowrap fw-medium">{{ row.weighted|money }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 d-flex flex-column gap-3">
+            <div class="cx-card mb-0">
+                <div class="cx-card__header"><h2>{{ t('reports.crm.activities') }}</h2></div>
+                <div class="cx-card__body">
+                    {% set activity_icons = {call: 'bi-telephone', email: 'bi-envelope', meeting: 'bi-people', note: 'bi-sticky', offer: 'bi-file-earmark-text'} %}
+                    <div class="row g-2 small" id="crm-activities">
+                        {% for type, icon in activity_icons %}
+                            <div class="col-6 d-flex justify-content-between"><span><i class="bi {{ icon }} me-1 text-muted"></i>{{ t('partners.activity_types.' ~ type) }}</span><strong>{{ activities.activities[type]|default(0) }}</strong></div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <div class="small text-muted mb-1">{{ t('reports.crm.todos_done') }}</div>
+                    <div class="row g-2 small">
+                        {% for type in ['task', 'call', 'email', 'meeting'] %}
+                            <div class="col-6 d-flex justify-content-between"><span>{{ t('todos.type.' ~ type) }}</span><strong>{{ activities.todos[type]|default(0) }}</strong></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="cx-card mb-0 flex-grow-1">
+                <div class="cx-card__header"><h2>{{ t('reports.crm.lost_reasons') }}</h2></div>
+                {% if lost_reasons is empty %}
+                    <div class="cx-card__body small text-muted">{{ t('reports.crm.none_lost') }}</div>
+                {% else %}
+                    {% set top = lost_reasons|first.count %}
+                    <div class="cx-card__body" id="crm-lost-reasons">
+                        {% for r in lost_reasons %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between small"><span class="text-truncate me-2">{{ r.reason }}</span><span class="text-nowrap text-muted">{{ r.count }} · {{ r.amount|money }}</span></div>
+                                <div class="progress" style="height: 4px;" role="presentation"><div class="progress-bar bg-danger" style="width: {{ (r.count / top * 100)|round }}%;"></div></div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="cx-card">
+        <div class="cx-card__header"><h2>{{ t('reports.crm.by_salesperson') }}</h2></div>
+        <div class="table-responsive">
+            <table class="table cx-table table-hover align-middle mb-0" id="crm-people">
+                <thead>
+                <tr>
+                    <th>{{ t('reports.crm.salesperson') }}</th>
+                    <th class="text-end">{{ t('reports.crm.open_deals') }}</th>
+                    <th class="text-end">{{ t('reports.crm.won') }}</th>
+                    <th class="text-end">{{ t('reports.crm.win_rate') }}</th>
+                    {% if quotes %}<th class="text-end">{{ t('reports.crm.quotes_col') }}</th>{% endif %}
+                    <th class="text-end">{{ t('reports.crm.activities') }}</th>
+                    <th class="text-end">{{ t('reports.crm.todos_col') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for p in people %}
+                    <tr>
+                        <td class="fw-medium">
+                            {% if p.user_id %}
+                                <a href="{{ base_url }}/deals?owner={{ p.user_id }}" class="text-decoration-none">{{ p.name }}</a>
+                            {% else %}
+                                <span class="text-muted fst-italic">{{ t('reports.crm.no_owner') }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">{{ p.open_deals }}<div class="small text-muted">{{ p.open_weighted|money }}</div></td>
+                        <td class="text-end text-nowrap">{{ p.won_amount|money }}<div class="small text-muted">{{ t('reports.crm.won_detail', {won: p.won, lost: p.lost}) }}</div></td>
+                        <td class="text-end">{{ p.win_rate is null ? '—' : p.win_rate ~ '%' }}</td>
+                        {% if quotes %}<td class="text-end text-nowrap">{{ p.quotes_ordered }} / {{ p.quotes }}<div class="small text-muted">{{ p.quote_rate is null ? '—' : p.quote_rate ~ '%' }}</div></td>{% endif %}
+                        <td class="text-end">{{ p.activities }}</td>
+                        <td class="text-end text-nowrap">{{ p.todos_done }}{% if p.todos_late %}<div class="small text-danger">{{ t('reports.crm.todos_late', {count: p.todos_late}) }}</div>{% endif %}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">{{ t('reports.crm.no_people') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ base_url }}/assets/vendor/chartjs/chart.umd.min.js"></script>
+    <script type="application/json" id="forecast-chart-data">{{ js_data(forecast|map(r => {label: bucket_label[r.key]|default(r.key|replace({'-': '.'})), amount: r.amount, weighted: r.weighted})) }}</script>
+{% endblock %}

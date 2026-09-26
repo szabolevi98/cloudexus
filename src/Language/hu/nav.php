@@ -56,4 +56,5 @@ return [
     'theme_dark' => 'Sötét',
     'theme_system' => 'A rendszer szerint',
     'dormant' => 'Alvó ügyfelek',
+    'crm_report' => 'CRM riport',
 ];

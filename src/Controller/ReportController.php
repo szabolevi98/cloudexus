@@ -37,6 +37,53 @@ class ReportController extends BaseController
         ]);
     }
 
+    /**
+     * A CRM riport: folyamat és előrejelzés, lezárt üzletek, ajánlatokból
+     * lett rendelések, tevékenységek, értékesítőnként is — egy időszakra.
+     */
+    public function crm(): void
+    {
+        $this->requirePermission(Permissions::CRM_VIEW);
+
+        [$period, $from, $to] = self::period((string) ($_GET['period'] ?? 'month'), (string) ($_GET['from'] ?? ''), (string) ($_GET['to'] ?? ''));
+        $report = new \Cloudexus\Model\Crm\CrmReportModel();
+
+        $this->activeMenu = 'crm_report';
+        $this->pageTitle = $this->t('reports.crm.title');
+        $this->render('reports/crm.twig', [
+            'period' => $period,
+            'from' => $from,
+            'to' => $to,
+            'pipeline' => $report->pipeline(),
+            'forecast' => $report->forecast(),
+            'closed' => $report->closed($from, $to),
+            'lost_reasons' => $report->lostReasons($from, $to),
+            'quotes' => \Cloudexus\Core\Acl::can(Permissions::ORDERS_VIEW) ? $report->quotes($from, $to) : null,
+            'activities' => $report->activities($from, $to),
+            'people' => $report->bySalesperson($from, $to),
+        ]);
+    }
+
+    /**
+     * Az időszak: előre adott (e hónap, az elmúlt 30 nap, e negyedév, ez az
+     * év) vagy két dátum között. Egy rossz vagy fordított dátumpár e hónap lesz.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    public static function period(string $period, string $from = '', string $to = '', ?string $today = null): array
+    {
+        $today ??= date('Y-m-d');
+        $date = static fn(string $d): bool => (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) && strtotime($d) !== false;
+
+        return match (true) {
+            $period === 'custom' && $date($from) && $date($to) && $from <= $to => ['custom', $from, $to],
+            $period === 'last30' => ['last30', date('Y-m-d', strtotime("$today -29 days")), $today],
+            $period === 'quarter' => ['quarter', date('Y-', strtotime($today)) . sprintf('%02d', intdiv((int) date('n', strtotime($today)) - 1, 3) * 3 + 1) . '-01', $today],
+            $period === 'year' => ['year', date('Y-01-01', strtotime($today)), $today],
+            default => ['month', date('Y-m-01', strtotime($today)), $today],
+        };
+    }
+
     /** Az alvó ügyfelek: régóta nem vásároltak — egy kattintással hívás-teendő nekik. */
     public function dormant(): void
     {

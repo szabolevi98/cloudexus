@@ -434,4 +434,39 @@
             });
         }
     })();
+
+    // CRM riport: az előrejelzés hónaponként — a teljes és a súlyozott érték, a téma színeivel.
+    (function () {
+        var canvas = $('#forecast-chart');
+        var rows = json('forecast-chart-data');
+        if (!canvas || !rows || !window.Chart) return;
+        var css = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+        var chart = null;
+        var draw = function () {
+            if (chart) chart.destroy();
+            var muted = css('--cx-muted');
+            var grid = css('--cx-border');
+            chart = new window.Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: rows.map(function (r) { return r.label; }),
+                    datasets: [
+                        {label: canvas.dataset.amount, data: rows.map(function (r) { return r.amount; }), backgroundColor: css('--cx-primary-soft'), borderColor: css('--cx-primary'), borderWidth: 1},
+                        {label: canvas.dataset.weighted, data: rows.map(function (r) { return r.weighted; }), backgroundColor: css('--cx-primary')}
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {legend: {labels: {color: muted}}},
+                    scales: {
+                        x: {grid: {display: false}, ticks: {color: muted}},
+                        y: {beginAtZero: true, grid: {color: grid}, ticks: {color: muted, callback: function (v) { return new Intl.NumberFormat('hu-HU', {notation: 'compact'}).format(v); }}}
+                    }
+                }
+            });
+        };
+        draw();
+        document.addEventListener('cx:theme', draw);
+    })();
 })();

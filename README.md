@@ -6,8 +6,9 @@ A business management system for trading companies that hold a lot of stock
 and sell every day: the products and the partners, the warehouses and what is
 in them, customer orders through to invoices and the money that comes in for
 them, purchase orders through to supplier invoices and the money that goes out,
-the cash desk, and the to-dos around the customers. One installation is one
-company, with its own database and its own people.
+the cash desk, and the work around the customers: quotes, a sales pipeline,
+to-dos and the reports on them. One installation is one company, with its own
+database and its own people.
 
 ![The dashboard: sales of the last ten days, what is owed to us and by us, the top categories](docs/dashboard.png)
 
@@ -40,19 +41,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - **Contacts** at each partner: name, position, email, phone, and which of
   them is the primary one and which gets the invoices — invoices and quotes are
   emailed to that person by default, with the others one click away.
-- **The partner's page** has it all in one place: this year's revenue against
-  last year's, what they owe and how much of it is overdue, how late they pay
-  on average, their quote win rate, their most bought products, and one
-  timeline of orders, quotes, invoices, payments, calls and to-dos that can be
-  filtered to documents, money or activity.
 - **Credit limit and payment terms** per partner. The order, quote and invoice
   forms warn when the unpaid invoices reach the limit or some are overdue, and
   an invoice is due as many days after issue as the partner's terms say.
-- **Tags** on partners, typed in freely ("restaurant", "wholesale", "VIP"),
-  filtered on in the list and given to or taken off many partners at once.
-- **Dormant customers**: active customers who have bought before but not for
-  60, 90, 180 or 365 days, the ones who brought the most first, each with a
-  one-click call to-do — or the open to-do they already have.
 - **CSV import** of products (by SKU) and partners (by tax number, or name),
   in the same columns the exports write, so an export can be edited and loaded
   back: headers recognised in Hungarian or English, semicolons or commas, a
@@ -66,8 +57,8 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   search-as-you-type pickers for the long ones (products, categories, partners).
   A list's filter can be **saved under a name**, for oneself or for everybody;
   products and partners can be ticked and **changed at once** (active,
-  webshop, category, customer group). A deleted product, partner, price rule or
-  to-do can be **brought back** from the next page for ten minutes — with its
+  webshop, category, customer group, a tag). A deleted product, partner, price
+  rule, deal or to-do can be **brought back** from the next page for ten minutes — with its
   id, its pictures, parameters, categories and links, and its partner's
   to-dos linked back.
 
@@ -94,12 +85,6 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ### Sales
 
-- **A sales pipeline** of deals on a board, one column per stage (lead,
-  qualified, proposal, negotiation, won, lost), moved by dragging. Each deal
-  has a value, a probability (the stage's by default), an expected close date
-  and an owner; each column shows its total and its weighted total. A deal is
-  only marked lost with the reason. A quote made from a deal moves it to the
-  proposal stage, and the order made from that quote wins it.
 - **Quotes** before the orders: the same line items and pricing (group
   prices, price rules, VAT per line), a validity date and a note for the
   customer, a PDF and sending by email, accepted or rejected (with the
@@ -127,6 +112,37 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   share a number and a refused one does not use one up.
 
 ![An invoice: VAT per line, the summary, and the payments on it](docs/invoice.png)
+
+### CRM
+
+- **The partner's page** has it all in one place: this year's revenue against
+  last year's, what they owe and how much of it is overdue, how late they pay
+  on average, their quote win rate, their most bought products, and one
+  timeline of orders, quotes, invoices, payments, calls and to-dos that can be
+  filtered to documents, money or activity.
+- **Tags** on partners, typed in freely ("restaurant", "wholesale", "VIP"),
+  filtered on in the list and given to or taken off many partners at once.
+- **A sales pipeline** of deals on a board, one column per stage (lead,
+  qualified, proposal, negotiation, won, lost), moved by dragging. Each deal
+  has a value, a probability (the stage's by default), an expected close date
+  and an owner; each column shows its total and its weighted total. A deal is
+  only marked lost with the reason. A quote made from a deal moves it to the
+  proposal stage, and the order made from that quote wins it.
+- **To-dos**: a task, call, email or meeting, with a due date and time, a
+  person, and the partner, deal or quote it belongs to. One can repeat daily,
+  weekly or monthly — ticking it off makes the next. They show in a week
+  calendar, on the deal's and the quote's page, and on the dashboard as one's
+  own list, ticked off from there.
+- **Dormant customers**: active customers who have bought before but not for
+  60, 90, 180 or 365 days, the ones who brought the most first, each with a
+  one-click call to-do — or the open to-do they already have.
+- **A CRM report** for a month, quarter, year or any two dates: the pipeline
+  now and its forecast by expected close month (value and weighted), deals
+  won and lost with the win rate and why they were lost, how many quotes
+  became orders, the calls, emails and meetings logged and the to-dos done —
+  and all of it per salesperson.
+
+![The sales pipeline: a column per stage, each with its total and its weighted total](docs/pipeline.png)
 
 ### Purchasing
 
@@ -176,8 +192,8 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ### The rest
 
-- **Ctrl+K** jumps anywhere: a product, partner, invoice, order or page by a
-  few letters of it, or — with nothing typed — what one opened lately; only
+- **Ctrl+K** jumps anywhere: a product, partner, invoice, order, quote, deal
+  or page by a few letters of it, or — with nothing typed — what one opened lately; only
   what one's role can see.
 - **Hungarian and English**, chosen per visitor. The catalog's own texts —
   product names and descriptions, categories, units, parameters — are stored
@@ -188,11 +204,6 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
   and exchange rates for the others, fetched from the Hungarian National Bank's
   daily mid rates with a button or from cron.
 - **A dark theme**, or the system's.
-- **To-dos**: a task, call, email or meeting, with a due date and time, a
-  person, and the partner, deal or quote it belongs to. One can repeat daily,
-  weekly or monthly — ticking it off makes the next. They show in a week
-  calendar, on the deal's and the quote's page, and on the dashboard as one's
-  own list, ticked off from there.
 - **A morning digest** by email on weekdays, for whoever asks for it on their
   profile: overdue customer and supplier invoices, products under their
   minimum, their own to-dos that are due — only what their role can see, and
@@ -299,9 +310,9 @@ Forty-eight products in Hungarian and English (some on sale, some with group
 prices), seventeen partners in three customer groups, three warehouses with
 storage locations, a few hundred stock movements, a hundred and thirty orders
 and the hundred or so invoices made from them — most paid, some in part, some
-overdue — purchase orders
-and supplier invoices, cash vouchers, five price rules, to-dos, and three
-currencies. It empties every business table first (the users stay), so it can
+overdue — purchase orders and supplier invoices, cash vouchers, five price
+rules, to-dos, tagged customers (three of them dormant), deals on the pipeline
+board, and three currencies. It empties every business table first (the users stay), so it can
 be run again at any time.
 
 ## The API
@@ -351,12 +362,16 @@ permission and audit action. The integration tests need a database of their
 own, named in `config/test.ini`, whose name must end in `_test` — they empty it
 before every test: document numbering, VAT per line, stock-outs and shortages,
 storno, partial payments and cash vouchers, the open-items buckets, price rule
-resolution, the permission matrix, stock locks and stocktaking.
+resolution, the permission matrix, stock locks and stocktaking, quotes to
+orders, the pipeline's sums and moves, repeating to-dos, tags, dormant
+customers and the CRM report's figures.
 
 The browser tests (Playwright, `tests/e2e`) check what only a browser can: an
 order typed in with the search-as-you-type pickers, its lines priced as they
-are picked and the totals following; the barcode collector; setting up and
-turning off two-step sign-in; the column headers, the sidebar and the theme.
+are picked and the totals following; a quote sent and made an order of; deals
+dragged across the pipeline board; the week calendar; the barcode collector;
+setting up and turning off two-step sign-in; the column headers, the sidebar
+and the theme.
 They clean up after themselves.
 
 The smoke test walks a running installation over real HTTP: it signs in
