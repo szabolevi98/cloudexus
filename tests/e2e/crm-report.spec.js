@@ -10,6 +10,7 @@ test('the CRM report counts a deal won today', async ({ page, request }) => {
     test.setTimeout(120_000);
     await page.goto('reports/crm');
     const wonBefore = await page.locator('#crm-kpis .text-success').innerText();
+    const peopleBefore = await page.locator('#crm-people tbody').innerText();
 
     await page.goto('deals/create?stage=negotiation');
     await page.locator('#title').fill('Böngészős teszt riport üzlet');
@@ -24,7 +25,8 @@ test('the CRM report counts a deal won today', async ({ page, request }) => {
 
         await page.goto('reports/crm');
         await expect(page.locator('#crm-kpis .text-success')).not.toHaveText(wonBefore);
-        await expect(page.locator('#crm-people')).toContainText('777');
+        // A felelőse (aki felvette) sorában: az összeg a többi megnyerttel együtt, ezért csak az, hogy változott.
+        await expect(page.locator('#crm-people tbody')).not.toHaveText(peopleBefore);
         // A diagram megrajzolva: a Chart.js a vászonhoz kötötte magát.
         expect(await page.locator('#forecast-chart').evaluate((el) => !!(window.Chart && window.Chart.getChart(el)))).toBe(true);
         await expect(page.locator('#forecast-table tbody tr')).toHaveCount(9);
@@ -37,7 +39,7 @@ test('the CRM report counts a deal won today', async ({ page, request }) => {
         await page.locator('#crm-period-form [name="to"]').fill('2020-01-31');
         await page.locator('#crm-period-form button[value="custom"]').click();
         await expect(page.locator('#crm-period')).toHaveText('2020-01-01 – 2020-01-31');
-        await expect(page.locator('#crm-people')).not.toContainText('777');
+        await expect(page.locator('#crm-people tbody')).not.toContainText('777');
     } finally {
         await post(request, `deals/${dealId}/delete`);
     }

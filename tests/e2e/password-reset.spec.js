@@ -77,4 +77,13 @@ test('a reset link from the email sets a new password once', async ({ page }) =>
     await page.goto(link);
     await expect(page.locator('#password')).toHaveCount(0);
     await expect(page.locator('a[href$="/forgot-password"]').first()).toBeVisible();
+
+    // A new password signs out every browser signed in before it — the saved
+    // session of the other tests too. Sign in again and save the new one.
+    await page.goto('login');
+    await page.locator('#username').fill(process.env.CX_USER || '');
+    await page.locator('#password').fill(process.env.CX_PASSWORD || '');
+    await Promise.all([page.waitForURL((url) => !url.pathname.endsWith('/login')), page.locator('#login-submit').click()]);
+    await page.goto('lang/en');
+    await page.context().storageState({ path: String(test.info().project.use.storageState) });
 });
