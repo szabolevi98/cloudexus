@@ -335,8 +335,10 @@ token that acts as them, with their role's permissions.
   quantity and a date.
 - **Write**: partners and orders, in full.
 - **Stock**: a product by its barcode, and stock in, out and transfers with any
-  number of lines, credited to the person signed in; an `Idempotency-Key`
-  header makes a request resent over bad Wi-Fi book once.
+  number of lines, credited to the person signed in.
+- **Safe retries**: an `Idempotency-Key` header on any change — a booking, a
+  partner, an order — makes a request resent over bad Wi-Fi or after a timeout
+  happen once; the resend gets the first answer back.
 - Amounts are in the primary currency (`meta.currency`); the catalog's texts
   come in the language asked for with `?language=` (`meta.language`). Every
   answer and every error is JSON, in English.

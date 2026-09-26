@@ -19,6 +19,9 @@ use Cloudexus\Model\Core\WarehouseModel;
  */
 class StockApiController extends ApiController
 {
+    /** The bookings keep their Idempotency-Key inside their own transaction: see inTransaction(). */
+    protected const OWN_IDEMPOTENCY = true;
+
     private const MAX_ITEMS = 500;
     private const MAX_NOTE_LENGTH = 200;
     private const DEFAULT_NOTE = 'Mobil app';

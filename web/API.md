@@ -191,8 +191,32 @@ All API messages (including error messages) are in **English**:
 
 Status codes used: `200` OK, `201` created, `400/422` bad request,
 `401` authentication missing/invalid, `403` the endpoint needs a user token, or the user's role lacks the permission,
-`404` resource or endpoint not found, `429` rate limit exceeded, `500` unexpected server error.
+`404` resource or endpoint not found, `409` a conflict (an invoiced order, a request still being worked on under the same Idempotency-Key), `429` rate limit exceeded, `500` unexpected server error.
 Every error, including an unknown endpoint and a server error, has this JSON shape.
+
+## Idempotency-Key (safe retries)
+
+A request may reach the server while its response gets lost on the way back (weak wifi at
+the far end of the warehouse, a webshop's call that timed out). Retrying blindly would book
+it, create the partner or place the order twice. To make retries safe, send an
+`Idempotency-Key` header with any change — `POST`, `PUT`, `PATCH` or `DELETE` — generated
+once per change on the client (a UUID is ideal) and resent unchanged with every retry of
+that change:
+
+```
+Idempotency-Key: 5b8e2c1a-7f4d-4a3e-9c61-2d0f8e7b9a44
+```
+
+- The first request is done and its response is stored under the key (per token owner —
+  the user, or the API user — for 7 days).
+- A retry with the same key and the same method, path and body does nothing and gets the
+  stored response, with the same status code and an `Idempotent-Replayed: true` header.
+- A retry that arrives while the first request is still being worked on gets `409` with
+  `Retry-After: 1`; ask again a moment later.
+- The same key with a different request returns `422`.
+- Failed requests (`4xx`) are not stored: fix the problem and retry under the same key.
+- The key must be 8–64 characters of `A-Z a-z 0-9 _ -`. Without the header, every request
+  is done as it comes. `GET` requests ignore it: they are safe to repeat anyway.
 
 ---
 
@@ -644,24 +668,9 @@ A shortage lists every short product with what is available and what was request
 }
 ```
 
-### Idempotency-Key (safe retries)
-
-A booking may reach the server while its response gets lost on the way back (weak wifi at
-the far end of the warehouse). Retrying blindly would book it twice. To make retries safe,
-send an `Idempotency-Key` header, generated once per booking on the device (a UUID is ideal)
-and resent unchanged with every retry of that booking:
-
-```
-Idempotency-Key: 5b8e2c1a-7f4d-4a3e-9c61-2d0f8e7b9a44
-```
-
-- The first request books and its response is stored under the key (per user, for 7 days).
-- A retry with the same key and the same body books nothing and gets the stored response,
-  with the same status code and an `Idempotent-Replayed: true` header. A retry that arrives
-  while the first request is still running waits for it and then gets its response.
-- The same key with a different body returns `422`.
-- Failed requests (`4xx`) are not stored: fix the problem and retry under the same key.
-- The key must be 8–64 characters of `A-Z a-z 0-9 _ -`. Without the header, every request books.
+Bookings take an `Idempotency-Key`, as every change does — see
+[Idempotency-Key](#idempotency-key-safe-retries). A retry of a booking that arrives while
+the first one is still running waits for it and then gets its response.
 
 ## Full CRUD resources
 

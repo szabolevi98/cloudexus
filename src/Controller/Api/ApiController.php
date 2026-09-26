@@ -28,6 +28,16 @@ abstract class ApiController
     protected ?array $user = null;
 
     /**
+     * An endpoint that handles its Idempotency-Key itself, inside its own
+     * transaction (the stock bookings), sets this; every other change gets
+     * the handling in authenticate().
+     */
+    protected const OWN_IDEMPOTENCY = false;
+
+    /** The Idempotency-Key claimed for this request, [owner, key], while its answer is due. */
+    private ?array $idempotency = null;
+
+    /**
      * Rejects the request with 401 unless a valid, active token is present,
      * and with 429 if the token's rate limit is exceeded. Every call also
      * logs the request to api_request_logs (see ApiRequestLogModel) — this
@@ -74,6 +84,61 @@ abstract class ApiController
         }
 
         $this->applyLanguage();
+        $this->idempotent();
+    }
+
+    /**
+     * A change (POST, PUT, PATCH, DELETE) sent with an Idempotency-Key is done
+     * once, however many times it arrives: the same key and the same request
+     * again, from the same token's owner, get the first answer again, with an
+     * Idempotent-Replayed: true header. While the first is still being worked
+     * on the answer is 409; the same key with a different request is 422. Only
+     * a successful answer is kept, so a refused request lets its key go and
+     * can be corrected and sent again under it.
+     */
+    private function idempotent(): void
+    {
+        $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $key = trim($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? '');
+
+        if (static::OWN_IDEMPOTENCY || $key === '' || !in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            return;
+        }
+
+        if (!preg_match('/^[A-Za-z0-9_-]{8,64}$/', $key)) {
+            $this->error('Idempotency-Key must be 8-64 characters of A-Z, a-z, 0-9, _ or -.', 422);
+        }
+
+        $owner = $this->user ? 'u' . $this->user['id'] : 'a' . $this->apiUser['id'];
+        $requestHash = hash('sha256', $method . ' ' . $this->requestPath() . "\n" . file_get_contents('php://input'));
+        $keys = new IdempotencyKeyModel();
+        $stored = $keys->claim($owner, $key, $requestHash);
+
+        if ($stored !== null) {
+            if (!hash_equals((string) $stored['request_hash'], $requestHash)) {
+                $this->error('This Idempotency-Key was already used for a different request.', 422);
+            }
+
+            if ($stored['status_code'] !== null) {
+                header('Idempotent-Replayed: true');
+                $this->json(json_decode((string) $stored['response'], true) ?? [], (int) $stored['status_code']);
+            }
+
+            if (!(int) $stored['abandoned'] || !$keys->takeOver($owner, $key)) {
+                header('Retry-After: 1');
+                $this->error('The first request with this Idempotency-Key is still being processed. Try again in a moment.', 409);
+            }
+        }
+
+        $this->idempotency = [$owner, $key];
+
+        // Whatever ends the request before a successful answer — a refusal,
+        // a fault — lets the key go: nothing was done under it.
+        register_shutdown_function(function () use ($keys, $owner, $key): void {
+            if ($this->idempotency === [$owner, $key]) {
+                $keys->release($owner, $key);
+            }
+        });
     }
 
     /**
@@ -185,6 +250,13 @@ abstract class ApiController
 
     protected function json(array $data, int $status = 200): never
     {
+        // A successful answer to a change sent with an Idempotency-Key is kept for its resends.
+        if ($this->idempotency !== null && $status < 400) {
+            [$owner, $key] = $this->idempotency;
+            (new IdempotencyKeyModel())->complete($owner, $key, $status, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            $this->idempotency = null;
+        }
+
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

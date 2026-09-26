@@ -5,20 +5,30 @@ namespace Cloudexus\Model\Account;
 use Cloudexus\Core\DatabaseConnection;
 
 /**
- * Idempotency-Key support for booking endpoints: a client that lost the
- * response (flaky warehouse wifi) sends the same request again with the same
- * key, and gets the first response back instead of a second booking.
+ * Idempotency-Key support: a client that lost the response (flaky warehouse
+ * wifi, a webshop's timed-out call) sends the same request again with the same
+ * key, and gets the first response back instead of a second booking, partner
+ * or order.
  *
- * claim() and complete() must run inside the caller's transaction, together
- * with the booking itself. A second request with the same key then blocks on
- * the unique index until the first one commits, and reads its stored response;
- * if the first one rolled back, the key was never stored and the retry books.
+ * Two ways of using it. The stock bookings run claim() and complete() inside
+ * their own transaction, together with the booking itself: a second request
+ * with the same key then blocks on the unique index until the first one
+ * commits, and reads its stored response; if the first one rolled back, the
+ * key was never stored and the retry books. Every other change (see
+ * ApiController) claims the key before it starts, completes it with a
+ * successful answer, and releases it when the request fails — a claim still
+ * without an answer is a request still being worked on, unless it is older
+ * than a minute, when its request is taken to have died.
  */
 class IdempotencyKeyModel
 {
+    /** How long an unanswered claim is taken to be a request still being worked on. */
+    public const ABANDONED_SECONDS = 60;
+
     /**
      * Stores the key, or returns the row already stored under it
-     * (status_code + response) when this request is a retry.
+     * (request_hash, status_code + response, and whether an unanswered one
+     * is abandoned) when this request is a retry.
      */
     public function claim(string $ownerKey, string $key, string $requestHash): ?array
     {
@@ -38,7 +48,9 @@ class IdempotencyKeyModel
         }
 
         $stmt = $pdo->prepare(
-            'SELECT request_hash, status_code, response FROM api_idempotency_keys
+            'SELECT request_hash, status_code, response,
+                    created_at < NOW() - INTERVAL ' . self::ABANDONED_SECONDS . ' SECOND AS abandoned
+             FROM api_idempotency_keys
              WHERE owner_key = :owner AND idempotency_key = :key FOR UPDATE'
         );
         $stmt->execute(['owner' => $ownerKey, 'key' => $key]);
@@ -52,6 +64,30 @@ class IdempotencyKeyModel
             'UPDATE api_idempotency_keys SET status_code = :status, response = :response
              WHERE owner_key = :owner AND idempotency_key = :key'
         )->execute(['status' => $statusCode, 'response' => $response, 'owner' => $ownerKey, 'key' => $key]);
+    }
+
+    /**
+     * Takes over an abandoned claim for this request: false when another
+     * request got there first.
+     */
+    public function takeOver(string $ownerKey, string $key): bool
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            'UPDATE api_idempotency_keys SET created_at = NOW()
+             WHERE owner_key = :owner AND idempotency_key = :key AND status_code IS NULL
+               AND created_at < NOW() - INTERVAL ' . self::ABANDONED_SECONDS . ' SECOND'
+        );
+        $stmt->execute(['owner' => $ownerKey, 'key' => $key]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    /** Lets an unanswered key go: its request failed, and did nothing. */
+    public function release(string $ownerKey, string $key): void
+    {
+        DatabaseConnection::get()->prepare(
+            'DELETE FROM api_idempotency_keys WHERE owner_key = :owner AND idempotency_key = :key AND status_code IS NULL'
+        )->execute(['owner' => $ownerKey, 'key' => $key]);
     }
 
     public function purgeOlderThan(int $days): void
