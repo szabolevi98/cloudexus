@@ -5,6 +5,8 @@ return [
     'username' => 'Felhasználónév',
     'full_name' => 'Teljes név',
     'email' => 'E-mail',
+    'theme' => 'Megjelenés',
+    'theme_hint' => 'A fejléc gombja világos és sötét között vált; a „rendszer szerint” a géped beállítását követi.',
     'change_password' => 'Jelszó módosítása',
     'change_password_hint' => '(csak ha változtatni szeretnéd)',
     'current_password' => 'Jelenlegi jelszó',

@@ -61,17 +61,32 @@ test('saving one’s own profile keeps one’s role', async ({ page }) => {
     await expect(page.locator('#full_name')).toHaveValue(original);
 });
 
-test('the theme switch stays switched', async ({ page }) => {
-    await page.goto('dashboard');
+test('the theme switch flips between light and dark, and the profile can follow the system', async ({ page }) => {
     const html = page.locator('html');
-
-    await page.goto('theme/dark');
-    await page.goto('dashboard');
-    await expect(html).toHaveAttribute('data-bs-theme', 'dark');
+    const button = page.locator('.cx-theme-btn');
 
     await page.goto('theme/light');
     await page.goto('dashboard');
     await expect(html).toHaveAttribute('data-bs-theme', 'light');
 
-    await page.goto('theme/system');
+    // As tall as the language button beside it.
+    const [themeBox, languageBox] = [await button.boundingBox(), await page.locator('.cx-lang-btn').boundingBox()];
+    expect(Math.round(themeBox?.height ?? 0)).toBe(Math.round(languageBox?.height ?? -1));
+
+    // Two states only: light to dark, dark to light — and it stays, being the user's.
+    await Promise.all([page.waitForURL(/dashboard/), button.click()]);
+    await expect(html).toHaveAttribute('data-bs-theme', 'dark');
+    await page.goto('products');
+    await expect(html).toHaveAttribute('data-bs-theme', 'dark');
+    await expect(html).toHaveAttribute('data-theme-mode', 'dark');
+
+    await Promise.all([page.waitForURL(/products/), button.click()]);
+    await expect(html).toHaveAttribute('data-theme-mode', 'light');
+
+    // The system's is chosen on the profile.
+    await page.goto('profile');
+    await page.locator('#theme').selectOption('system');
+    await page.locator('main form[action$="/profile"] button[type="submit"]').click();
+    await expect(html).toHaveAttribute('data-theme-mode', 'system');
+    await expect(page.locator('#theme')).toHaveValue('system');
 });

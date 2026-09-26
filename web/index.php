@@ -145,6 +145,7 @@ $router->post('/reset-password/{token}', fn($token) => (new PasswordResetControl
 $router->post('/logout', fn() => (new LoginController())->logout());
 
 $router->get('/lang/{code}', fn($code) => (new LocaleController())->switch($code));
+$router->post('/theme/toggle', fn() => (new ThemeController())->toggle());
 $router->get('/theme/{mode}', fn($mode) => (new ThemeController())->switch($mode));
 
 $router->get('/dashboard', fn() => (new DashboardController())->show());

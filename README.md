@@ -203,7 +203,9 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 - **Currencies**: one primary currency that every amount is kept and shown in,
   and exchange rates for the others, fetched from the Hungarian National Bank's
   daily mid rates with a button or from cron.
-- **A dark theme**, or the system's.
+- **A dark theme**: one button in the header switches between light and dark,
+  and the profile can follow the system's instead. The choice is kept with the
+  user, so it follows them to every browser.
 - **A morning digest** by email on weekdays, for whoever asks for it on their
   profile: overdue customer and supplier invoices, products under their
   minimum, their own to-dos that are due — only what their role can see, and

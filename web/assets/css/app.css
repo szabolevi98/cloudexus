@@ -760,9 +760,33 @@ a {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239097ad' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
 
-/* The theme switch sits beside the language one, the same size. */
+/*
+ * The buttons of the top bar — the search, the language and the theme — are
+ * one height, whatever is inside them: an icon alone is shorter than a line
+ * of text, and was drawn a size smaller than its neighbours.
+ */
+.cx-palette-btn,
+.cx-lang-btn,
 .cx-theme-btn {
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+}
+
+.cx-theme-btn {
+    width: 32px;
+    padding: 0;
+}
+
+/* One icon: the moon on a light page (to go dark), the sun on a dark one. */
+.cx-theme-btn__sun,
+.cx-theme-switch[data-shown="dark"] .cx-theme-btn__moon {
+    display: none;
+}
+
+.cx-theme-switch[data-shown="dark"] .cx-theme-btn__sun {
+    display: inline;
 }
 
 /* A Ctrl+K kereső: egy <dialog> a lap közepe fölött, a Bootstrap színeivel, így a sötét témában is. */

@@ -143,6 +143,34 @@
         });
     })();
 
+    // A fejléc téma-kapcsolója: világos és sötét között vált. Hogy most melyik
+    // látszik, azt "rendszer szerint" választásnál csak a böngésző tudja
+    // (data-bs-theme, lásd theme-head.js): a kapcsoló ebből tudja, melyik ikont
+    // mutassa és merre váltson; és az oldal azonnal átvált, mielőtt a választás
+    // elmentődik és az oldal visszajön.
+    (function () {
+        var form = document.querySelector('[data-theme-switch]');
+        if (!form) return;
+        var root = document.documentElement;
+        var shown = function () { return root.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light'; };
+        var label = function () {
+            var now = shown();
+            var button = form.querySelector('button');
+            form.setAttribute('data-shown', now);
+            form.elements.to.value = now === 'dark' ? 'light' : 'dark';
+            button.title = now === 'dark' ? form.dataset.toLight : form.dataset.toDark;
+            button.setAttribute('aria-label', button.title);
+        };
+        label();
+        document.addEventListener('cx:theme', label);
+        form.addEventListener('submit', function () {
+            // A küldendő cél már a mezőben van; a kapcsoló ne írja át.
+            document.removeEventListener('cx:theme', label);
+            root.setAttribute('data-bs-theme', form.elements.to.value);
+            document.dispatchEvent(new CustomEvent('cx:theme'));
+        });
+    })();
+
     // Megerősítés: egy gombon kattintáskor (a gomb egy másik űrlapot is küldhet a form="…" attribútummal),
     // egy űrlapon küldéskor.
     document.addEventListener('click', function (e) {

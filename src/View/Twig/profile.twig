@@ -15,9 +15,18 @@
                     <label for="full_name" class="form-label">{{ t('profile.full_name') }}</label>
                     <input type="text" id="full_name" name="full_name" class="form-control" value="{{ user.full_name }}" required>
                 </div>
-                <div class="mb-4">
+                <div class="mb-3">
                     <label for="email" class="form-label">{{ t('profile.email') }}</label>
                     <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                </div>
+                <div class="mb-4">
+                    <label for="theme" class="form-label">{{ t('profile.theme') }}</label>
+                    <select id="theme" name="theme" class="form-select">
+                        {% for mode in ['system', 'light', 'dark'] %}
+                            <option value="{{ mode }}" {{ theme_mode == mode ? 'selected' : '' }}>{{ t('nav.theme_' ~ mode) }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">{{ t('profile.theme_hint') }}</div>
                 </div>
 
                 <h3 class="fs-6 fw-semibold border-top pt-4">{{ t('profile.change_password') }} <span class="text-muted small fw-normal">{{ t('profile.change_password_hint') }}</span></h3>

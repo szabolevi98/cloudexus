@@ -270,21 +270,22 @@
                     </ul>
                 </div>
 
-                {% set theme_icons = {light: 'bi-sun', dark: 'bi-moon-stars', system: 'bi-circle-half'} %}
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary cx-theme-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ t('nav.theme') }}" aria-label="{{ t('nav.theme') }}">
-                        <i class="bi {{ theme_icons[theme_mode] }}" aria-hidden="true"></i>
+                {# Világos vagy sötét egy kattintással; a "rendszer szerint" a profilban
+                   választható. Hogy most melyik látszik, azt rendszer szerinti
+                   választásnál csak a böngésző tudja: a szkript tölti ki (app.js). #}
+                {% set theme_dark = theme_mode == 'dark' %}
+                <form method="post" action="{{ base_url }}/theme/toggle" class="cx-theme-switch" data-theme-switch
+                      data-shown="{{ theme_dark ? 'dark' : 'light' }}"
+                      data-to-dark="{{ t('nav.theme_to_dark') }}" data-to-light="{{ t('nav.theme_to_light') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="to" value="{{ theme_dark ? 'light' : 'dark' }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary cx-theme-btn"
+                            title="{{ theme_dark ? t('nav.theme_to_light') : t('nav.theme_to_dark') }}"
+                            aria-label="{{ theme_dark ? t('nav.theme_to_light') : t('nav.theme_to_dark') }}">
+                        <i class="bi bi-moon-stars cx-theme-btn__moon" aria-hidden="true"></i>
+                        <i class="bi bi-sun cx-theme-btn__sun" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                        {% for mode, icon in theme_icons %}
-                            <li>
-                                <a class="dropdown-item {{ mode == theme_mode ? 'active' : '' }}" href="{{ base_url }}/theme/{{ mode }}">
-                                    <i class="bi {{ icon }} me-2" aria-hidden="true"></i>{{ t('nav.theme_' ~ mode) }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                </form>
 
                 {% if auth_user_id %}
                     <div class="dropdown">

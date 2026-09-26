@@ -55,6 +55,8 @@ return [
     'theme_light' => 'Light',
     'theme_dark' => 'Dark',
     'theme_system' => 'As the system',
+    'theme_to_dark' => 'Switch to the dark theme',
+    'theme_to_light' => 'Switch to the light theme',
     'dormant' => 'Dormant customers',
     'crm_report' => 'CRM report',
 ];

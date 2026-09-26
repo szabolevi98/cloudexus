@@ -65,6 +65,7 @@ class ProfileController extends BaseController
         }
 
         $this->users->updateProfile((int) $user['id'], $email, $fullName, $password);
+        \Cloudexus\Core\Theme::choose((string) ($_POST['theme'] ?? ''));
 
         // Az új jelszó minden más böngészőből kiléptet; ez bent marad.
         if ($password !== '') {

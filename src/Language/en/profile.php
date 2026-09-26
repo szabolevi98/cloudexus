@@ -5,6 +5,8 @@ return [
     'username' => 'Username',
     'full_name' => 'Full name',
     'email' => 'Email',
+    'theme' => 'Appearance',
+    'theme_hint' => 'The button in the header switches between light and dark; “as the system” follows your computer’s setting.',
     'change_password' => 'Change password',
     'change_password_hint' => '(only if you want to change it)',
     'current_password' => 'Current password',

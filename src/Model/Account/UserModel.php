@@ -22,7 +22,7 @@ class UserModel
     public function findActiveWithRole(int $id): ?array
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'SELECT u.id, u.username, u.email, u.full_name, u.role_id, u.sessions_valid_from, r.code AS role_code, r.name AS role_name
+            'SELECT u.id, u.username, u.email, u.full_name, u.role_id, u.sessions_valid_from, u.theme, r.code AS role_code, r.name AS role_name
              FROM users u LEFT JOIN roles r ON r.id = u.role_id
              WHERE u.id = :id AND u.is_active = 1 LIMIT 1'
         );
@@ -169,6 +169,13 @@ class UserModel
         if ($password !== '') {
             $this->setPassword($id, $password);
         }
+    }
+
+    /** Világos, sötét vagy a rendszer szerint (24_user_theme.sql). */
+    public function setTheme(int $id, string $theme): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE users SET theme = :theme WHERE id = :id')
+            ->execute(['id' => $id, 'theme' => in_array($theme, \Cloudexus\Core\Theme::MODES, true) ? $theme : null]);
     }
 
     public function setDigest(int $id, bool $on): void
