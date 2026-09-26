@@ -314,9 +314,12 @@ prices), seventeen partners in three customer groups, three warehouses with
 storage locations, a few hundred stock movements, a hundred and thirty orders
 and the hundred or so invoices made from them — most paid, some in part, some
 overdue — purchase orders and supplier invoices, cash vouchers, five price
-rules, to-dos, tagged customers (three of them dormant), deals on the pipeline
-board, and three currencies. It empties every business table first (the users stay), so it can
-be run again at any time.
+rules, and three currencies. On the CRM side: contacts at every customer, a
+few with a credit limit and payment terms, quotes in every state (some made
+orders of), deals on the pipeline board with their owners, calls, emails and
+meetings for this week and the next, tags, and three dormant customers. The
+existing users are the salespeople. It empties every business table first (the
+users stay), so it can be run again at any time.
 
 ## The API
 

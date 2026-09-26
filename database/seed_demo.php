@@ -437,6 +437,9 @@ foreach ($partners['customer'] as $i => $partnerId) {
 }
 echo count($tagModel->all()) . " partner tags.\n";
 
+// Az értékesítők a meglévő felhasználók; ha még nincs egy sem, felelős nélkül.
+$owners = array_map('intval', array_column($pdo->query('SELECT id FROM users WHERE is_active = 1 ORDER BY id')->fetchAll(), 'id')) ?: [null];
+
 // Három vevő "alvó": csak 100-300 napja rendelt, így az alvó ügyfelek riportban is van kit felhívni.
 $dormantCustomers = array_slice($partners['customer'], 5, 3);
 $activeCustomers = array_values(array_diff($partners['customer'], $dormantCustomers));
@@ -469,6 +472,36 @@ foreach ($allPartnerIds as $partnerId) {
     }
 }
 echo array_sum(array_map('count', $partnerAddressIds)) . " partner addresses.\n";
+
+// Kapcsolattartók: vevőnként egy-kettő — az elsődleges, és akinek a számla megy.
+echo "Seeding partner contacts...\n";
+$contactModel = new \Cloudexus\Model\Core\PartnerContactModel();
+$contactPeople = [
+    ['Kovács Anna', 'Beszerzési vezető'], ['Szabó Péter', 'Ügyvezető'], ['Tóth Eszter', 'Pénzügy'],
+    ['Horváth Gábor', 'Üzletvezető'], ['Varga Judit', 'Könyvelés'], ['Kiss Márton', 'Beszerző'],
+    ['Molnár Réka', 'Irodavezető'], ['Németh Balázs', 'Tulajdonos'], ['Farkas Zsófia', 'Pénzügyi vezető'],
+];
+$partnerContacts = [];
+foreach (array_unique($partners['customer']) as $i => $partnerId) {
+    $domain = (string) substr((string) strrchr((string) $pdo->query('SELECT email FROM partners WHERE id = ' . (int) $partnerId)->fetchColumn(), '@'), 1);
+    foreach (range(0, $i % 3 === 0 ? 1 : 0) as $k) {
+        [$name, $position] = $contactPeople[($i * 2 + $k) % count($contactPeople)];
+        $local = strtolower(strtr((string) strtok($name, ' '), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ö' => 'o', 'ő' => 'o', 'ú' => 'u', 'ü' => 'u', 'ű' => 'u', 'Á' => 'a', 'É' => 'e', 'Ó' => 'o', 'Ö' => 'o', 'Ú' => 'u']));
+        $partnerContacts[$partnerId][] = $contactModel->save($partnerId, null, [
+            'name' => $name, 'position' => $position, 'email' => $local . '@' . $domain,
+            'phone' => '+36 20 ' . rand(100, 999) . ' ' . rand(1000, 9999), 'note' => '',
+            'is_primary' => $k === 0, 'receives_invoices' => $k === 1 || $i % 3 !== 0,
+        ]);
+    }
+}
+echo array_sum(array_map('count', $partnerContacts)) . " partner contacts.\n";
+
+// Hitelkeret és fizetési határidő néhány vevőnél, hogy az űrlapok figyelmeztetése is látsszon.
+foreach (array_slice($partners['customer'], 0, 4) as $i => $partnerId) {
+    $pdo->prepare('UPDATE partners SET credit_limit = :limit, payment_terms_days = :terms WHERE id = :id')->execute([
+        'limit' => [2000000, 500000, 1500000, null][$i], 'terms' => [30, 15, 8, 45][$i], 'id' => $partnerId,
+    ]);
+}
 
 // ---------------------------------------------------------------------------
 // Warehouses
@@ -836,32 +869,6 @@ foreach ([$warehouseIds[0], $warehouseIds[1]] as $whId) {
 echo "$stocktakingCount stocktakings.\n";
 
 // ---------------------------------------------------------------------------
-// Teendők (CRM todos)
-// ---------------------------------------------------------------------------
-echo "Seeding todos...\n";
-
-$todoModel = new \Cloudexus\Model\Crm\TodoModel();
-$todoTitles = [
-    'Ajánlat visszaküldése', 'Szállítói egyeztetés', 'Lejárt számla behajtása',
-    'Raktár átrendezése', 'Új termékek felvitele', 'Havi zárás előkészítése',
-    'Vevő visszahívása', 'Árlista frissítése', 'Leltár egyeztetés', 'Csomagolóanyag rendelés',
-];
-
-foreach ($todoTitles as $i => $title) {
-    $pdo->prepare(
-        'INSERT INTO todos (title, is_done, due_date, partner_id, created_at)
-         VALUES (:title, :done, :due, :partner, NOW())'
-    )->execute([
-        'title' => $title,
-        'done' => $i % 4 === 0 ? 1 : 0,
-        'due' => rand(0, 1) ? date('Y-m-d', strtotime('+' . rand(-3, 14) . ' days')) : null,
-        'partner' => rand(0, 1) ? $partners['customer'][array_rand($partners['customer'])] : null,
-    ]);
-}
-
-echo count($todoTitles) . " todos.\n";
-
-// ---------------------------------------------------------------------------
 // Partner kapcsolattörténet (CRM aktivitások)
 // ---------------------------------------------------------------------------
 echo "Seeding partner activities...\n";
@@ -874,13 +881,15 @@ $activitySubjects = [
 ];
 $activityCount = 0;
 $activityStmt = $pdo->prepare(
-    'INSERT INTO partner_activities (partner_id, type, subject, note, activity_date, created_by, created_at)
-     VALUES (:pid, :type, :subject, :note, :adate, NULL, NOW())'
+    'INSERT INTO partner_activities (partner_id, contact_id, type, subject, note, activity_date, created_by, created_at)
+     VALUES (:pid, :contact, :type, :subject, :note, :adate, :by, NOW())'
 );
 foreach (array_unique($partners['customer']) as $partnerId) {
     for ($k = 0; $k < rand(2, 6); $k++) {
         $activityStmt->execute([
             'pid' => $partnerId,
+            'contact' => isset($partnerContacts[$partnerId]) ? $partnerContacts[$partnerId][array_rand($partnerContacts[$partnerId])] : null,
+            'by' => $owners[array_rand($owners)],
             'type' => $activityTypes[array_rand($activityTypes)],
             'subject' => $activitySubjects[array_rand($activitySubjects)],
             'note' => 'Rövid feljegyzés a kapcsolatfelvételről és a megbeszélt teendőkről.',
@@ -892,31 +901,137 @@ foreach (array_unique($partners['customer']) as $partnerId) {
 echo "$activityCount partner activities.\n";
 
 // ---------------------------------------------------------------------------
-// Értékesítési folyamat: néhány üzlet minden szakaszban
+// Árajánlatok: minden állapotban, néhányból már rendelés lett
+// ---------------------------------------------------------------------------
+echo "Seeding quotes...\n";
+$quoteModel = new \Cloudexus\Model\Sales\QuoteModel();
+$quoteLines = function () use ($products): array {
+    $lines = [];
+    foreach ((array) array_rand($products, rand(2, 4)) as $key) {
+        $lines[] = ['product_id' => $products[$key]['id'], 'quantity' => (float) rand(2, 20), 'unit_price' => round($products[$key]['price'] * (rand(90, 100) / 100))];
+    }
+
+    return $lines;
+};
+$makeQuote = function (int $partnerId, int $daysAgo, int $k) use ($quoteModel, $quoteLines, $owners): int {
+    $date = date('Y-m-d', strtotime("-$daysAgo days"));
+
+    return $quoteModel->create([
+        'partner_id' => $partnerId, 'quote_date' => $date,
+        'valid_until' => date('Y-m-d', strtotime($date . ' +' . \Cloudexus\Model\Sales\QuoteModel::VALID_DAYS . ' days')),
+        'shipping_cost' => $k % 3 === 0 ? 1990.0 : 0.0, 'payment_cost' => 0.0,
+        'note' => 'Az árak nettó árak, a szállítás a megrendeléstől számított 5 munkanap.', 'created_by' => $owners[$k % count($owners)],
+    ], $quoteLines());
+};
+// Állapot, hány napja készült.
+$demoQuotes = [
+    ['draft', 1], ['draft', 3], ['sent', 2], ['sent', 5], ['sent', 9], ['sent', 28],
+    ['accepted', 6], ['accepted', 12], ['rejected', 15], ['rejected', 24], ['ordered', 8], ['ordered', 18], ['ordered', 33],
+];
+$quoteIds = [];
+foreach ($demoQuotes as $k => [$status, $daysAgo]) {
+    $partnerId = $activeCustomers[($k * 2) % count($activeCustomers)];
+    $quoteId = $makeQuote($partnerId, $daysAgo, $k);
+    if ($status !== 'draft') {
+        $quoteModel->markSent($quoteId, null);
+    }
+    if ($status === 'accepted') {
+        $quoteModel->decide($quoteId, true);
+    } elseif ($status === 'rejected') {
+        $quoteModel->decide($quoteId, false, ['Magasnak találta az árat', 'Másik beszállítót választott'][$k % 2]);
+    } elseif ($status === 'ordered') {
+        $quoteModel->toOrder($quoteId, $owners[$k % count($owners)]);
+    }
+    $quoteIds[$status][] = [$quoteId, $partnerId];
+}
+echo count($demoQuotes) . " quotes.\n";
+
+// ---------------------------------------------------------------------------
+// Értékesítési folyamat: üzletek minden szakaszban, felelőssel, néhány ajánlathoz kötve
 // ---------------------------------------------------------------------------
 echo "Seeding deals...\n";
 $dealModel = new \Cloudexus\Model\Crm\DealModel();
+/** @var list<array{string, string, int, int}> $demoDeals cím, szakasz, érték (0: az ajánlatáé), várható lezárás napokban */
 $demoDeals = [
     ['Új üzlet berendezése', 'lead', 850000, 40],
     ['Éves szerviz keretszerződés', 'lead', 420000, 25],
     ['Tavaszi kerékpár-flotta', 'qualified', 2400000, 20],
-    ['Iskolai sisakcsomag', 'qualified', 390000, 15],
-    ['Webshop viszonteladói ár', 'proposal', 1250000, 10],
+    ['Iskolai sisakcsomag', 'qualified', 390000, -4],
+    ['Webshop viszonteladói ár', 'proposal', 0, 10],
+    ['Szállodai bérkerékpárok', 'proposal', 1980000, 30],
     ['Céges e-bike lízing', 'negotiation', 5600000, 12],
-    ['Kiegészítők újrarendelése', 'won', 310000, -5],
+    ['Kiegészítők újrarendelése', 'won', 0, -5],
     ['Túrakerékpár tender', 'lost', 3100000, -12],
 ];
+$dealIds = [];
 foreach ($demoDeals as $k => [$title, $stage, $amount, $closeIn]) {
+    $partnerId = $activeCustomers[$k % count($activeCustomers)];
     $dealId = $dealModel->create([
-        'title' => $title, 'partner_id' => $activeCustomers[$k % count($activeCustomers)], 'stage' => $stage === 'lost' ? 'negotiation' : $stage,
+        'title' => $title, 'partner_id' => $partnerId, 'stage' => in_array($stage, ['won', 'lost'], true) ? 'negotiation' : $stage,
         'amount' => (float) $amount, 'probability' => null,
         'expected_close' => date('Y-m-d', strtotime(($closeIn >= 0 ? '+' : '') . $closeIn . ' days')),
-        'owner_id' => null, 'note' => '',
+        'owner_id' => $owners[$k % count($owners)], 'note' => '',
     ]);
-    if ($stage === 'lost') {
+    if ($stage === 'proposal' && $amount === 0) {
+        // Egy elküldött ajánlat hozzá: az értéke az ajánlat nettója lesz.
+        $dealModel->attachQuote($dealId, $makeQuote($partnerId, 4, $k));
+        $quoteModel->markSent((int) $dealModel->findById($dealId)['quote_id'], null);
+    } elseif ($stage === 'won') {
+        // Az ajánlatból lett rendelés nyeri meg.
+        $quoteId = $makeQuote($partnerId, 10, $k);
+        $dealModel->attachQuote($dealId, $quoteId);
+        $quoteModel->markSent($quoteId, null);
+        $quoteModel->toOrder($quoteId, $owners[$k % count($owners)]);
+    } elseif ($stage === 'lost') {
         $dealModel->move($dealId, 'lost', [], 'Olcsóbb ajánlatot kapott');
     }
+    $dealIds[] = [$dealId, $partnerId];
 }
 echo count($demoDeals) . " deals.\n";
+
+// ---------------------------------------------------------------------------
+// Teendők: hívások, e-mailek, találkozók, a héten szétszórva, néhány ismétlődő
+// ---------------------------------------------------------------------------
+echo "Seeding todos...\n";
+$todoModel = new \Cloudexus\Model\Crm\TodoModel();
+// Cím, típus, hány nap múlva (null: nincs határidő, negatív: már lejárt), időpont, ismétlődés, kész-e, kötés.
+/** @var list<array{string, string, ?int, ?string, string, bool, ?string}> $demoTodos */
+$demoTodos = [
+    ['Visszahívni az ajánlat miatt', 'call', 0, '09:30', 'none', true, 'deal'],
+    ['Heti értékesítési egyeztetés', 'meeting', 0, '10:00', 'weekly', false, null],
+    ['Szerződéstervezet elküldése', 'email', 1, '14:00', 'none', false, 'deal'],
+    ['Bemutató a bérkerékpárokról', 'meeting', 2, '11:00', 'none', false, 'deal'],
+    ['Lejárt számla behajtása', 'call', 2, null, 'none', false, 'partner'],
+    ['Ajánlat utánkövetése', 'call', 3, '15:30', 'none', false, 'quote'],
+    ['Árlista frissítése a webshopban', 'task', 3, null, 'monthly', false, null],
+    ['Mintacsomag kiküldése', 'task', 4, null, 'none', false, 'partner'],
+    ['Havi zárás előkészítése', 'task', 4, '16:00', 'monthly', false, null],
+    ['Raktárkészlet egyeztetése', 'task', 5, null, 'none', false, null],
+    ['Tender dokumentáció átnézése', 'email', 8, '09:00', 'none', false, 'deal'],
+    ['Éves keretszerződés megújítása', 'meeting', 10, '13:00', 'none', false, 'partner'],
+    ['Reklamáció lezárása', 'call', -3, null, 'none', false, 'partner'],
+    ['Katalógus kiküldése', 'email', -2, '10:00', 'none', true, 'partner'],
+    ['Új termékek felvitele', 'task', null, null, 'none', false, null],
+    ['Csomagolóanyag rendelés', 'task', null, null, 'none', true, null],
+];
+foreach ($demoTodos as $k => [$title, $type, $day, $time, $recurrence, $done, $link]) {
+    [$dealId, $dealPartner] = $dealIds[$k % count($dealIds)];
+    [$quoteId, $quotePartner] = $quoteIds['sent'][$k % count($quoteIds['sent'])];
+    $todoId = $todoModel->create([
+        'title' => $title, 'type' => $type, 'recurrence' => $recurrence, 'due_time' => $time,
+        'due_date' => $day === null ? null : date('Y-m-d', strtotime("$day days")),
+        'partner_id' => match ($link) {
+            'deal' => $dealPartner, 'quote' => $quotePartner, 'partner' => $activeCustomers[$k % count($activeCustomers)], default => null
+        },
+        'deal_id' => $link === 'deal' ? $dealId : null,
+        'quote_id' => $link === 'quote' ? $quoteId : null,
+        'assigned_to' => $owners[$k % count($owners)],
+        'created_by' => $owners[0],
+    ]);
+    if ($done) {
+        $todoModel->toggle($todoId);
+    }
+}
+echo count($demoTodos) . " todos.\n";
 
 echo "\nDone. Demo data ready.\n";
