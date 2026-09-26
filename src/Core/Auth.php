@@ -70,6 +70,29 @@ class Auth
         AuditLog::record(AuditLog::LOGIN, 'user', (int) $user['id'], (string) $user['username']);
     }
 
+    /**
+     * Ez a böngésző bejelentkezve marad, miután a felhasználó minden eddigi
+     * munkamenete megszűnt (új saját jelszó, vagy a profil gombja).
+     */
+    public static function keepThisSession(): void
+    {
+        Session::set('logged_in_at', time());
+        self::forget();
+    }
+
+    /** Kijelentkezés minden más böngészőből; ez bent marad. */
+    public static function endOtherSessions(): void
+    {
+        $id = self::id();
+
+        if ($id === null) {
+            return;
+        }
+
+        (new UserModel())->endSessions($id);
+        self::keepThisSession();
+    }
+
     public static function logout(): void
     {
         if (self::check()) {
@@ -95,6 +118,13 @@ class Auth
 
             if ($id !== null) {
                 self::$user = (new UserModel())->findActiveWithRole((int) $id);
+
+                // Egy "mindenhol máshol kijelentkezés" vagy új jelszó előtt
+                // belépett munkamenet is megszűnik.
+                $validFrom = empty(self::$user['sessions_valid_from']) ? 0 : (int) strtotime((string) self::$user['sessions_valid_from']);
+                if (self::$user !== null && (int) Session::get('logged_in_at', 0) < $validFrom) {
+                    self::$user = null;
+                }
 
                 if (self::$user === null) {
                     Session::destroy();

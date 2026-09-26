@@ -66,9 +66,27 @@ class ProfileController extends BaseController
 
         $this->users->updateProfile((int) $user['id'], $email, $fullName, $password);
 
+        // Az új jelszó minden más böngészőből kiléptet; ez bent marad.
+        if ($password !== '') {
+            Auth::keepThisSession();
+        }
+
         \Cloudexus\Core\Session::set('user_name', $fullName);
 
         $this->flashSuccess($this->t('profile.updated') . ($password !== '' ? ' ' . $this->t('profile.password_note') : ''));
+        $this->redirect('/profile');
+    }
+
+    /** Kijelentkezés minden más böngészőből — egy elhagyott laptop, egy közös gép. */
+    public function endSessions(): void
+    {
+        $this->requireAuth();
+
+        $user = Auth::user();
+        Auth::endOtherSessions();
+        \Cloudexus\Core\AuditLog::record(\Cloudexus\Core\AuditLog::SIGNED_OUT_ELSEWHERE, 'user', (int) $user['id'], (string) $user['username']);
+
+        $this->flashSuccess($this->t('profile.signed_out_elsewhere'));
         $this->redirect('/profile');
     }
 

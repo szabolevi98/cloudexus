@@ -14,6 +14,7 @@ return [
         'login' => 'Belépés',
         'login_failed' => 'Sikertelen belépés',
         'logout' => 'Kilépés',
+        'signed_out_elsewhere' => 'Kijelentkezés mindenhol máshol',
         'permission_denied' => 'Elutasított hozzáférés',
         'create' => 'Létrehozás',
         'update' => 'Módosítás',

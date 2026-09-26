@@ -18,8 +18,8 @@ available_locales = "hu,en"
 
 [session]
 name = cloudexus_session
-; élettartam másodpercben (alap: 30 nap)
-lifetime = 2592000
+; élettartam másodpercben, az utolsó kattintástól (alap: 1 év)
+lifetime = 31536000
 ; ennyi sikertelen webes belépés után 15 percre letiltjuk az IP-t
 login_max_failures = 10
 

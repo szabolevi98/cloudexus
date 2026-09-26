@@ -226,6 +226,9 @@ page.
 
 - One CSRF gate for every form post, including sign-out; the session cookie is
   HttpOnly and SameSite.
+- A browser stays signed in for a year from its last click. A new password
+  signs its owner out of every other browser (and of the mobile app), and so
+  does "Sign out everywhere else" on the profile.
 - Passwords with bcrypt; ten failed sign-ins from one address lock it out for
   fifteen minutes, on the web and on the API alike; an optional score-based
   reCAPTCHA v3 on the sign-in form.

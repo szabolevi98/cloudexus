@@ -15,6 +15,7 @@ final class AuditLog
     public const LOGIN = 'login';
     public const LOGIN_FAILED = 'login_failed';
     public const LOGOUT = 'logout';
+    public const SIGNED_OUT_ELSEWHERE = 'signed_out_elsewhere';
     public const DENIED = 'permission_denied';
     public const CREATE = 'create';
     public const UPDATE = 'update';
@@ -33,7 +34,7 @@ final class AuditLog
 
     /** A napló szűrőjében választható műveletek. */
     public const ACTIONS = [
-        self::LOGIN, self::LOGIN_FAILED, self::LOGOUT, self::DENIED, self::CREATE, self::UPDATE,
+        self::LOGIN, self::LOGIN_FAILED, self::LOGOUT, self::SIGNED_OUT_ELSEWHERE, self::DENIED, self::CREATE, self::UPDATE,
         self::DELETE, self::PERMISSIONS, self::ISSUE, self::STORNO, self::PAID, self::BOOK,
         self::TWO_FACTOR_ON, self::TWO_FACTOR_OFF, self::PASSWORD_RESET_REQUESTED, self::PASSWORD_RESET, self::EMAILED, self::IMPORT,
     ];

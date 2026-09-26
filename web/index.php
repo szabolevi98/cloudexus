@@ -156,6 +156,7 @@ $router->post('/saved-filters/{id}/delete', fn($id) => (new SavedFilterControlle
 $router->get('/profile', fn() => (new ProfileController())->show());
 $router->post('/profile', fn() => (new ProfileController())->update());
 $router->post('/profile/digest', fn() => (new ProfileController())->digest());
+$router->post('/profile/sessions/end', fn() => (new ProfileController())->endSessions());
 $router->get('/profile/two-factor', fn() => (new TwoFactorController())->show());
 $router->post('/profile/two-factor/start', fn() => (new TwoFactorController())->start());
 $router->post('/profile/two-factor/confirm', fn() => (new TwoFactorController())->confirm());

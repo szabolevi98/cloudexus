@@ -16,5 +16,10 @@ return [
     'new_password_too_short' => 'Az új jelszónak legalább 8 karakteresnek kell lennie.',
     'new_password_mismatch' => 'Az új jelszó és a megerősítés nem egyezik.',
     'updated' => 'Profil frissítve.',
-    'password_note' => 'Az új jelszó a következő belépéstől érvényes.',
+    'password_note' => 'Minden más böngészőben és a mobilappban kijelentkeztél; ez a böngésző bent marad.',
+    'sessions_title' => 'Ahol be vagy jelentkezve',
+    'sessions_text' => 'Egy böngészőben az utolsó használattól számítva egy évig bejelentkezve maradsz. Az új jelszó minden más helyen kiléptet, és ez a gomb is, új jelszó nélkül.',
+    'sessions_end' => 'Kijelentkezés mindenhol máshol',
+    'sessions_end_confirm' => 'Kijelentkezel minden más böngészőből?',
+    'signed_out_elsewhere' => 'Minden más böngészőben kijelentkeztél. Ez a böngésző bent marad.',
 ];

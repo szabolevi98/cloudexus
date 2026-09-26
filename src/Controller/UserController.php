@@ -97,6 +97,11 @@ class UserController extends BaseController
 
         $this->users->update($id, $data);
 
+        // A saját jelszavát itt változtató admin böngészője bent marad.
+        if ($data['password'] !== '' && $id === Auth::id()) {
+            Auth::keepThisSession();
+        }
+
         $changes = [];
         if ($before && (int) $before['role_id'] !== (int) $data['role_id']) {
             $changes['role'] = [$this->roleName((int) $before['role_id']), $this->roleName((int) $data['role_id'])];

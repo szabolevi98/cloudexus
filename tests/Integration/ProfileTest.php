@@ -39,4 +39,45 @@ final class ProfileTest extends DatabaseTestCase
         self::assertTrue(password_verify('a new long password', (string) (new UserModel())->findById($id)['password_hash']));
         self::assertSame(0, (int) $this->scalar('SELECT COUNT(*) FROM user_tokens WHERE user_id = :id', ['id' => $id]));
     }
+
+    public function testANewPasswordSignsEveryOtherBrowserOutButTheOneItWasChangedIn(): void
+    {
+        $id = $this->user('super_admin', 'anna');
+        $this->signedIn($id, time() - 60);
+        self::assertNotNull(\Cloudexus\Core\Auth::user());
+
+        (new UserModel())->updateProfile($id, 'anna@kovacs.hu', 'Kovács Anna', 'a new long password');
+        \Cloudexus\Core\Auth::keepThisSession();
+        self::assertNotNull(\Cloudexus\Core\Auth::user(), 'the browser it was changed in stays');
+
+        // Another browser, signed in before the change.
+        $this->signedIn($id, time() - 60);
+        self::assertNull(\Cloudexus\Core\Auth::user());
+    }
+
+    public function testSigningOutEverywhereElseKeepsThisBrowser(): void
+    {
+        $id = $this->user('super_admin', 'anna');
+        $this->signedIn($id, time() - 60);
+
+        \Cloudexus\Core\Auth::endOtherSessions();
+        self::assertNotNull(\Cloudexus\Core\Auth::user());
+
+        $this->signedIn($id, time() - 60);
+        self::assertNull(\Cloudexus\Core\Auth::user());
+    }
+
+    protected function tearDown(): void
+    {
+        $_SESSION = [];
+        \Cloudexus\Core\Auth::forget();
+        parent::tearDown();
+    }
+
+    /** A browser whose session says it signed in at `$at`, as on its next click. */
+    private function signedIn(int $id, int $at): void
+    {
+        $_SESSION = ['user_id' => $id, 'logged_in_at' => $at];
+        \Cloudexus\Core\Auth::forget();
+    }
 }

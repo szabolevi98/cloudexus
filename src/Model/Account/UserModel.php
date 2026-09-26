@@ -22,7 +22,7 @@ class UserModel
     public function findActiveWithRole(int $id): ?array
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.code AS role_code, r.name AS role_name
+            'SELECT u.id, u.username, u.email, u.full_name, u.role_id, u.sessions_valid_from, r.code AS role_code, r.name AS role_name
              FROM users u LEFT JOIN roles r ON r.id = u.role_id
              WHERE u.id = :id AND u.is_active = 1 LIMIT 1'
         );
@@ -142,6 +142,8 @@ class UserModel
         if (!empty($data['password'])) {
             $fields[] = 'password_hash = :password_hash';
             $params['password_hash'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            // ...and signs them out of every browser too (see 23_sessions_valid_from.sql).
+            $fields[] = 'sessions_valid_from = NOW()';
         }
 
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = :id';
@@ -174,12 +176,23 @@ class UserModel
             ->execute(['id' => $id, 'on' => $on ? 1 : 0]);
     }
 
-    /** Új jelszó, ami a mobilalkalmazásból is kiléptet minden eszközön. */
+    /**
+     * Új jelszó, ami a mobilalkalmazásból és minden böngészőből is kiléptet.
+     * Aki a sajátját változtatta, annak a böngészője bent marad: lásd
+     * Auth::keepThisSession().
+     */
     public function setPassword(int $id, string $password): void
     {
-        DatabaseConnection::get()->prepare('UPDATE users SET password_hash = :hash WHERE id = :id')
+        DatabaseConnection::get()->prepare('UPDATE users SET password_hash = :hash, sessions_valid_from = NOW() WHERE id = :id')
             ->execute(['id' => $id, 'hash' => password_hash($password, PASSWORD_DEFAULT)]);
         (new UserTokenModel())->revokeAllForUser($id);
+    }
+
+    /** Minden eddigi böngészős munkamenete megszűnik (23_sessions_valid_from.sql). */
+    public function endSessions(int $id): void
+    {
+        DatabaseConnection::get()->prepare('UPDATE users SET sessions_valid_from = NOW() WHERE id = :id')
+            ->execute(['id' => $id]);
     }
 
     public function delete(int $id): void

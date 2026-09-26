@@ -67,4 +67,18 @@
             </a>
         </div>
     </div>
+
+    {# Egy évig bent marad a böngésző az utolsó kattintástól: ez a kiút egy
+       elhagyott laptopnál vagy egy közös gépnél. #}
+    <div class="cx-card mt-4" style="max-width: 560px;">
+        <div class="cx-card__body d-flex align-items-center justify-content-between gap-3">
+            <div>
+                <div class="fw-semibold"><i class="bi bi-box-arrow-right me-1"></i>{{ t('profile.sessions_title') }}</div>
+                <div class="small text-muted">{{ t('profile.sessions_text') }}</div>
+            </div>
+            <form method="post" action="{{ base_url }}/profile/sessions/end">
+                <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap" data-confirm="{{ t('profile.sessions_end_confirm') }}">{{ t('profile.sessions_end') }}</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}

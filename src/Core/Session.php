@@ -10,7 +10,10 @@ class Session
             return;
         }
 
-        $lifetime = (int) Config::get('session.lifetime', 60 * 60 * 24 * 30); // default: 30 nap
+        // Alapból egy év az utolsó kattintástól (a böngészők legfeljebb 400
+        // napig tartanak meg egy sütit). Egy elhagyott laptopot a profil
+        // "Kijelentkezés mindenhol máshol" gombja vagy egy új jelszó zár ki.
+        $lifetime = (int) Config::get('session.lifetime', 60 * 60 * 24 * 365);
 
         // A GC a gc_maxlifetime alapján törli a szerver oldali session fájlt.
         // Enélkül a PHP alapértelmezett ~24 perce után kidobna a rendszer.

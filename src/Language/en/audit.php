@@ -14,6 +14,7 @@ return [
         'login' => 'Sign-in',
         'login_failed' => 'Failed sign-in',
         'logout' => 'Sign-out',
+        'signed_out_elsewhere' => 'Signed out everywhere else',
         'permission_denied' => 'Access refused',
         'create' => 'Create',
         'update' => 'Update',

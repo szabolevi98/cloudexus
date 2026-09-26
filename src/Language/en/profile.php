@@ -16,5 +16,10 @@ return [
     'new_password_too_short' => 'The new password must be at least 8 characters long.',
     'new_password_mismatch' => 'The new password and its confirmation do not match.',
     'updated' => 'Profile updated.',
-    'password_note' => 'The new password takes effect from your next sign-in.',
+    'password_note' => 'You are signed out of every other browser and of the mobile app; this browser stays signed in.',
+    'sessions_title' => 'Where you are signed in',
+    'sessions_text' => 'You stay signed in for a year from the last time you used a browser. A new password signs you out everywhere else; so does this button, without a new password.',
+    'sessions_end' => 'Sign out everywhere else',
+    'sessions_end_confirm' => 'Sign out of every other browser?',
+    'signed_out_elsewhere' => 'You are signed out of every other browser. This one stays signed in.',
 ];
