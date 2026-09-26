@@ -352,7 +352,10 @@ token that acts as them, with their role's permissions.
 
 The endpoints, with their requests, answers and curl examples, are in
 [web/API.md](web/API.md), and inside the application under **API → API
-documentation**.
+documentation**. For programs the same is an **OpenAPI 3.1** document at
+`/api/openapi.json`, for Postman, Insomnia or a client generator; it is built
+by `php bin/openapi.php` into [docs/openapi.json](docs/openapi.json), and a test
+fails when an endpoint is missing from it.
 
 ## Checking it
 

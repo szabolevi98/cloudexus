@@ -26,6 +26,7 @@ return [
     'deleted' => 'API user deleted.',
     'docs_title' => 'API documentation',
     'docs_open_raw' => 'Open raw markdown',
+    'docs_openapi_hint' => 'The API as an OpenAPI 3.1 document, for Postman, Insomnia or a client generator',
     'docs_english_only' => 'This documentation is sourced from an MD file, therefore it is available in English only.',
     'docs_loading' => 'Loading…',
     'docs_load_failed' => 'The documentation could not be loaded. Please check the raw markdown file.',

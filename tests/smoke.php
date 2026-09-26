@@ -92,6 +92,10 @@ check($status === 200 && str_starts_with($type, 'text/csv') && substr_count($csv
 [$status] = request("$base/api/products", $jar);
 check($status === 401, 'the API wants a token, not the session');
 
+[$status, $openapi] = request("$base/api/openapi.json", $jar);
+$described = json_decode($openapi, true);
+check($status === 200 && ($described['servers'][0]['url'] ?? '') === "$base/api" && isset($described['paths']['/products']), "the OpenAPI description, with this installation's address");
+
 // Sign out with the form's POST; afterwards the pages send back to sign-in.
 [, $dashboard] = request("$base/dashboard", $jar);
 [$status] = request("$base/logout", $jar, ['_token' => token($dashboard)]);

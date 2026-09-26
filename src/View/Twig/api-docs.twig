@@ -4,9 +4,14 @@
     <div class="cx-card">
         <div class="cx-card__header">
             <h2>{{ t('api_users.docs_title') }}</h2>
-            <a href="{{ base_url }}/API.md" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-filetype-md me-1"></i>{{ t('api_users.docs_open_raw') }}
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ base_url }}/api/openapi.json" download="cloudexus-openapi.json" class="btn btn-outline-primary btn-sm" title="{{ t('api_users.docs_openapi_hint') }}">
+                    <i class="bi bi-code-slash me-1"></i>OpenAPI
+                </a>
+                <a href="{{ base_url }}/API.md" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-filetype-md me-1"></i>{{ t('api_users.docs_open_raw') }}
+                </a>
+            </div>
         </div>
         <div class="cx-card__body">
             <p class="text-muted">{{ t('api_users.docs_english_only') }}</p>

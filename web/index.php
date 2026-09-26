@@ -6,6 +6,7 @@ use Cloudexus\Controller\Api\CurrencyApiController;
 use Cloudexus\Controller\Api\CustomerGroupApiController;
 use Cloudexus\Controller\Api\InvoiceApiController;
 use Cloudexus\Controller\Api\LanguageApiController;
+use Cloudexus\Controller\Api\OpenApiController;
 use Cloudexus\Controller\Api\OrderApiController;
 use Cloudexus\Controller\Api\ParameterApiController;
 use Cloudexus\Controller\Api\PartnerApiController;
@@ -359,6 +360,7 @@ $router->post('/cash/{id}/delete', fn($id) => (new CashVoucherController())->del
 // partners and orders, per-user sign-in and stock bookings for the mobile app.
 // See web/API.md for the full documentation.
 // ---------------------------------------------------------------------------
+$router->get('/api/openapi.json', fn() => (new OpenApiController())->show());
 $router->post('/api/auth/login', fn() => (new AuthApiController())->login());
 $router->post('/api/auth/logout', fn() => (new AuthApiController())->logout());
 $router->get('/api/auth/me', fn() => (new AuthApiController())->me());

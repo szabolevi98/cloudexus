@@ -8,6 +8,10 @@ JSON in and out, token-based authentication.
 - **Base URL:** `https://<domain>/api` (e.g. `https://cloudexus.levente.net/api`)
 - **Format:** every response is JSON (`Content-Type: application/json; charset=utf-8`)
 - **Encoding:** UTF-8
+- **OpenAPI:** the same API for programs, as an OpenAPI 3.1 document at
+  `GET /api/openapi.json` (no token needed, with the installation's own address in it).
+  Postman and Insomnia import it as a collection ready to send; a client generator makes a
+  typed client from it. It is built by `php bin/openapi.php` into `docs/openapi.json`.
 
 ## Authentication
 

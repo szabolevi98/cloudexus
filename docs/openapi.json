@@ -1,0 +1,4538 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Cloudexus API",
+        "version": "1",
+        "summary": "The catalog, stock, prices, invoices, partners and orders, and the warehouse app's bookings.",
+        "description": "JSON in and out; every message in English. Amounts are in the primary currency (meta.currency); translatable text comes in the language asked for (meta.language). The whole description, for people, is web/API.md — and inside the application under API → API documentation.",
+        "license": {
+            "name": "AGPL-3.0-only",
+            "identifier": "AGPL-3.0-only"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://cloudexus.example/api"
+        }
+    ],
+    "security": [
+        {
+            "token": []
+        },
+        {
+            "apiKey": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Signing in"
+        },
+        {
+            "name": "Catalog"
+        },
+        {
+            "name": "Master data"
+        },
+        {
+            "name": "Stock"
+        },
+        {
+            "name": "Sales"
+        },
+        {
+            "name": "Partners"
+        }
+    ],
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Signing in"
+                ],
+                "operationId": "login",
+                "summary": "Sign a user in",
+                "description": "Returns a user token (cxu_…), the only time it can be read. With two-step sign-in on, the password alone is 403 with details.two_factor_required; send the same body again with code. 10 failures from one IP in 15 minutes: 429.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "description": "The username or the email address."
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "description": "Tells the user's devices apart."
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "description": "The two-step code, or a recovery code."
+                                    }
+                                },
+                                "required": [
+                                    "username",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Signed in.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "examples": [
+                                                        "2026-07-24 16:44:35"
+                                                    ]
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                }
+                                            },
+                                            "required": [
+                                                "token",
+                                                "expires_at",
+                                                "user"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Wrong username or password, or a wrong code.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Two-step sign-in is on: send code.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Signing in"
+                ],
+                "operationId": "logout",
+                "summary": "Revoke the user token",
+                "description": "This device only; 403 with an integration token.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signed out.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "signed_out": {
+                                                    "const": true
+                                                }
+                                            },
+                                            "required": [
+                                                "signed_out"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Signing in"
+                ],
+                "operationId": "me",
+                "summary": "The user behind a user token",
+                "description": "For an app to check its stored token at start-up; 403 with an integration token.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The user.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "examples": [
+                                                        "2026-07-24 16:44:35"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "user",
+                                                "expires_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "categories",
+                "summary": "Categories",
+                "description": "A tree by parent_id, ordered by the translated name.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Category"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "category",
+                "summary": "A category",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The category.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Category"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/currencies": {
+            "get": {
+                "tags": [
+                    "Master data"
+                ],
+                "operationId": "currencies",
+                "summary": "Currencies and exchange rates",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CurrencyRate"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/customer-groups": {
+            "get": {
+                "tags": [
+                    "Master data"
+                ],
+                "operationId": "customerGroups",
+                "summary": "Customer groups",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CustomerGroup"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/customer-groups/{id}": {
+            "get": {
+                "tags": [
+                    "Master data"
+                ],
+                "operationId": "customerGroup",
+                "summary": "A customer group",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The group.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CustomerGroup"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/invoices": {
+            "get": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "invoices",
+                "summary": "Invoices",
+                "description": "Read only.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "name": "partner_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One partner."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "unpaid",
+                                "paid",
+                                "cancelled",
+                                "storno"
+                            ]
+                        },
+                        "description": "One status."
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "Issued on or after."
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "Issued on or before."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Invoice"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "invoice",
+                "summary": "An invoice, with its lines",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The invoice.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoiceDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/languages": {
+            "get": {
+                "tags": [
+                    "Master data"
+                ],
+                "operationId": "languages",
+                "summary": "Languages",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LanguageRow"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/openapi.json": {
+            "get": {
+                "tags": [
+                    "Signing in"
+                ],
+                "operationId": "openapi",
+                "summary": "This description",
+                "description": "No token needed.",
+                "responses": {
+                    "200": {
+                        "description": "The OpenAPI document, with this installation's address.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/orders": {
+            "get": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "orders",
+                "summary": "Orders",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "name": "partner_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One partner."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "confirmed",
+                                "invoiced",
+                                "cancelled"
+                            ]
+                        },
+                        "description": "One status."
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "Ordered on or after."
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "Ordered on or before."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Order"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "createOrder",
+                "summary": "Place an order",
+                "description": "The order number is made by the server, and so is the total.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Placed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OrderDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "order",
+                "summary": "An order, with its lines and addresses",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The order.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OrderDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "updateOrder",
+                "summary": "Update an order",
+                "description": "An invoiced order is read only: 409.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/OrderDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "deleteOrder",
+                "summary": "Delete an order",
+                "description": "Only a draft or cancelled order that was never invoiced; otherwise 409.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "const": true
+                                                },
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "deleted",
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/parameter-names": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "parameterNames",
+                "summary": "Parameters (old name)",
+                "description": "Deprecated: the same as GET /parameters.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Parameter"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                },
+                "deprecated": true
+            }
+        },
+        "/parameters": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "parameters",
+                "summary": "Parameters",
+                "description": "The master list product parameters take their name from.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Parameter"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/partners": {
+            "get": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "partners",
+                "summary": "Partners",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "customer",
+                                "supplier",
+                                "both"
+                            ]
+                        },
+                        "description": "One type."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        },
+                        "description": "Active or inactive only."
+                    },
+                    {
+                        "name": "customer_group_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One customer group."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Partner"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "createPartner",
+                "summary": "Create a partner",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/partners/tax/{tax}": {
+            "get": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "partnerByTax",
+                "summary": "A partner by tax number",
+                "parameters": [
+                    {
+                        "name": "tax",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "12345678-2-42"
+                            ]
+                        },
+                        "description": "The tax number."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The partner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "upsertPartnerByTax",
+                "summary": "Update or create by tax number",
+                "description": "Updated if the tax number exists (200), created otherwise (201).",
+                "parameters": [
+                    {
+                        "name": "tax",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "12345678-2-42"
+                            ]
+                        },
+                        "description": "The tax number."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/partners/{id}": {
+            "get": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "partner",
+                "summary": "A partner, with its addresses",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The partner.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "updatePartner",
+                "summary": "Update a partner",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PartnerInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartnerDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Partners"
+                ],
+                "operationId": "deletePartner",
+                "summary": "Delete a partner",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "const": true
+                                                },
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "deleted",
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/pricing/effective": {
+            "get": {
+                "tags": [
+                    "Sales"
+                ],
+                "operationId": "effectivePrice",
+                "summary": "The net unit price for a sales line",
+                "description": "Group price, sale price and price rules.",
+                "parameters": [
+                    {
+                        "name": "product_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "The product."
+                    },
+                    {
+                        "name": "partner_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Without it only the product's own price and the rules for everyone apply."
+                    },
+                    {
+                        "name": "quantity",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 1
+                        },
+                        "description": "Positive."
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "The document's date; today when not given."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The price.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EffectivePrice"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "products",
+                "summary": "Products",
+                "description": "q searches SKU, name and barcode.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One category."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        },
+                        "description": "Active or inactive only."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Product"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/products/lookup": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "lookupProduct",
+                "summary": "A scanned code",
+                "description": "Matched against the barcode first, the SKU second; active products only. A query parameter, as scanned codes can contain a slash.",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "What the scanner read."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The product, and where its stock is.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProductLookup"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/products/sku/{sku}": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "productBySku",
+                "summary": "A product by SKU",
+                "parameters": [
+                    {
+                        "name": "sku",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The SKU."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The product.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProductDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/products/{id}": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "product",
+                "summary": "A product",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The product.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProductDetail"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/Meta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/stock": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stock",
+                "summary": "Current stock",
+                "description": "By warehouse, location and product.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "name": "warehouse_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One warehouse."
+                    },
+                    {
+                        "name": "location_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One location."
+                    },
+                    {
+                        "name": "product_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One product."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/StockRow"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/stock/in": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stockIn",
+                "summary": "Book stock in",
+                "description": "Needs a user token whose role has stock.move. All or nothing.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StockBooking"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booked.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Booked"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/stock/out": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stockOut",
+                "summary": "Book stock out",
+                "description": "Needs a user token whose role has stock.move. All or nothing; checked against the warehouse's stock, one booking after the other.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StockBooking"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booked.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Booked"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/stock/transfer": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stockTransfer",
+                "summary": "Move stock between warehouses",
+                "description": "Needs a user token whose role has stock.move. Each line is an out movement and an in movement. All or nothing.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StockTransfer"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booked.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Booked"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/units": {
+            "get": {
+                "tags": [
+                    "Catalog"
+                ],
+                "operationId": "units",
+                "summary": "Units of measure",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Unit"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/warehouses": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "warehouses",
+                "summary": "Warehouses",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "$ref": "#/components/parameters/updated_since"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        },
+                        "description": "Active or inactive only."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Warehouse"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/warehouses/{id}/locations": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "locations",
+                "summary": "A warehouse's storage locations",
+                "description": "For what is on a shelf, GET /stock?location_id=.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/q"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Exactly this code: a scanned shelf label."
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        },
+                        "description": "Active or inactive only."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Location"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "token": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "An integration token (API → API users) or a user token from POST /auth/login (cxu_…)."
+            },
+            "apiKey": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Api-Key",
+                "description": "The same token, for servers that strip the Authorization header."
+            }
+        },
+        "parameters": {
+            "id": {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "type": "integer"
+                },
+                "description": "The record's id."
+            },
+            "page": {
+                "name": "page",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                }
+            },
+            "per_page": {
+                "name": "per_page",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 50
+                }
+            },
+            "q": {
+                "name": "q",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "string"
+                },
+                "description": "Free-text search; the fields searched differ per list."
+            },
+            "updated_since": {
+                "name": "updated_since",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "string",
+                    "examples": [
+                        "2026-07-19 00:00:00"
+                    ]
+                },
+                "description": "Only records changed since then: for a delta sync."
+            },
+            "language": {
+                "name": "language",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "string",
+                    "examples": [
+                        "en"
+                    ]
+                },
+                "description": "The language translatable text comes in (see GET /languages); a missing translation falls back to the default. An unknown code is 422."
+            },
+            "IdempotencyKey": {
+                "name": "Idempotency-Key",
+                "in": "header",
+                "required": false,
+                "schema": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{8,64}$"
+                },
+                "description": "Makes a resend safe: the same key with the same request, from the same token's owner within 7 days, gets the first answer again (with Idempotent-Replayed: true) and is not done again. 409 while the first is still being worked on; 422 for the same key with another request."
+            }
+        },
+        "responses": {
+            "Unauthorized": {
+                "description": "Invalid or missing API token.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "The endpoint needs a user token, or the user's role lacks the permission.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "Not found.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Conflict": {
+                "description": "A conflict: an invoiced order, or the same request still being worked on under the same Idempotency-Key.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "Unprocessable": {
+                "description": "The request does not make sense; details may say which lines.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            },
+            "TooManyRequests": {
+                "description": "Rate limit exceeded: 60 requests a minute per token (per user for user tokens).",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "type": "integer",
+                                "description": "The HTTP status again."
+                            },
+                            "message": {
+                                "type": "string",
+                                "description": "In English."
+                            },
+                            "details": {
+                                "description": "For a client to act on: which lines are short of stock, two_factor_required."
+                            }
+                        },
+                        "required": [
+                            "status",
+                            "message"
+                        ]
+                    }
+                },
+                "required": [
+                    "error"
+                ]
+            },
+            "Currency": {
+                "description": "The primary currency every amount is in. Amounts are never converted.",
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "examples": [
+                            "HUF"
+                        ]
+                    },
+                    "symbol": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "symbol",
+                    "title"
+                ]
+            },
+            "Language": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "examples": [
+                            "en"
+                        ]
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "The default language's code, which a missing translation falls back to."
+                    }
+                },
+                "required": [
+                    "code",
+                    "name",
+                    "default"
+                ]
+            },
+            "Meta": {
+                "type": "object",
+                "properties": {
+                    "currency": {
+                        "$ref": "#/components/schemas/Currency"
+                    },
+                    "language": {
+                        "$ref": "#/components/schemas/Language"
+                    }
+                }
+            },
+            "PageMeta": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "total_pages": {
+                        "type": "integer"
+                    },
+                    "currency": {
+                        "$ref": "#/components/schemas/Currency"
+                    },
+                    "language": {
+                        "$ref": "#/components/schemas/Language"
+                    }
+                },
+                "required": [
+                    "page",
+                    "per_page",
+                    "total",
+                    "total_pages"
+                ]
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "full_name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "description": "The older split, kept for existing clients: admin means super admin.",
+                        "enum": [
+                            "admin",
+                            "user"
+                        ]
+                    },
+                    "role_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "role_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "examples": [
+                                "stock.move"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "username",
+                    "full_name",
+                    "permissions"
+                ]
+            },
+            "Product": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "barcode": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "In the language asked for."
+                    },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "HTML."
+                    },
+                    "category_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "category_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "In lists."
+                    },
+                    "unit_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The unit's code."
+                    },
+                    "unit_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "price": {
+                        "type": "string",
+                        "description": "Net.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "sale_price": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Net; when set, the active price.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "vat_rate": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "min_stock": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "is_webshop": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "width_mm": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "height_mm": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "depth_mm": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "weight_g": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "stock_qty": {
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Current stock, all warehouses."
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "sku",
+                    "name",
+                    "price",
+                    "is_active"
+                ]
+            },
+            "ProductDetail": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Product"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "images": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "description": "A relative upload path or a full URL."
+                                        },
+                                        "is_primary": {
+                                            "type": "integer",
+                                            "enum": [
+                                                0,
+                                                1
+                                            ]
+                                        },
+                                        "sort_order": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            },
+                            "attributes": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "parameter_id": {
+                                            "type": "integer"
+                                        },
+                                        "attr_name": {
+                                            "type": "string"
+                                        },
+                                        "attr_value": {
+                                            "type": "string"
+                                        },
+                                        "sort_order": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            },
+                            "category_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                }
+                            },
+                            "related_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                }
+                            },
+                            "substitute_ids": {
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                }
+                            },
+                            "group_prices": {
+                                "type": "object",
+                                "description": "By customer_group_id.",
+                                "additionalProperties": {
+                                    "type": "object",
+                                    "properties": {
+                                        "customer_group_id": {
+                                            "type": "integer"
+                                        },
+                                        "price": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "sale_price": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "ProductLookup": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "barcode": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "unit_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "min_stock": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "matched_by": {
+                        "type": "string",
+                        "enum": [
+                            "barcode",
+                            "sku"
+                        ]
+                    },
+                    "stock_total": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "stock": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "warehouse_id": {
+                                    "type": "integer"
+                                },
+                                "warehouse_name": {
+                                    "type": "string"
+                                },
+                                "location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "location_code": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "quantity": {
+                                    "type": "string",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "sku",
+                    "name",
+                    "matched_by",
+                    "stock_total",
+                    "stock"
+                ]
+            },
+            "Category": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "parent_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "In the language asked for."
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "Parameter": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "Unit": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "code",
+                    "name"
+                ]
+            },
+            "CurrencyRate": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "symbol": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number",
+                        "description": "1 primary unit is this many of this currency: amount * value."
+                    },
+                    "is_primary": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "code",
+                    "value",
+                    "is_primary"
+                ]
+            },
+            "LanguageRow": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "code",
+                    "name"
+                ]
+            },
+            "CustomerGroup": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "partner_count": {
+                        "type": "integer",
+                        "description": "In lists."
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "Warehouse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "Location": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "warehouse_id": {
+                        "type": "integer"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Unique within the warehouse: what a shelf label says."
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "stock_qty": {
+                        "type": "string",
+                        "description": "All products on it.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "product_count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "warehouse_id",
+                    "code"
+                ]
+            },
+            "StockRow": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer"
+                    },
+                    "warehouse_name": {
+                        "type": "string"
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "description": "Stock in less stock out.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "product_id",
+                    "quantity"
+                ]
+            },
+            "Invoice": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "invoice_number": {
+                        "type": "string"
+                    },
+                    "invoice_type": {
+                        "type": "string",
+                        "enum": [
+                            "normal",
+                            "storno"
+                        ]
+                    },
+                    "storno_of_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "order_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "partner_id": {
+                        "type": "integer"
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "unpaid",
+                            "paid",
+                            "cancelled",
+                            "storno"
+                        ]
+                    },
+                    "issue_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "fulfilment_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "payment_method": {
+                        "type": "string",
+                        "enum": [
+                            "transfer",
+                            "cash",
+                            "card",
+                            "cod"
+                        ]
+                    },
+                    "net_total": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "vat_total": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "total_amount": {
+                        "type": "string",
+                        "description": "Gross.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "paid_amount": {
+                        "type": "string",
+                        "description": "What has been received; the balance is total_amount - paid_amount.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "shipping_cost": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "payment_cost": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "extra_vat_rate": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "seller_name": {
+                        "type": "string"
+                    },
+                    "seller_tax_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "invoice_number",
+                    "status",
+                    "total_amount"
+                ]
+            },
+            "InvoiceDetail": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Invoice"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "storno_by_id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "product_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        },
+                                        "sku": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "product_name": {
+                                            "type": "string"
+                                        },
+                                        "unit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "quantity": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "unit_price": {
+                                            "type": "string",
+                                            "description": "Net.",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "vat_rate": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "net_amount": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "vat_amount": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "gross_amount": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            "vat_summary": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rate": {
+                                            "type": "number"
+                                        },
+                                        "net": {
+                                            "type": "number"
+                                        },
+                                        "vat": {
+                                            "type": "number"
+                                        },
+                                        "gross": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "items"
+                        ]
+                    }
+                ]
+            },
+            "EffectivePrice": {
+                "type": "object",
+                "properties": {
+                    "price": {
+                        "type": "number",
+                        "description": "The net unit price: the lowest of the list price, the sale price and the price rules that fit."
+                    },
+                    "is_sale": {
+                        "type": "boolean"
+                    },
+                    "list_price": {
+                        "type": "number"
+                    },
+                    "rule": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "price",
+                    "is_sale",
+                    "list_price"
+                ]
+            },
+            "Address": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "In answers only."
+                    },
+                    "country": {
+                        "type": "string",
+                        "default": "Magyarország"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "street": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "postal_code",
+                    "city",
+                    "street"
+                ]
+            },
+            "Partner": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "supplier",
+                            "both"
+                        ]
+                    },
+                    "customer_group_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "customer_group_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "tax_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "name",
+                    "is_active"
+                ]
+            },
+            "PartnerDetail": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Partner"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "addresses": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Address"
+                                }
+                            }
+                        },
+                        "required": [
+                            "addresses"
+                        ]
+                    }
+                ]
+            },
+            "PartnerInput": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Required on POST."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "supplier",
+                            "both"
+                        ],
+                        "default": "customer"
+                    },
+                    "tax_number": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "customer_group_id": {
+                        "type": "integer",
+                        "description": "0 or none: no group."
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "addresses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Address"
+                        },
+                        "description": "On PUT, given: replaces every address; left out: they stay. One without city, postal_code and street is not saved."
+                    }
+                }
+            },
+            "Order": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "order_number": {
+                        "type": "string"
+                    },
+                    "partner_id": {
+                        "type": "integer"
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "confirmed",
+                            "invoiced",
+                            "cancelled"
+                        ]
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "shipping_address_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "billing_address_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "shipping_cost": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "payment_cost": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "total_amount": {
+                        "type": "string",
+                        "description": "Items + shipping_cost + payment_cost.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "order_number",
+                    "partner_id",
+                    "status",
+                    "total_amount"
+                ]
+            },
+            "OrderDetail": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Order"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "shipping_country": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "shipping_postal_code": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "shipping_city": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "shipping_street": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "shipping_note": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "billing_country": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "billing_postal_code": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "billing_city": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "billing_street": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "billing_note": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "product_id": {
+                                            "type": "integer"
+                                        },
+                                        "sku": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "product_name": {
+                                            "type": "string"
+                                        },
+                                        "unit": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "quantity": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "unit_price": {
+                                            "type": "string",
+                                            "description": "Net.",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        },
+                                        "line_total": {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                            "examples": [
+                                                "89900.00"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "items"
+                        ]
+                    }
+                ]
+            },
+            "OrderInput": {
+                "type": "object",
+                "properties": {
+                    "partner_id": {
+                        "type": "integer",
+                        "description": "Required on POST: an existing partner."
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "description": "Today when not given.",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "invoiced is set by issuing the invoice, and cannot be sent.",
+                        "enum": [
+                            "draft",
+                            "confirmed",
+                            "cancelled"
+                        ],
+                        "default": "confirmed"
+                    },
+                    "shipping_address_id": {
+                        "type": "integer",
+                        "description": "One of the partner's addresses; 0 or none: none."
+                    },
+                    "billing_address_id": {
+                        "type": "integer"
+                    },
+                    "shipping_cost": {
+                        "type": "number",
+                        "description": "Net."
+                    },
+                    "payment_cost": {
+                        "type": "number",
+                        "description": "Net."
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "integer"
+                                },
+                                "quantity": {
+                                    "type": "number"
+                                },
+                                "unit_price": {
+                                    "type": "number",
+                                    "description": "Net, in the primary currency."
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "quantity",
+                                "unit_price"
+                            ]
+                        },
+                        "description": "Required on POST, at least one line. On PUT, given: replaces the lines; left out: they stay."
+                    }
+                }
+            },
+            "BookingItem": {
+                "type": "object",
+                "properties": {
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "quantity": {
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "description": "Positive, at most 3 decimals."
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Overrides the request's default location."
+                    }
+                },
+                "required": [
+                    "product_id",
+                    "quantity"
+                ]
+            },
+            "StockBooking": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer",
+                        "description": "An active warehouse."
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "The default location of every line."
+                    },
+                    "note": {
+                        "type": "string",
+                        "description": "At most 200 characters; \"Mobil app\" when not given."
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 500,
+                        "items": {
+                            "$ref": "#/components/schemas/BookingItem"
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "items"
+                ]
+            },
+            "StockTransfer": {
+                "type": "object",
+                "properties": {
+                    "from_warehouse_id": {
+                        "type": "integer"
+                    },
+                    "from_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "to_warehouse_id": {
+                        "type": "integer",
+                        "description": "Another warehouse than the source."
+                    },
+                    "to_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 500,
+                        "items": {
+                            "$ref": "#/components/schemas/BookingItem"
+                        }
+                    }
+                },
+                "required": [
+                    "from_warehouse_id",
+                    "to_warehouse_id",
+                    "items"
+                ]
+            },
+            "Booked": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out",
+                            "transfer"
+                        ]
+                    },
+                    "warehouse": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "full_name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "full_name"
+                        ]
+                    },
+                    "movements": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "description": "In and out bookings."
+                                },
+                                "out_movement_id": {
+                                    "type": "integer",
+                                    "description": "Transfers."
+                                },
+                                "in_movement_id": {
+                                    "type": "integer",
+                                    "description": "Transfers."
+                                },
+                                "product_id": {
+                                    "type": "integer"
+                                },
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "product_name": {
+                                    "type": "string"
+                                },
+                                "unit": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "location_code": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "quantity": {
+                                    "type": "string",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "type",
+                    "created_by",
+                    "movements"
+                ]
+            }
+        }
+    }
+}
