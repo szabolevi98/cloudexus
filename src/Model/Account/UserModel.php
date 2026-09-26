@@ -143,7 +143,8 @@ class UserModel
             $fields[] = 'password_hash = :password_hash';
             $params['password_hash'] = password_hash($data['password'], PASSWORD_DEFAULT);
             // ...and signs them out of every browser too (see 23_sessions_valid_from.sql).
-            $fields[] = 'sessions_valid_from = NOW()';
+            $fields[] = 'sessions_valid_from = :valid_from';
+            $params['valid_from'] = self::now();
         }
 
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = :id';
@@ -183,16 +184,28 @@ class UserModel
      */
     public function setPassword(int $id, string $password): void
     {
-        DatabaseConnection::get()->prepare('UPDATE users SET password_hash = :hash, sessions_valid_from = NOW() WHERE id = :id')
-            ->execute(['id' => $id, 'hash' => password_hash($password, PASSWORD_DEFAULT)]);
+        DatabaseConnection::get()->prepare('UPDATE users SET password_hash = :hash, sessions_valid_from = :valid_from WHERE id = :id')
+            ->execute(['id' => $id, 'hash' => password_hash($password, PASSWORD_DEFAULT), 'valid_from' => self::now()]);
         (new UserTokenModel())->revokeAllForUser($id);
     }
 
     /** Minden eddigi böngészős munkamenete megszűnik (23_sessions_valid_from.sql). */
     public function endSessions(int $id): void
     {
-        DatabaseConnection::get()->prepare('UPDATE users SET sessions_valid_from = NOW() WHERE id = :id')
-            ->execute(['id' => $id]);
+        DatabaseConnection::get()->prepare('UPDATE users SET sessions_valid_from = :valid_from WHERE id = :id')
+            ->execute(['id' => $id, 'valid_from' => self::now()]);
+    }
+
+    /**
+     * A mostani idő a PHP órája szerint. Az Auth a PHP időzónájában olvassa
+     * vissza (strtotime) és a PHP-ban mért belépési időhöz hasonlítja, ezért
+     * nem jöhet a MySQL NOW()-jából: ha az adatbázis más időzónában fut (a
+     * CI-ben UTC-ben, a PHP Budapesten), órákkal elcsúszna, és a korábban
+     * belépett böngészők bent maradnának.
+     */
+    private static function now(): string
+    {
+        return date('Y-m-d H:i:s');
     }
 
     public function delete(int $id): void
