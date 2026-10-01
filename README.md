@@ -217,12 +217,14 @@ without the internet, apart from the optional reCAPTCHA on sign-in.
 
 ## The warehouse app
 
-Stock in, stock out and transfers are booked from a phone or a handheld barcode
+Stock in, stock out, transfers and shelf moves, stocktaking, picking customer
+orders and receiving purchase orders are done from a phone or a handheld barcode
 scanner with **[Cloudexus Mobile](https://github.com/szabolevi98/cloudexus-mobile)**,
 an Android app the warehouse staff sign into with their own username. What they
-book is credited to them and shows up in the web interface at once; the APK is
-on the app's [releases](https://github.com/szabolevi98/cloudexus-mobile/releases)
-page.
+book is credited to them and shows up in the web interface at once: a picked
+order and a received purchase order say so on their page, and the invoice made
+from them later does not move the stock a second time. The APK is on the app's
+[releases](https://github.com/szabolevi98/cloudexus-mobile/releases) page.
 
 ## Security, in short
 
