@@ -33,6 +33,8 @@ class OrderModel
     {
         $stmt = DatabaseConnection::get()->prepare(
             'SELECT o.*, p.name AS partner_name, qf.quote_number AS from_quote_number,
+                    (SELECT full_name FROM users WHERE id = o.picked_by) AS picked_by_name,
+                    (SELECT name FROM warehouses WHERE id = o.picked_warehouse_id) AS picked_warehouse_name,
                     sa.country AS shipping_country, sa.city AS shipping_city, sa.postal_code AS shipping_postal_code,
                     sa.street AS shipping_street, sa.note AS shipping_note,
                     ba.country AS billing_country, ba.city AS billing_city, ba.postal_code AS billing_postal_code,

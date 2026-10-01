@@ -34,4 +34,6 @@ return [
     'not_cancellable' => 'Csak piszkozat vagy visszaigazolt rendelés mondható le; egy kiszámlázottat előbb a számla sztornójával kell visszanyitni.',
     'not_deletable' => 'Csak piszkozat vagy lemondott, soha nem számlázott rendelés törölhető.',
     'title_prefix' => 'Rendelés',
+    'picked' => 'Kiszedve a mobil appban: {date}, {name}, {warehouse}.',
+    'picked_note' => 'A tételek ekkor kimentek a raktárból; a rendelés számlája már nem ad ki készletet, és a sztornója sem hozza vissza.',
 ];

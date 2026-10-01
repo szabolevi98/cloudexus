@@ -24,4 +24,7 @@ return [
     'not_cancellable' => 'Csak piszkozat vagy visszaigazolt rendelés stornózható.',
     'not_deletable' => 'Csak piszkozat vagy lemondott rendelés törölhető, amelyhez nem érkezett számla.',
     'title_prefix' => 'Rendelés',
+    'received' => 'Átvéve a mobil appban: {date}, {name}, {warehouse}.',
+    'received_note' => 'Az átvett mennyiségek ekkor bekerültek a raktárba; a bejövő számlája már nem vesz be készletet, és a sztornója sem adja ki.',
+    'received_quantity' => 'Átvéve',
 ];

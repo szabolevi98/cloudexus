@@ -146,6 +146,13 @@ class IncomingInvoiceModel
      */
     public function create(array $data, array $items): int
     {
+        // Egy mobilon átvett beszerzési rendelés áruja az átvételkor bekerült a
+        // raktárba (25_picking_and_receiving.sql): a bejövő számlája nem veszi be
+        // még egyszer, és raktár nélkül a sztornója sem adja ki.
+        if (!empty($data['purchase_order_id']) && self::purchaseOrderIsReceived((int) $data['purchase_order_id'])) {
+            $data['warehouse_id'] = null;
+        }
+
         $pdo = DatabaseConnection::get();
         $pdo->beginTransaction();
 
@@ -282,6 +289,15 @@ class IncomingInvoiceModel
                 }
             }
         });
+    }
+
+    /** Átvettek-e már árut a beszerzési rendelésből a mobil appban (és így be is vételezték). */
+    public static function purchaseOrderIsReceived(int $purchaseOrderId): bool
+    {
+        $stmt = DatabaseConnection::get()->prepare('SELECT received_at IS NOT NULL FROM purchase_orders WHERE id = :id');
+        $stmt->execute(['id' => $purchaseOrderId]);
+
+        return (bool) $stmt->fetchColumn();
     }
 
     public function unpaidList(): array

@@ -334,8 +334,14 @@ token that acts as them, with their role's permissions.
   invoices, currencies, languages, and the price of a product for a partner, a
   quantity and a date.
 - **Write**: partners and orders, in full.
-- **Stock**: a product by its barcode, and stock in, out and transfers with any
-  number of lines, credited to the person signed in.
+- **Stock**: a product by its barcode (with its price, image and whether it is
+  under its minimum), and stock in, out, transfers and shelf-to-shelf moves with
+  any number of lines, credited to the person signed in; their own bookings of
+  the day.
+- **Warehouse work** for the PDA: a stocktaking counted by scanning; customer
+  orders picked shelf by shelf, booked out at the pick; purchase orders received,
+  in parts if they come in parts, booked in at the receipt. The invoice of a
+  picked order, or of a received purchase order, then moves no stock again.
 - **Safe retries**: an `Idempotency-Key` header on any change — a booking, a
   partner, an order — makes a request resent over bad Wi-Fi or after a timeout
   happen once; the resend gets the first answer back.

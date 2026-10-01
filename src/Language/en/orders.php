@@ -34,4 +34,6 @@ return [
     'not_cancellable' => 'Only a draft or confirmed order can be cancelled; reopen an invoiced one by reversing its invoice first.',
     'not_deletable' => 'Only a draft or cancelled order that was never invoiced can be deleted.',
     'title_prefix' => 'Order',
+    'picked' => 'Picked in the mobile app: {date}, {name}, {warehouse}.',
+    'picked_note' => 'Its lines left the warehouse then; the order\'s invoice books no stock out, and its storno none back in.',
 ];

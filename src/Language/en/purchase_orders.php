@@ -24,4 +24,7 @@ return [
     'not_cancellable' => 'Only a draft or confirmed purchase order can be cancelled.',
     'not_deletable' => 'Only a draft or cancelled purchase order without an incoming invoice can be deleted.',
     'title_prefix' => 'Order',
+    'received' => 'Received in the mobile app: {date}, {name}, {warehouse}.',
+    'received_note' => 'What arrived was booked into the warehouse then; its incoming invoice books no stock in, and its storno none out.',
+    'received_quantity' => 'Received',
 ];

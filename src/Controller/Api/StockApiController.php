@@ -22,11 +22,11 @@ class StockApiController extends ApiController
     /** The bookings keep their Idempotency-Key inside their own transaction: see inTransaction(). */
     protected const OWN_IDEMPOTENCY = true;
 
-    private const MAX_ITEMS = 500;
-    private const MAX_NOTE_LENGTH = 200;
-    private const DEFAULT_NOTE = 'Mobil app';
+    protected const MAX_ITEMS = 500;
+    protected const MAX_NOTE_LENGTH = 200;
+    protected const DEFAULT_NOTE = 'Mobil app';
 
-    private StockMovementModel $movements;
+    protected StockMovementModel $movements;
 
     public function __construct()
     {
@@ -130,6 +130,144 @@ class StockApiController extends ApiController
         });
     }
 
+    /**
+     * The signed-in user's own movements on one day (today by default),
+     * newest first: what the app lists as "today's bookings". Filters:
+     * date (YYYY-MM-DD), warehouse_id.
+     */
+    public function movements(): void
+    {
+        $this->requireUser();
+
+        $date = trim((string) ($_GET['date'] ?? ''));
+        if ($date === '') {
+            $date = date('Y-m-d');
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || strtotime($date) === false) {
+            $this->error('date must be YYYY-MM-DD.', 422);
+        }
+
+        $pager = $this->paginator();
+        $rows = $this->movements->byUser((int) $this->user['id'], $date, (int) ($_GET['warehouse_id'] ?? 0) ?: null, $pager);
+
+        $this->collection(array_map(static fn(array $row): array => [
+            'id' => (int) $row['id'],
+            'type' => $row['type'],
+            'warehouse_id' => (int) $row['warehouse_id'],
+            'warehouse_name' => $row['warehouse_name'],
+            'location_id' => $row['location_id'] !== null ? (int) $row['location_id'] : null,
+            'location_code' => $row['location_code'],
+            'product_id' => (int) $row['product_id'],
+            'sku' => $row['sku'],
+            'product_name' => $row['product_name'],
+            'unit' => $row['unit'],
+            'quantity' => $row['quantity'],
+            'note' => $row['note'],
+            'created_at' => $row['created_at'],
+        ], $rows), $pager);
+    }
+
+    /**
+     * Moves stock from shelf to shelf within one warehouse: an out and an in
+     * movement per line, so the warehouse's total does not change. Checked
+     * against what the source shelf holds — a shelf cannot give what it does
+     * not have — and with the note "Átpolcozás".
+     */
+    public function relocate(): void
+    {
+        $this->requireUserPermission(Permissions::STOCK_MOVE);
+
+        $body = $this->body();
+        $warehouse = $this->activeWarehouse($body['warehouse_id'] ?? null, 'warehouse_id');
+        $defaultFrom = $this->location($warehouse, $body['from_location_id'] ?? null, 'from_location_id');
+        $defaultTo = $this->location($warehouse, $body['to_location_id'] ?? null, 'to_location_id');
+        $note = $this->note($body);
+
+        $lines = [];
+        $problems = [];
+        foreach ($this->items($body) as $i => $item) {
+            $from = array_key_exists('from_location_id', $item['raw'])
+                ? $this->location($warehouse, $item['raw']['from_location_id'], "items[$i].from_location_id")
+                : $defaultFrom;
+            $to = array_key_exists('to_location_id', $item['raw'])
+                ? $this->location($warehouse, $item['raw']['to_location_id'], "items[$i].to_location_id")
+                : $defaultTo;
+            if (($from['id'] ?? null) === ($to['id'] ?? null)) {
+                $problems[] = ['index' => $i, 'message' => 'The source and the target shelf must differ.'];
+                continue;
+            }
+
+            $key = $item['product']['id'] . ':' . ($from['id'] ?? '') . ':' . ($to['id'] ?? '');
+            $lines[$key] ??= ['product' => $item['product'], 'from' => $from, 'to' => $to, 'quantity' => 0.0];
+            $lines[$key]['quantity'] += $item['quantity'];
+        }
+        if ($problems) {
+            $this->error('Some items are invalid.', 422, $problems);
+        }
+
+        $fullNote = 'Átpolcozás: ' . $warehouse['name'] . ($note !== null ? ' — ' . $note : '');
+
+        $this->inTransaction(function () use ($warehouse, $lines, $fullNote): array {
+            $this->movements->lockWarehouses([$warehouse['id']]);
+
+            // What each source shelf is asked for, against what it holds.
+            $asked = [];
+            foreach ($lines as $line) {
+                $key = $line['product']['id'] . ':' . ($line['from']['id'] ?? '');
+                $asked[$key] ??= ['product' => $line['product'], 'from' => $line['from'], 'quantity' => 0.0];
+                $asked[$key]['quantity'] += $line['quantity'];
+            }
+            $shortages = [];
+            foreach ($asked as $ask) {
+                $available = $this->movements->availableAt((int) $ask['product']['id'], (int) $warehouse['id'], $ask['from']['id'] ?? null);
+                if (round($ask['quantity'], 3) > round($available, 3)) {
+                    $shortages[] = $this->productFields($ask['product']) + [
+                        'location_id' => $ask['from']['id'] ?? null,
+                        'location_code' => $ask['from']['code'] ?? null,
+                        'available' => self::qty($available),
+                        'requested' => self::qty($ask['quantity']),
+                    ];
+                }
+            }
+            if ($shortages) {
+                return [422, ['error' => [
+                    'status' => 422,
+                    'message' => 'Not enough stock on the source shelf for ' . count($shortages) . ' product(s). Nothing was moved.',
+                    'details' => $shortages,
+                ]]];
+            }
+
+            $moves = [];
+            foreach ($lines as $line) {
+                $movement = fn(string $type, ?array $location): int => $this->movements->create([
+                    'warehouse_id' => (int) $warehouse['id'],
+                    'location_id' => $location['id'] ?? null,
+                    'product_id' => (int) $line['product']['id'],
+                    'type' => $type,
+                    'quantity' => $line['quantity'],
+                    'note' => $fullNote,
+                    'created_by' => (int) $this->user['id'],
+                ]);
+
+                $moves[] = $this->productFields($line['product']) + [
+                    'quantity' => self::qty($line['quantity']),
+                    'out_movement_id' => $movement('out', $line['from']),
+                    'from_location_id' => $line['from']['id'] ?? null,
+                    'from_location_code' => $line['from']['code'] ?? null,
+                    'in_movement_id' => $movement('in', $line['to']),
+                    'to_location_id' => $line['to']['id'] ?? null,
+                    'to_location_code' => $line['to']['code'] ?? null,
+                ];
+            }
+
+            return [201, ['data' => [
+                'warehouse' => $this->warehouseFields($warehouse),
+                'note' => $fullNote,
+                'created_by' => $this->createdBy(),
+                'moves' => $moves,
+            ]]];
+        });
+    }
+
     private function bookInOrOut(string $type): void
     {
         $this->requireUserPermission(Permissions::STOCK_MOVE);
@@ -198,7 +336,7 @@ class StockApiController extends ApiController
      * instead of booking twice. Failed requests are not stored, so a client can
      * fix the problem and retry under the same key.
      */
-    private function inTransaction(callable $work): never
+    protected function inTransaction(callable $work): never
     {
         $key = trim($_SERVER['HTTP_IDEMPOTENCY_KEY'] ?? '');
         if ($key !== '' && !preg_match('/^[A-Za-z0-9_-]{8,64}$/', $key)) {
@@ -252,7 +390,7 @@ class StockApiController extends ApiController
      *
      * @return array<int, array{product: array, quantity: float, raw: array}>
      */
-    private function items(array $body): array
+    protected function items(array $body): array
     {
         $raw = $body['items'] ?? null;
         if (!is_array($raw) || !array_is_list($raw) || !$raw) {
@@ -291,7 +429,7 @@ class StockApiController extends ApiController
         return $items;
     }
 
-    private static function parseQuantity(mixed $value): ?float
+    protected static function parseQuantity(mixed $value): ?float
     {
         if (is_string($value)) {
             $value = trim($value);
@@ -307,7 +445,7 @@ class StockApiController extends ApiController
         return round($quantity, 3);
     }
 
-    private function activeWarehouse(mixed $id, string $field): array
+    protected function activeWarehouse(mixed $id, string $field): array
     {
         $id = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         $warehouse = $id ? (new WarehouseModel())->findById($id) : null;
@@ -319,7 +457,7 @@ class StockApiController extends ApiController
     }
 
     /** An optional location of the warehouse: null or 0 means "no location". */
-    private function location(array $warehouse, mixed $id, string $field): ?array
+    protected function location(array $warehouse, mixed $id, string $field): ?array
     {
         if ($id === null || $id === 0 || $id === '0' || $id === '') {
             return null;
@@ -333,7 +471,7 @@ class StockApiController extends ApiController
         return $location;
     }
 
-    private function note(array $body): ?string
+    protected function note(array $body): ?string
     {
         $note = trim((string) ($body['note'] ?? ''));
         if (mb_strlen($note) > self::MAX_NOTE_LENGTH) {
@@ -347,7 +485,7 @@ class StockApiController extends ApiController
      * Products whose requested total exceeds the warehouse's stock. Must run
      * after lockWarehouses(), inside the booking transaction.
      */
-    private function shortages(int $warehouseId, array $lines): array
+    protected function shortages(int $warehouseId, array $lines): array
     {
         $requested = [];
         foreach ($lines as $line) {
@@ -370,7 +508,7 @@ class StockApiController extends ApiController
         return $shortages;
     }
 
-    private function shortageError(array $warehouse, array $shortages): array
+    protected function shortageError(array $warehouse, array $shortages): array
     {
         return [422, ['error' => [
             'status' => 422,
@@ -380,7 +518,7 @@ class StockApiController extends ApiController
     }
 
     /** findById() already carries the translated name and the unit code. */
-    private function productFields(array $product): array
+    protected function productFields(array $product): array
     {
         return [
             'product_id' => (int) $product['id'],
@@ -390,17 +528,17 @@ class StockApiController extends ApiController
         ];
     }
 
-    private function warehouseFields(array $warehouse): array
+    protected function warehouseFields(array $warehouse): array
     {
         return ['id' => (int) $warehouse['id'], 'name' => $warehouse['name']];
     }
 
-    private function createdBy(): array
+    protected function createdBy(): array
     {
         return ['id' => (int) $this->user['id'], 'full_name' => $this->user['full_name']];
     }
 
-    private static function qty(float $quantity): string
+    protected static function qty(float $quantity): string
     {
         return number_format($quantity, 3, '.', '');
     }

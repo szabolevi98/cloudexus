@@ -17,6 +17,14 @@
                 {% endif %}
             </div>
         </div>
+        {# A mobil appban átvett beszerzés (25_picking_and_receiving.sql): a
+           készlet már bejött, a bejövő számlája nem veszi be még egyszer. #}
+        {% if order.received_at %}
+            <div class="cx-card__body border-bottom pt-3 pb-3 small">
+                <i class="bi bi-truck me-1"></i>{{ t('purchase_orders.received', {date: order.received_at|date('Y-m-d H:i'), name: order.received_by_name|default('—'), warehouse: order.received_warehouse_name|default('—')}) }}
+                <div class="text-muted">{{ t('purchase_orders.received_note') }}</div>
+            </div>
+        {% endif %}
         <div class="cx-card__body p-0">
             <div class="table-responsive">
                 <table class="table cx-table align-middle mb-0">
@@ -25,6 +33,7 @@
                         <th>{{ t('common.sku') }}</th>
                         <th>{{ t('purchase_orders.product_name') }}</th>
                         <th class="text-end">{{ t('common.quantity') }}</th>
+                        {% if order.received_at %}<th class="text-end">{{ t('purchase_orders.received_quantity') }}</th>{% endif %}
                         <th class="text-end">{{ t('common.unit_price') }}</th>
                         <th class="text-end">{{ t('common.line_total') }}</th>
                     </tr>
@@ -35,6 +44,7 @@
                             <td>{{ item.sku }}</td>
                             <td>{{ item.product_name }}</td>
                             <td class="text-end">{{ item.quantity|qty }} {{ item.unit }}</td>
+                            {% if order.received_at %}<td class="text-end {{ item.received_quantity < item.quantity ? 'text-warning-emphasis' : '' }}">{{ item.received_quantity|qty }} {{ item.unit }}</td>{% endif %}
                             <td class="text-end">{{ item.unit_price|money }}</td>
                             <td class="text-end">{{ item.line_total|money }}</td>
                         </tr>
@@ -42,7 +52,7 @@
                     </tbody>
                     <tfoot>
                     <tr>
-                        <td colspan="4" class="text-end fw-medium">{{ t('common.total') }}</td>
+                        <td colspan="{{ order.received_at ? 5 : 4 }}" class="text-end fw-medium">{{ t('common.total') }}</td>
                         <td class="text-end fw-bold">{{ order.total_amount|money }}</td>
                     </tr>
                     </tfoot>

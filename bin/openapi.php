@@ -288,6 +288,11 @@ $schemas = [
             'location_code' => nullable(str()),
             'quantity' => decimal(),
         ])),
+        'price' => decimal('Net.'),
+        'sale_price' => nullable(decimal('Net; when set, the active price.')),
+        'vat_rate' => decimal(),
+        'below_min_stock' => boolean('The total stock is under min_stock.'),
+        'image_url' => nullable(str('The primary image.', ['format' => 'uri'])),
     ], ['id', 'sku', 'name', 'matched_by', 'stock_total', 'stock']),
     'Category' => obj([
         'id' => integer(),
@@ -469,24 +474,190 @@ $schemas = [
         'note' => str(),
         'items' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 500, 'items' => ref('BookingItem')],
     ], ['from_warehouse_id', 'to_warehouse_id', 'items']),
+    'Movement' => obj([
+        'id' => integer(),
+        'product_id' => integer(),
+        'sku' => str(),
+        'product_name' => str(),
+        'unit' => nullable(str()),
+        'location_id' => nullable(integer()),
+        'location_code' => nullable(str()),
+        'quantity' => decimal(),
+    ], ['id', 'product_id', 'quantity']),
+    'Move' => obj([
+        'product_id' => integer(),
+        'sku' => str(),
+        'product_name' => str(),
+        'unit' => nullable(str()),
+        'quantity' => decimal(),
+        'out_movement_id' => integer(),
+        'from_location_id' => nullable(integer()),
+        'from_location_code' => nullable(str()),
+        'in_movement_id' => integer(),
+        'to_location_id' => nullable(integer()),
+        'to_location_code' => nullable(str()),
+    ], ['product_id', 'quantity', 'out_movement_id', 'in_movement_id']),
     'Booked' => obj([
-        'type' => str(null, ['enum' => ['in', 'out', 'transfer']]),
-        'warehouse' => obj(['id' => integer(), 'name' => str()]),
+        'type' => str(null, ['enum' => ['in', 'out']]),
+        'warehouse' => ref('WarehouseRef'),
         'note' => str(),
-        'created_by' => obj(['id' => integer(), 'full_name' => str()], ['id', 'full_name']),
-        'movements' => listOf(obj([
-            'id' => integer('In and out bookings.'),
-            'out_movement_id' => integer('Transfers.'),
-            'in_movement_id' => integer('Transfers.'),
+        'created_by' => ref('CreatedBy'),
+        'movements' => listOf(ref('Movement')),
+    ], ['type', 'created_by', 'movements']),
+    'Transferred' => obj([
+        'from_warehouse' => ref('WarehouseRef'),
+        'to_warehouse' => ref('WarehouseRef'),
+        'note' => str(),
+        'created_by' => ref('CreatedBy'),
+        'transfers' => listOf(ref('Move')),
+    ], ['from_warehouse', 'to_warehouse', 'created_by', 'transfers']),
+    'Relocated' => obj([
+        'warehouse' => ref('WarehouseRef'),
+        'note' => str(),
+        'created_by' => ref('CreatedBy'),
+        'moves' => listOf(ref('Move')),
+    ], ['warehouse', 'created_by', 'moves']),
+    'WarehouseRef' => obj(['id' => integer(), 'name' => str()], ['id', 'name']),
+    'CreatedBy' => obj(['id' => integer(), 'full_name' => str()], ['id', 'full_name']),
+    'Relocation' => obj([
+        'warehouse_id' => integer('An active warehouse.'),
+        'from_location_id' => nullable(integer('The default source shelf; null: stock booked without one.')),
+        'to_location_id' => nullable(integer('The default target shelf.')),
+        'note' => str(),
+        'items' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 500, 'items' => obj([
+            'product_id' => integer(),
+            'quantity' => ['type' => ['number', 'string']],
+            'from_location_id' => nullable(integer()),
+            'to_location_id' => nullable(integer()),
+        ], ['product_id', 'quantity'])],
+    ], ['warehouse_id', 'items']),
+    'MyMovement' => obj([
+        'id' => integer(),
+        'type' => str(null, ['enum' => ['in', 'out']]),
+        'warehouse_id' => integer(),
+        'warehouse_name' => str(),
+        'location_id' => nullable(integer()),
+        'location_code' => nullable(str()),
+        'product_id' => integer(),
+        'sku' => str(),
+        'product_name' => str(),
+        'unit' => nullable(str()),
+        'quantity' => decimal(),
+        'note' => nullable(str()),
+        'created_at' => stamp(),
+    ], ['id', 'type', 'warehouse_id', 'product_id', 'quantity', 'created_at']),
+    'Stocktaking' => obj([
+        'warehouse_id' => integer('An active warehouse.'),
+        'note' => str(),
+        'items' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 2000, 'items' => obj([
+            'product_id' => integer(),
+            'counted_quantity' => ['type' => ['number', 'string'], 'description' => 'Zero or more, at most 3 decimals.'],
+        ], ['product_id', 'counted_quantity'])],
+    ], ['warehouse_id', 'items']),
+    'StocktakingBooked' => obj([
+        'id' => integer(),
+        'stocktaking_number' => str(),
+        'warehouse' => ref('WarehouseRef'),
+        'item_count' => integer(),
+        'diff_count' => integer('How many products differed, and got a correction.'),
+        'items' => listOf(obj([
             'product_id' => integer(),
             'sku' => str(),
             'product_name' => str(),
-            'unit' => nullable(str()),
-            'location_id' => nullable(integer()),
-            'location_code' => nullable(str()),
-            'quantity' => decimal(),
+            'book_quantity' => decimal('The book stock when it was booked.'),
+            'counted_quantity' => decimal(),
+            'diff' => decimal(),
         ])),
-    ], ['type', 'created_by', 'movements']),
+    ], ['id', 'stocktaking_number', 'warehouse', 'items']),
+    'Shelf' => obj(['location_id' => nullable(integer()), 'location_code' => nullable(str()), 'quantity' => decimal()], ['location_id', 'quantity']),
+    'PickTask' => obj([
+        'id' => integer(),
+        'order_number' => str(),
+        'order_date' => day(),
+        'partner_id' => integer(),
+        'partner_name' => str(),
+        'line_count' => integer(),
+        'total_quantity' => decimal(),
+    ], ['id', 'order_number', 'partner_name']),
+    'PickOrder' => obj([
+        'id' => integer(),
+        'order_number' => str(),
+        'order_date' => day(),
+        'partner_name' => str(),
+        'warehouse' => ref('WarehouseRef'),
+        'lines' => listOf(obj([
+            'product_id' => integer(),
+            'sku' => str(),
+            'barcode' => nullable(str()),
+            'product_name' => str(),
+            'unit' => nullable(str()),
+            'quantity' => decimal('To pick.'),
+            'in_warehouse' => decimal(),
+            'shelves' => listOf(ref('Shelf')) + ['description' => 'The shelves holding it, by code; stock booked without a shelf last.'],
+        ], ['product_id', 'sku', 'quantity', 'shelves'])) + ['description' => 'By their first shelf: the walk through the warehouse.'],
+    ], ['id', 'order_number', 'warehouse', 'lines']),
+    'Pick' => obj([
+        'warehouse_id' => integer(),
+        'items' => ['type' => 'array', 'minItems' => 1, 'items' => obj([
+            'product_id' => integer(),
+            'quantity' => ['type' => ['number', 'string']],
+            'location_id' => nullable(integer('The shelf it was taken from.')),
+        ], ['product_id', 'quantity'])],
+    ], ['warehouse_id', 'items']),
+    'Picked' => obj([
+        'order' => obj(['id' => integer(), 'order_number' => str()], ['id', 'order_number']),
+        'warehouse' => ref('WarehouseRef'),
+        'note' => str(),
+        'created_by' => ref('CreatedBy'),
+        'movements' => listOf(ref('Movement')),
+    ], ['order', 'warehouse', 'movements']),
+    'ReceiveTask' => obj([
+        'id' => integer(),
+        'po_number' => str(),
+        'order_date' => day(),
+        'partner_id' => integer(),
+        'partner_name' => str(),
+        'line_count' => integer(),
+        'ordered' => decimal(),
+        'received' => decimal(),
+        'partly_received' => boolean(),
+    ], ['id', 'po_number', 'partner_name']),
+    'ReceiveLine' => obj([
+        'product_id' => integer(),
+        'sku' => str(),
+        'barcode' => nullable(str()),
+        'product_name' => str(),
+        'unit' => nullable(str()),
+        'ordered' => decimal(),
+        'received' => decimal('So far.'),
+        'remaining' => decimal(),
+    ], ['product_id', 'sku', 'ordered', 'received', 'remaining']),
+    'ReceiveOrder' => obj([
+        'id' => integer(),
+        'po_number' => str(),
+        'order_date' => day(),
+        'partner_name' => str(),
+        'received_at' => nullable(stamp()),
+        'lines' => listOf(ref('ReceiveLine')),
+    ], ['id', 'po_number', 'lines']),
+    'Receipt' => obj([
+        'warehouse_id' => integer(),
+        'location_id' => nullable(integer('The default shelf.')),
+        'note' => str(),
+        'items' => ['type' => 'array', 'minItems' => 1, 'items' => obj([
+            'product_id' => integer('A product on the purchase order.'),
+            'quantity' => ['type' => ['number', 'string'], 'description' => 'What arrived: more or less than ordered is fine.'],
+            'location_id' => nullable(integer()),
+        ], ['product_id', 'quantity'])],
+    ], ['warehouse_id', 'items']),
+    'Received' => obj([
+        'purchase_order' => obj(['id' => integer(), 'po_number' => str()], ['id', 'po_number']),
+        'warehouse' => ref('WarehouseRef'),
+        'note' => str(),
+        'created_by' => ref('CreatedBy'),
+        'movements' => listOf(ref('Movement')),
+        'lines' => listOf(ref('ReceiveLine')),
+    ], ['purchase_order', 'warehouse', 'movements', 'lines']),
 ];
 
 $errorResponse = static fn(string $description): array => json(ref('Error'), $description);
@@ -590,8 +761,39 @@ foreach (['in' => 'Book stock in', 'out' => 'Book stock out'] as $type => $summa
     ] + errors(403, 422), [], body(ref('StockBooking'))));
 }
 $add('/stock/transfer', 'post', op('post', 'Stock', 'stockTransfer', 'Move stock between warehouses', 'Needs a user token whose role has stock.move. Each line is an out movement and an in movement. All or nothing.', [
-    '201' => json(obj(['data' => ref('Booked')], ['data']), 'Booked.'),
+    '201' => json(obj(['data' => ref('Transferred')], ['data']), 'Booked.'),
 ] + errors(403, 422), [], body(ref('StockTransfer'))));
+$add('/stock/relocate', 'post', op('post', 'Stock', 'stockRelocate', 'Move stock from shelf to shelf', 'Within one warehouse: its total does not change. Checked against what the source shelf holds. Needs a user token whose role has stock.move. All or nothing.', [
+    '201' => json(obj(['data' => ref('Relocated')], ['data']), 'Moved.'),
+] + errors(403, 422), [], body(ref('Relocation'))));
+$add('/stock/movements', 'get', op('get', 'Stock', 'myMovements', 'My movements on a day', 'The user token\'s own movements, newest first: the app\'s "today\'s bookings". 403 with an integration token.', [
+    '200' => json(page(ref('MyMovement')), 'A page.'),
+] + errors(403, 422), [
+    p('page'), p('per_page'),
+    query('date', day(), 'Today when not given.'),
+    query('warehouse_id', ['type' => 'integer'], 'One warehouse.'),
+]));
+$add('/stocktakings', 'post', op('post', 'Stock', 'stocktaking', 'Book a stocktaking', 'The counted quantities of the products scanned in one warehouse, as on the web: the book stock is read at booking, and every difference becomes a correction. Products not sent are left as they are. Needs a user token whose role has stocktaking.manage.', [
+    '201' => json(obj(['data' => ref('StocktakingBooked')], ['data']), 'Booked.'),
+] + errors(403, 409, 422), [], body(ref('Stocktaking'))));
+$add('/picking', 'get', op('get', 'Warehouse work', 'pickTasks', 'Orders to pick', 'Confirmed orders not yet picked or invoiced, oldest first. Needs stock.move.', [
+    '200' => json(obj(['data' => listOf(ref('PickTask'))], ['data']), 'The orders.'),
+] + errors(403)));
+$add('/picking/{id}', 'get', op('get', 'Warehouse work', 'pickOrder', 'An order to pick', 'Its lines per product with the shelves of the warehouse that hold them.', [
+    '200' => json(obj(['data' => ref('PickOrder')], ['data']), 'The order.'),
+] + errors(403, 404, 409, 422), [p('id'), query('warehouse_id', ['type' => 'integer'], 'The warehouse picked from.', true)]));
+$add('/picking/{id}', 'post', op('post', 'Warehouse work', 'pick', 'Pick an order', 'Books the goods out, from the shelves they were taken from, and marks the order picked. In full or not at all: the quantities have to add up to the order. The order\'s invoice then books no stock.', [
+    '201' => json(obj(['data' => ref('Picked')], ['data']), 'Picked.'),
+] + errors(403, 404, 409, 422), [p('id')], body(ref('Pick'))));
+$add('/receiving', 'get', op('get', 'Warehouse work', 'receiveTasks', 'Purchase orders to receive', 'Confirmed purchase orders with something still to come, oldest first. Needs stock.move.', [
+    '200' => json(obj(['data' => listOf(ref('ReceiveTask'))], ['data']), 'The purchase orders.'),
+] + errors(403)));
+$add('/receiving/{id}', 'get', op('get', 'Warehouse work', 'receiveOrder', 'A purchase order to receive', 'Per product: ordered, received so far, still to come.', [
+    '200' => json(obj(['data' => ref('ReceiveOrder')], ['data']), 'The purchase order.'),
+] + errors(403, 404, 409), [p('id')]));
+$add('/receiving/{id}', 'post', op('post', 'Warehouse work', 'receive', 'Receive goods', 'Books what arrived into the warehouse, onto its shelves, and adds it to what the order received. Can be done in parts. The order\'s incoming invoice then books no stock.', [
+    '201' => json(obj(['data' => ref('Received')], ['data']), 'Received.'),
+] + errors(403, 404, 409, 422), [p('id')], body(ref('Receipt'))));
 $add('/pricing/effective', 'get', op('get', 'Sales', 'effectivePrice', 'The net unit price for a sales line', 'Group price, sale price and price rules.', ['200' => json(one(ref('EffectivePrice')), 'The price.')] + errors(404, 422), [
     query('product_id', ['type' => 'integer'], 'The product.', true),
     query('partner_id', ['type' => 'integer'], 'Without it only the product\'s own price and the rules for everyone apply.'),
@@ -647,7 +849,7 @@ $document = [
     ],
     'servers' => [['url' => 'https://cloudexus.example/api']],
     'security' => [['token' => []], ['apiKey' => []]],
-    'tags' => array_map(static fn(string $t): array => ['name' => $t], ['Signing in', 'Catalog', 'Master data', 'Stock', 'Sales', 'Partners']),
+    'tags' => array_map(static fn(string $t): array => ['name' => $t], ['Signing in', 'Catalog', 'Master data', 'Stock', 'Warehouse work', 'Sales', 'Partners']),
     'paths' => $paths,
     'components' => $components,
 ];

@@ -305,6 +305,96 @@ class StockMovementModel
         return (float) ($stmt->fetchColumn() ?: 0);
     }
 
+    /**
+     * A product's stock on one shelf of a warehouse — or, with a null
+     * location, what was booked into the warehouse without one.
+     */
+    public function availableAt(int $productId, int $warehouseId, ?int $locationId): float
+    {
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT SUM(CASE WHEN type = 'in' THEN quantity ELSE -quantity END)
+             FROM stock_movements
+             WHERE product_id = :product_id AND warehouse_id = :warehouse_id AND location_id <=> :location_id"
+        );
+        $stmt->execute(['product_id' => $productId, 'warehouse_id' => $warehouseId, 'location_id' => $locationId]);
+
+        return (float) ($stmt->fetchColumn() ?: 0);
+    }
+
+    /**
+     * Where in one warehouse the given products are, with how much on each
+     * shelf: what a picker walks. Only shelves holding some, by code.
+     *
+     * @param list<int> $productIds
+     * @return array<int, list<array{location_id: ?int, location_code: ?string, quantity: string}>> product id => shelves
+     */
+    public function shelvesFor(int $warehouseId, array $productIds): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $productIds)));
+        if (!$ids) {
+            return [];
+        }
+
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT m.product_id, l.id AS location_id, l.code AS location_code,
+                    SUM(CASE WHEN m.type = 'in' THEN m.quantity ELSE -m.quantity END) AS quantity
+             FROM stock_movements m
+             LEFT JOIN warehouse_locations l ON l.id = m.location_id
+             WHERE m.warehouse_id = ? AND m.product_id IN (" . implode(',', array_fill(0, count($ids), '?')) . ')
+             GROUP BY m.product_id, l.id
+             HAVING quantity > 0
+             ORDER BY l.code IS NULL, l.code'
+        );
+        $stmt->execute(array_merge([$warehouseId], $ids));
+
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(int) $row['product_id']][] = [
+                'location_id' => $row['location_id'] !== null ? (int) $row['location_id'] : null,
+                'location_code' => $row['location_code'],
+                'quantity' => number_format((float) $row['quantity'], 3, '.', ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * One person's movements on one day, newest first: the app's "today's
+     * bookings". A transfer's two halves are two rows, like everywhere else.
+     */
+    public function byUser(int $userId, string $date, ?int $warehouseId, Paginator $pager): array
+    {
+        $where = 'm.created_by = :user AND m.created_at >= :from AND m.created_at < :to'
+            . ($warehouseId ? ' AND m.warehouse_id = :warehouse_id' : '');
+        $params = ['user' => $userId, 'from' => $date . ' 00:00:00', 'to' => date('Y-m-d', strtotime($date . ' +1 day')) . ' 00:00:00']
+            + ($warehouseId ? ['warehouse_id' => $warehouseId] : []);
+
+        $count = DatabaseConnection::get()->prepare("SELECT COUNT(*) FROM stock_movements m WHERE $where");
+        $count->execute($params);
+        $pager->total = (int) $count->fetchColumn();
+        $pager->clamp();
+
+        $stmt = DatabaseConnection::get()->prepare(
+            "SELECT m.id, m.type, m.quantity, m.note, m.created_at,
+                    w.id AS warehouse_id, w.name AS warehouse_name,
+                    l.id AS location_id, l.code AS location_code,
+                    p.id AS product_id, p.sku, {$this->nameSelect()}, un.code AS unit
+             FROM stock_movements m
+             JOIN warehouses w ON w.id = m.warehouse_id
+             JOIN products p ON p.id = m.product_id
+             {$this->descJoin()}
+             LEFT JOIN units un ON un.id = p.unit_id
+             LEFT JOIN warehouse_locations l ON l.id = m.location_id
+             WHERE $where
+             ORDER BY m.created_at DESC, m.id DESC
+             LIMIT {$pager->perPage} OFFSET {$pager->offset()}"
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     /** Sortable columns of the stock overview list (see Sort): key => SQL expression. */
     public const OVERVIEW_SORTS = [
         'warehouse' => 'warehouse_name',

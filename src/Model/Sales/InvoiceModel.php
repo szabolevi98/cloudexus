@@ -154,6 +154,13 @@ class InvoiceModel
      */
     public function create(array $data, array $items): int
     {
+        // Egy mobilról kiszedett rendelés áruja a kiszedéskor kiment a raktárból
+        // (25_picking_and_receiving.sql): a számlája nem adja ki még egyszer, és
+        // raktár nélkül a sztornója sem hozza vissza.
+        if (!empty($data['order_id']) && self::orderIsPicked((int) $data['order_id'])) {
+            $data['warehouse_id'] = null;
+        }
+
         $pdo = DatabaseConnection::get();
         $pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
         $pdo->beginTransaction();
@@ -355,6 +362,15 @@ class InvoiceModel
     }
 
     /** Van-e a rendelésnek élő (nem sztornózott) számlája. */
+    /** Kiszedték-e a rendelést a mobil appból (és így már kiadták a készletét). */
+    public static function orderIsPicked(int $orderId): bool
+    {
+        $stmt = DatabaseConnection::get()->prepare('SELECT picked_at IS NOT NULL FROM orders WHERE id = :id');
+        $stmt->execute(['id' => $orderId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
     public function orderIsInvoiced(int $orderId): bool
     {
         $stmt = DatabaseConnection::get()->prepare(

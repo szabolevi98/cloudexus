@@ -21,7 +21,9 @@ class PurchaseOrderModel
     public function findById(int $id): ?array
     {
         $stmt = DatabaseConnection::get()->prepare(
-            'SELECT po.*, p.name AS partner_name
+            'SELECT po.*, p.name AS partner_name,
+                    (SELECT full_name FROM users WHERE id = po.received_by) AS received_by_name,
+                    (SELECT name FROM warehouses WHERE id = po.received_warehouse_id) AS received_warehouse_name
              FROM purchase_orders po
              JOIN partners p ON p.id = po.partner_id
              WHERE po.id = :id LIMIT 1'

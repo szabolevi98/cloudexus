@@ -59,6 +59,9 @@ class ProductApiController extends ApiController
             'quantity' => $row['quantity'],
         ], (new StockMovementModel())->stockForProduct((int) $product['id']));
 
+        $total = (float) array_sum(array_column($stock, 'quantity'));
+        $image = (new ProductModel())->images((int) $product['id'])[0]['path'] ?? null;
+
         $this->resource([
             'id' => (int) $product['id'],
             'sku' => $product['sku'],
@@ -68,8 +71,15 @@ class ProductApiController extends ApiController
             'unit_name' => $product['unit_name'],
             'min_stock' => $product['min_stock'],
             'matched_by' => $product['barcode'] === $code ? 'barcode' : 'sku',
-            'stock_total' => number_format(array_sum(array_column($stock, 'quantity')), 3, '.', ''),
+            'stock_total' => number_format($total, 3, '.', ''),
             'stock' => $stock,
+            // What a worker at the shelf asks next: the price on the label, and
+            // whether the product needs reordering.
+            'price' => $product['price'],
+            'sale_price' => $product['sale_price'],
+            'vat_rate' => $product['vat_rate'],
+            'below_min_stock' => (float) $product['min_stock'] > 0 && $total < (float) $product['min_stock'],
+            'image_url' => $image === null ? null : (preg_match('~^https?://~', (string) $image) ? $image : rtrim((string) \Cloudexus\Core\Config::get('app.base_url'), '/') . '/' . ltrim((string) $image, '/')),
         ]);
     }
 

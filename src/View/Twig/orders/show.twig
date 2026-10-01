@@ -19,6 +19,14 @@
                 {% endif %}
             </div>
         </div>
+        {# A mobil appban kiszedett rendelés (25_picking_and_receiving.sql): a
+           készlete már kiment, a számlája nem adja ki még egyszer. #}
+        {% if order.picked_at %}
+            <div class="cx-card__body border-bottom pt-3 pb-3 small">
+                <i class="bi bi-box-seam me-1"></i>{{ t('orders.picked', {date: order.picked_at|date('Y-m-d H:i'), name: order.picked_by_name|default('—'), warehouse: order.picked_warehouse_name|default('—')}) }}
+                <div class="text-muted">{{ t('orders.picked_note') }}</div>
+            </div>
+        {% endif %}
         {% if order.shipping_address_id or order.billing_address_id %}
             <div class="cx-card__body border-bottom pt-3 pb-3">
                 <div class="row small">

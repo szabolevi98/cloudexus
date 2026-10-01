@@ -345,6 +345,9 @@ parameter rather than part of the path because scanned codes can contain `/`. Re
 - `stock` lists every warehouse+location with non-zero stock; stock booked without a
   location is under `location_id: null`. `stock_total` is their sum.
 - No match returns `404`; a missing `code` returns `422`.
+- Also: `price` and `sale_price` (net; a set `sale_price` is the active price), `vat_rate`,
+  `below_min_stock` (`true` when the total stock is under `min_stock`) and `image_url` (the
+  primary image, or `null`) — what a worker at the shelf asks next.
 
 ### Categories
 
@@ -675,6 +678,102 @@ A shortage lists every short product with what is available and what was request
 Bookings take an `Idempotency-Key`, as every change does — see
 [Idempotency-Key](#idempotency-key-safe-retries). A retry of a booking that arrives while
 the first one is still running waits for it and then gets its response.
+
+### Shelf to shelf (POST)
+
+`POST /api/stock/relocate` moves stock between the shelves of **one** warehouse — an out and
+an in movement per line, so the warehouse's total does not change. Like the bookings above it
+needs a user token whose role has `stock.move`, is all-or-nothing and takes an
+`Idempotency-Key`.
+
+```json
+{
+  "warehouse_id": 1,
+  "from_location_id": 24,
+  "to_location_id": 31,
+  "note": "Fast movers to the front",
+  "items": [ { "product_id": 12, "quantity": 6 }, { "product_id": 31, "quantity": 2, "from_location_id": 18 } ]
+}
+```
+
+- `from_location_id` / `to_location_id` are defaults, overridable per item; `null` means stock
+  booked without a shelf. Source and target must differ on every line.
+- Each source shelf is checked against what it holds (not the warehouse's total): asking more
+  is `422` with the short lines in `details`, nothing moved.
+- The response (`201`) lists, per line, `out_movement_id` and `in_movement_id` with the
+  shelves, under `moves`; the note is `Átpolcozás: <warehouse> — <note>`.
+
+### My movements today (GET)
+
+`GET /api/stock/movements` lists the signed-in user's own movements of one day, newest first —
+the app's "today's bookings". User token only (`403` with an integration token). Filters:
+`date` (`YYYY-MM-DD`, default today), `warehouse_id`; paginated. Each row carries `type`
+(`in`/`out`), the warehouse, the shelf, the product, `quantity`, `note` and `created_at`; a
+transfer's or a relocation's two halves are two rows.
+
+## Warehouse work (mobile app)
+
+Stocktaking, picking customer orders and receiving purchase orders on the PDA. All need a user
+token, and all bookings take an `Idempotency-Key`.
+
+### Stocktaking
+
+`POST /api/stocktakings` books a stocktaking counted in the app, exactly as on the web: the
+book stock is read at the moment of booking with the warehouse locked, and every difference
+becomes a correction movement (`Leltár korrekció: <number>`). Products that were not counted
+are left as they are. Needs the `stocktaking.manage` permission.
+
+```json
+{ "warehouse_id": 1, "note": "Aisle A", "items": [ { "product_id": 12, "counted_quantity": 41 }, { "product_id": 31, "counted_quantity": 0 } ] }
+```
+
+One count per product (a product found on several shelves is added up by the app);
+`counted_quantity` may be `0`. The response (`201`) has the `stocktaking_number`, `diff_count`
+and, per product, `book_quantity`, `counted_quantity` and `diff`. Corrections carry no shelf,
+as on the web.
+
+### Picking customer orders
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/picking` | Confirmed orders not yet picked or invoiced, oldest first |
+| GET | `/api/picking/{id}?warehouse_id=` | One order's lines per product, each with the shelves of the warehouse holding it (`shelves`), the lines ordered by their first shelf — the walk |
+| POST | `/api/picking/{id}` | Pick it: book the goods out from the shelves they were taken from, and mark the order picked |
+
+```json
+{ "warehouse_id": 1, "items": [ { "product_id": 14, "quantity": 3, "location_id": 1 }, { "product_id": 14, "quantity": 1, "location_id": 32 } ] }
+```
+
+- An order is picked **in full or not at all**: per product the quantities must add up to what
+  the order asks for, otherwise `422` with `ordered` and `picked` per product in `details`.
+  Change the order on the web first if it cannot be delivered in full.
+- The warehouse's stock is checked as for a stock-out; a shortage is `422`, nothing booked.
+- Picked by somebody else or invoiced in the meantime: `409`.
+- The movements' note is `Kiszedés: <order number>`. The order shows "Picked in the mobile
+  app" on the web, and **its invoice books no stock** — the goods left at the pick — nor does
+  that invoice's storno book any back.
+- Needs `stock.move`.
+
+### Receiving purchase orders
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/receiving` | Confirmed purchase orders with something still to come, oldest first |
+| GET | `/api/receiving/{id}` | Per product: `ordered`, `received` so far and `remaining` |
+| POST | `/api/receiving/{id}` | Receive what arrived: book it in, onto its shelves |
+
+```json
+{ "warehouse_id": 1, "location_id": 5, "note": "Delivery note 4471", "items": [ { "product_id": 39, "quantity": 20 }, { "product_id": 2, "quantity": 4, "location_id": 9 } ] }
+```
+
+- A delivery may come **in parts**: an order can be received more than once, and what arrived
+  is added to its lines' `received`. More or less than ordered is accepted — what was scanned
+  is what came. Products not on the purchase order are `422`.
+- Invoiced or cancelled in the meantime: `409`.
+- The movements' note is `Átvétel: <PO number> — <note>`. The purchase order shows what was
+  received on the web, and **its incoming invoice books no stock** — the goods came in at the
+  receipt — nor does that invoice's cancellation book any out.
+- Needs `stock.move`.
 
 ## Full CRUD resources
 

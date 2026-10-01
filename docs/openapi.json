@@ -37,6 +37,9 @@
             "name": "Stock"
         },
         {
+            "name": "Warehouse work"
+        },
+        {
             "name": "Sales"
         },
         {
@@ -1766,6 +1769,185 @@
                 }
             }
         },
+        "/picking": {
+            "get": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "pickTasks",
+                "summary": "Orders to pick",
+                "description": "Confirmed orders not yet picked or invoiced, oldest first. Needs stock.move.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The orders.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PickTask"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/picking/{id}": {
+            "get": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "pickOrder",
+                "summary": "An order to pick",
+                "description": "Its lines per product with the shelves of the warehouse that hold them.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "name": "warehouse_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "The warehouse picked from."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The order.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PickOrder"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "pick",
+                "summary": "Pick an order",
+                "description": "Books the goods out, from the shelves they were taken from, and marks the order picked. In full or not at all: the quantities have to add up to the order. The order's invoice then books no stock.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Pick"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Picked.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Picked"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
         "/pricing/effective": {
             "get": {
                 "tags": [
@@ -2102,6 +2284,173 @@
                 }
             }
         },
+        "/receiving": {
+            "get": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "receiveTasks",
+                "summary": "Purchase orders to receive",
+                "description": "Confirmed purchase orders with something still to come, oldest first. Needs stock.move.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The purchase orders.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ReceiveTask"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/receiving/{id}": {
+            "get": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "receiveOrder",
+                "summary": "A purchase order to receive",
+                "description": "Per product: ordered, received so far, still to come.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The purchase order.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReceiveOrder"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Warehouse work"
+                ],
+                "operationId": "receive",
+                "summary": "Receive goods",
+                "description": "Books what arrived into the warehouse, onto its shelves, and adds it to what the order received. Can be done in parts. The order's incoming invoice then books no stock.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/id"
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Receipt"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Received.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Received"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
         "/stock": {
             "get": {
                 "tags": [
@@ -2249,6 +2598,88 @@
                 }
             }
         },
+        "/stock/movements": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "myMovements",
+                "summary": "My movements on a day",
+                "description": "The user token's own movements, newest first: the app's \"today's bookings\". 403 with an integration token.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/page"
+                    },
+                    {
+                        "$ref": "#/components/parameters/per_page"
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "examples": [
+                                "2026-07-20"
+                            ]
+                        },
+                        "description": "Today when not given."
+                    },
+                    {
+                        "name": "warehouse_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "One warehouse."
+                    },
+                    {
+                        "$ref": "#/components/parameters/language"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MyMovement"
+                                            }
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
         "/stock/out": {
             "post": {
                 "tags": [
@@ -2309,6 +2740,66 @@
                 }
             }
         },
+        "/stock/relocate": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stockRelocate",
+                "summary": "Move stock from shelf to shelf",
+                "description": "Within one warehouse: its total does not change. Checked against what the source shelf holds. Needs a user token whose role has stock.move. All or nothing.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Relocation"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Moved.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Relocated"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
         "/stock/transfer": {
             "post": {
                 "tags": [
@@ -2344,7 +2835,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/Booked"
+                                            "$ref": "#/components/schemas/Transferred"
                                         }
                                     },
                                     "required": [
@@ -2359,6 +2850,69 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Unprocessable"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
+            }
+        },
+        "/stocktakings": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "operationId": "stocktaking",
+                "summary": "Book a stocktaking",
+                "description": "The counted quantities of the products scanned in one warehouse, as on the web: the book stock is read at booking, and every difference becomes a correction. Products not sent are left as they are. Needs a user token whose role has stocktaking.manage.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/language"
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Stocktaking"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booked.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/StocktakingBooked"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
                     },
                     "422": {
                         "$ref": "#/components/responses/Unprocessable"
@@ -3266,6 +3820,44 @@
                                 }
                             }
                         }
+                    },
+                    "price": {
+                        "type": "string",
+                        "description": "Net.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "sale_price": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Net; when set, the active price.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "vat_rate": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "below_min_stock": {
+                        "type": "boolean",
+                        "description": "The total stock is under min_stock."
+                    },
+                    "image_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The primary image.",
+                        "format": "uri"
                     }
                 },
                 "required": [
@@ -4432,6 +5024,116 @@
                     "items"
                 ]
             },
+            "Movement": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "product_id",
+                    "quantity"
+                ]
+            },
+            "Move": {
+                "type": "object",
+                "properties": {
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "out_movement_id": {
+                        "type": "integer"
+                    },
+                    "from_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "from_location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "in_movement_id": {
+                        "type": "integer"
+                    },
+                    "to_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "to_location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "product_id",
+                    "quantity",
+                    "out_movement_id",
+                    "in_movement_id"
+                ]
+            },
             "Booked": {
                 "type": "object",
                 "properties": {
@@ -4439,56 +5141,319 @@
                         "type": "string",
                         "enum": [
                             "in",
-                            "out",
-                            "transfer"
+                            "out"
                         ]
                     },
                     "warehouse": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "integer"
-                            },
-                            "name": {
-                                "type": "string"
-                            }
-                        }
+                        "$ref": "#/components/schemas/WarehouseRef"
                     },
                     "note": {
                         "type": "string"
                     },
                     "created_by": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "integer"
-                            },
-                            "full_name": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "id",
-                            "full_name"
-                        ]
+                        "$ref": "#/components/schemas/CreatedBy"
                     },
                     "movements": {
                         "type": "array",
                         "items": {
+                            "$ref": "#/components/schemas/Movement"
+                        }
+                    }
+                },
+                "required": [
+                    "type",
+                    "created_by",
+                    "movements"
+                ]
+            },
+            "Transferred": {
+                "type": "object",
+                "properties": {
+                    "from_warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "to_warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "$ref": "#/components/schemas/CreatedBy"
+                    },
+                    "transfers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Move"
+                        }
+                    }
+                },
+                "required": [
+                    "from_warehouse",
+                    "to_warehouse",
+                    "created_by",
+                    "transfers"
+                ]
+            },
+            "Relocated": {
+                "type": "object",
+                "properties": {
+                    "warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "$ref": "#/components/schemas/CreatedBy"
+                    },
+                    "moves": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Move"
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse",
+                    "created_by",
+                    "moves"
+                ]
+            },
+            "WarehouseRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "CreatedBy": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "full_name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "full_name"
+                ]
+            },
+            "Relocation": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer",
+                        "description": "An active warehouse."
+                    },
+                    "from_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "The default source shelf; null: stock booked without one."
+                    },
+                    "to_location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "The default target shelf."
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 500,
+                        "items": {
                             "type": "object",
                             "properties": {
-                                "id": {
-                                    "type": "integer",
-                                    "description": "In and out bookings."
+                                "product_id": {
+                                    "type": "integer"
                                 },
-                                "out_movement_id": {
-                                    "type": "integer",
-                                    "description": "Transfers."
+                                "quantity": {
+                                    "type": [
+                                        "number",
+                                        "string"
+                                    ]
                                 },
-                                "in_movement_id": {
-                                    "type": "integer",
-                                    "description": "Transfers."
+                                "from_location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
                                 },
+                                "to_location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "quantity"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "items"
+                ]
+            },
+            "MyMovement": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "in",
+                            "out"
+                        ]
+                    },
+                    "warehouse_id": {
+                        "type": "integer"
+                    },
+                    "warehouse_name": {
+                        "type": "string"
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "warehouse_id",
+                    "product_id",
+                    "quantity",
+                    "created_at"
+                ]
+            },
+            "Stocktaking": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer",
+                        "description": "An active warehouse."
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 2000,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "integer"
+                                },
+                                "counted_quantity": {
+                                    "type": [
+                                        "number",
+                                        "string"
+                                    ],
+                                    "description": "Zero or more, at most 3 decimals."
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "counted_quantity"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "items"
+                ]
+            },
+            "StocktakingBooked": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "stocktaking_number": {
+                        "type": "string"
+                    },
+                    "warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "item_count": {
+                        "type": "integer"
+                    },
+                    "diff_count": {
+                        "type": "integer",
+                        "description": "How many products differed, and got a correction."
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
                                 "product_id": {
                                     "type": "integer"
                                 },
@@ -4498,25 +5463,22 @@
                                 "product_name": {
                                     "type": "string"
                                 },
-                                "unit": {
-                                    "type": [
-                                        "string",
-                                        "null"
+                                "book_quantity": {
+                                    "type": "string",
+                                    "description": "The book stock when it was booked.",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
                                     ]
                                 },
-                                "location_id": {
-                                    "type": [
-                                        "integer",
-                                        "null"
+                                "counted_quantity": {
+                                    "type": "string",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
                                     ]
                                 },
-                                "location_code": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
-                                },
-                                "quantity": {
+                                "diff": {
                                     "type": "string",
                                     "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
                                     "examples": [
@@ -4528,9 +5490,490 @@
                     }
                 },
                 "required": [
-                    "type",
-                    "created_by",
+                    "id",
+                    "stocktaking_number",
+                    "warehouse",
+                    "items"
+                ]
+            },
+            "Shelf": {
+                "type": "object",
+                "properties": {
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quantity": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    }
+                },
+                "required": [
+                    "location_id",
+                    "quantity"
+                ]
+            },
+            "PickTask": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "order_number": {
+                        "type": "string"
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "partner_id": {
+                        "type": "integer"
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "line_count": {
+                        "type": "integer"
+                    },
+                    "total_quantity": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "order_number",
+                    "partner_name"
+                ]
+            },
+            "PickOrder": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "order_number": {
+                        "type": "string"
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "integer"
+                                },
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "barcode": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "product_name": {
+                                    "type": "string"
+                                },
+                                "unit": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "quantity": {
+                                    "type": "string",
+                                    "description": "To pick.",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
+                                    ]
+                                },
+                                "in_warehouse": {
+                                    "type": "string",
+                                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                                    "examples": [
+                                        "89900.00"
+                                    ]
+                                },
+                                "shelves": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Shelf"
+                                    },
+                                    "description": "The shelves holding it, by code; stock booked without a shelf last."
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "sku",
+                                "quantity",
+                                "shelves"
+                            ]
+                        },
+                        "description": "By their first shelf: the walk through the warehouse."
+                    }
+                },
+                "required": [
+                    "id",
+                    "order_number",
+                    "warehouse",
+                    "lines"
+                ]
+            },
+            "Pick": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "integer"
+                                },
+                                "quantity": {
+                                    "type": [
+                                        "number",
+                                        "string"
+                                    ]
+                                },
+                                "location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "The shelf it was taken from."
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "quantity"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "items"
+                ]
+            },
+            "Picked": {
+                "type": "object",
+                "properties": {
+                    "order": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "order_number": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "order_number"
+                        ]
+                    },
+                    "warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "$ref": "#/components/schemas/CreatedBy"
+                    },
+                    "movements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Movement"
+                        }
+                    }
+                },
+                "required": [
+                    "order",
+                    "warehouse",
                     "movements"
+                ]
+            },
+            "ReceiveTask": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "po_number": {
+                        "type": "string"
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "partner_id": {
+                        "type": "integer"
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "line_count": {
+                        "type": "integer"
+                    },
+                    "ordered": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "received": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "partly_received": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "po_number",
+                    "partner_name"
+                ]
+            },
+            "ReceiveLine": {
+                "type": "object",
+                "properties": {
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "barcode": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "product_name": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ordered": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "received": {
+                        "type": "string",
+                        "description": "So far.",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    },
+                    "remaining": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+                        "examples": [
+                            "89900.00"
+                        ]
+                    }
+                },
+                "required": [
+                    "product_id",
+                    "sku",
+                    "ordered",
+                    "received",
+                    "remaining"
+                ]
+            },
+            "ReceiveOrder": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "po_number": {
+                        "type": "string"
+                    },
+                    "order_date": {
+                        "type": "string",
+                        "format": "date",
+                        "examples": [
+                            "2026-07-20"
+                        ]
+                    },
+                    "partner_name": {
+                        "type": "string"
+                    },
+                    "received_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "examples": [
+                            "2026-07-24 16:44:35"
+                        ]
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReceiveLine"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "po_number",
+                    "lines"
+                ]
+            },
+            "Receipt": {
+                "type": "object",
+                "properties": {
+                    "warehouse_id": {
+                        "type": "integer"
+                    },
+                    "location_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "The default shelf."
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "product_id": {
+                                    "type": "integer",
+                                    "description": "A product on the purchase order."
+                                },
+                                "quantity": {
+                                    "type": [
+                                        "number",
+                                        "string"
+                                    ],
+                                    "description": "What arrived: more or less than ordered is fine."
+                                },
+                                "location_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "product_id",
+                                "quantity"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "warehouse_id",
+                    "items"
+                ]
+            },
+            "Received": {
+                "type": "object",
+                "properties": {
+                    "purchase_order": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "po_number": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "po_number"
+                        ]
+                    },
+                    "warehouse": {
+                        "$ref": "#/components/schemas/WarehouseRef"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "created_by": {
+                        "$ref": "#/components/schemas/CreatedBy"
+                    },
+                    "movements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Movement"
+                        }
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReceiveLine"
+                        }
+                    }
+                },
+                "required": [
+                    "purchase_order",
+                    "warehouse",
+                    "movements",
+                    "lines"
                 ]
             }
         }
